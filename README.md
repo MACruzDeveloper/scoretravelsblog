@@ -13,7 +13,7 @@
 
 ## Code pattern
   - React
-  - Redux
+  - Zustand
   - Typescript
   - Lodash
   - Vite
