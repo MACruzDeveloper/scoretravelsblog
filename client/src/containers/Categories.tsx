@@ -2,8 +2,7 @@ import { useState, useEffect, FormEvent } from 'react'
 import axios from 'axios'
 import { sortBy } from 'lodash'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
-import { useAppDispatch, useAppSelector } from '../hooks/useDispatchSelector'
-import { Cat, fetchCats, catsSelector } from '../store/slice-categories'
+import { useCategoriesStore, Cat } from '../store/categoriesStore'
 import { URL } from '../config'
 import SelectContinent from '../components/common/SelectContinent'
 import Pagination from '../components/common/Pagination'
@@ -11,25 +10,11 @@ import Msgbox, { ParamsMsgBox } from '../components/common/Msgbox'
 
 const Categories = () => {
   // fetch Categories
-  const [cats, setCats] = useState<Array<Cat>>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | undefined>(undefined)
-  const selectedCats = useAppSelector(catsSelector)
-  const dispatch = useAppDispatch()
+  const { cats, loading, error, fetchCats } = useCategoriesStore()
 
   useEffect(() => {
-    setLoading(selectedCats.loading)
-    setError(selectedCats.error)
-    setCats(selectedCats.cats)
-  }, [selectedCats])
-
-  function handleFetchCats() {
-    dispatch(fetchCats())
-  }
-
-  useEffect(() => {
-    handleFetchCats()
-  }, [])
+    fetchCats()
+  }, [fetchCats])
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -69,7 +54,7 @@ const Categories = () => {
       if (result === -1) {
         if (reg.exec(valuesInputAdd.name)) {
           await axios.post(url, { name: valuesInputAdd.name, continent: valuesInputAdd.continent })
-          handleFetchCats()
+          fetchCats()
           setMessage({ body: `Category ${valuesInputAdd.name} added!`, classname: 'msg_ok' })
         } else {
           setMessage({ body: 'The category has to be a text', classname: 'msg_error' })
@@ -88,7 +73,7 @@ const Categories = () => {
     try {
       let url = `${URL}/admin/categories/delete`
       await axios.post(url, { name: ele.name })
-      handleFetchCats()
+      fetchCats()
       setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
@@ -118,7 +103,7 @@ const Categories = () => {
           name: valuesInputUpdate.name,
           continent: valuesInputUpdate.continent
         })
-        handleFetchCats()
+        fetchCats()
         setUpdateActive(null)
         //setValuesInputUpdate('')
         setMessage({ body: `Category updated!`, classname: 'msg_ok' })

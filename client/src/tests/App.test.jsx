@@ -2,11 +2,9 @@ import { render, screen } from "@testing-library/react"
 //import userEvent from "@testing-library/user-event"
 //import { logRoles } from "@testing-library/dom"
 import { BrowserRouter } from 'react-router-dom'
-import { Provider } from 'react-redux/es/exports'
 import { HttpResponse, http } from 'msw'
 import { vi } from 'vitest'
 import { server } from "../mocks/server.js"
-import { store } from '../store/store.ts'
 import Header from '../components/common/Header.tsx'
 import Home from '../components/Home.tsx'
 import AllExperiences from '../components/experiences/AllExperiences.tsx'
@@ -16,12 +14,10 @@ import { URL } from '../config.js'
 test("App contains correct headings", () => {
   const logoutMock = vi.fn()
   render(
-    <Provider store={store}>
-      <BrowserRouter>
-        <Header isLoggedIn={false} logout={logoutMock} />
-        <Home />
-      </BrowserRouter>
-    </Provider>
+    <BrowserRouter>
+      <Header isLoggedIn={false} logout={logoutMock} />
+      <Home />
+    </BrowserRouter>
   )
   
   const headingElement = screen.getByRole('heading', {level: 1})
@@ -40,9 +36,7 @@ test("handle error for AllExperiences component", async () => {
   )
 
   render(
-    <Provider store={store}>
-      <AllExperiences />
-    </Provider>
+    <AllExperiences />
   )
 
   const errorMessage = await screen.findByRole("alert")

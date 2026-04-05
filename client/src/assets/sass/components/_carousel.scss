@@ -1,6 +1,6 @@
 .carousel {
   width: 100%;
-  height: 36rem;
+  height: 42rem;
   position: relative;
   overflow: hidden;
 
@@ -52,14 +52,39 @@
     }
   }
 
+  &_images {
+    width: 100%;
+    height: 42rem;
+    position: relative;
+    overflow: hidden;
+  }
+
   &_image {
     width: 100%;
-    height: 36rem;
+    height: 42rem;
     position: absolute;
     left: 0;
     top: 0;
     object-fit: cover;
-    transition: all 0.3s ease-in-out;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &_image--active {
+    opacity: 1;
+    z-index: 2;
+  }
+
+  &_image--entering {
+    opacity: 0;
+    z-index: 2;
+  }
+
+  &_image--fade-out {
+    opacity: 0;
+    z-index: 1;
   }
 
   &_nav {
@@ -68,6 +93,7 @@
     height: 5rem;
     position: absolute;
     top: 50%;
+    z-index: 90;
     transform: translateY(-50%);
     background-color: $color1;
     color: #fff;

@@ -4,24 +4,27 @@ import { URL } from '../config'
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Spinner from './common/Spinner'
 
-const Carousel = () => {
-  const [slideImages, setSlideImages] = useState<Array<Object>>([])
-  const [slideIndex, setSlideIndex] = useState<number>(0)
-  const [slideStop, setSlideStop] = useState<boolean>(true)
-  const [objCarouselImage, setObjCarouselImage] = useState<CarouselImage>({})
-  const numSlides = slideImages.length
+type CarouselImage = {
+  readonly _id?: string,
+  filename?: string,
+  pathname?: string,
+  featured?: boolean,
+  title?: string
+}
 
-  type CarouselImage = {
-    readonly _id?: string,
-    filename?: string,
-    pathname?: string,
-    featured?: boolean,
-    title?: string
-  }
+const Carousel = () => {
+  const [slideImages, setSlideImages] = useState<Array<CarouselImage>>([])
+  const [slideIndex, setSlideIndex] = useState<number>(0)
+  const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
+  const [slideStop, setSlideStop] = useState<boolean>(true)
+  const [transitioning, setTransitioning] = useState<boolean>(false)
+  const [entering, setEntering] = useState<boolean>(false)
+  const numSlides = slideImages.length
 
   const options = {
     autoplay: false,
-    time: 5000
+    time: 5000,
+    transition: 600
   }
 
   useEffect(() => {
@@ -32,7 +35,7 @@ const Carousel = () => {
         const imagesFeatured = data?.filter((item: CarouselImage) => item.featured)
         setSlideImages(imagesFeatured)
       } catch (error) {
-        console.log("error =>", error)
+        console.log('error =>', error)
       }
     }
 
@@ -40,51 +43,74 @@ const Carousel = () => {
   }, [])
 
   useEffect(() => {
-    setObjCarouselImage(slideImages[slideIndex])
-  }, [slideImages, slideIndex])
+    if (!transitioning) return
+    const timeout = window.setTimeout(() => {
+      setPrevSlideIndex(null)
+      setTransitioning(false)
+    }, options.transition)
 
-  const getUrlImage = () => {
-    return `${URL}/static/images/${objCarouselImage?.filename}`
+    return () => window.clearTimeout(timeout)
+  }, [transitioning, options.transition])
+
+  useEffect(() => {
+    if (entering) {
+      // Force re-render to change class from --entering to --active
+      setEntering(false)
+    }
+  }, [entering])
+
+  const getUrlImage = (index = slideIndex) => {
+    const image = slideImages[index]
+    return image ? `${URL}/static/images/${image.filename}` : ''
   }
 
-  const getTitleImage = () => {
-    return objCarouselImage?.title
+  const getTitleImage = (index = slideIndex) => {
+    return slideImages[index]?.title
+  }
+
+  const changeSlide = (nextIndex: number) => {
+    if (nextIndex === slideIndex || numSlides === 0) return
+
+    if ('startViewTransition' in document) {
+      // Use View Transition API for smooth transition
+      (document as any).startViewTransition(() => {
+        setSlideIndex(nextIndex)
+      })
+    } else {
+      // Fallback to manual fade
+      setPrevSlideIndex(slideIndex)
+      setSlideIndex(nextIndex)
+      setTransitioning(true)
+      setEntering(true)
+    }
+    setSlideStop(true)
   }
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (slideStop && options.autoplay) {
-        autoPlayAndClickNext()
+    const interval = window.setInterval(() => {
+      if (slideStop && options.autoplay && numSlides > 0) {
+        const nextIndex = slideIndex === numSlides - 1 ? 0 : slideIndex + 1
+        changeSlide(nextIndex)
       }
     }, options.time)
-    return () => clearInterval(interval)
-  }, [slideIndex])
+
+    return () => window.clearInterval(interval)
+  }, [slideIndex, slideStop, numSlides, options.autoplay, options.time])
 
   const handleClickPrev = () => {
-    setSlideStop(true)
-    if (slideIndex === 0) {
-      setSlideIndex(numSlides - 1)
-    } else {
-      setSlideIndex(slideIndex - 1)
-    }
+    if (numSlides === 0) return
+    const nextIndex = slideIndex === 0 ? numSlides - 1 : slideIndex - 1
+    changeSlide(nextIndex)
   }
 
   const handleClickNext = () => {
-    setSlideStop(true)
-    autoPlayAndClickNext()
-  }
-
-  const autoPlayAndClickNext = () => {
-    if (slideIndex === numSlides - 1) {
-      setSlideIndex(0)
-    } else {
-      setSlideIndex(slideIndex + 1)
-    }
+    if (numSlides === 0) return
+    const nextIndex = slideIndex === numSlides - 1 ? 0 : slideIndex + 1
+    changeSlide(nextIndex)
   }
 
   const onClickDot = (i: number) => {
-    setSlideStop(true)
-    setSlideIndex(i)
+    changeSlide(i)
   }
 
   return <div className="carousel">
@@ -95,11 +121,23 @@ const Carousel = () => {
       </div>
 
       <div className="carousel_images">
-        {
-          slideImages.length > 0 ?
-            <img src={getUrlImage()} className="carousel_image" alt={getTitleImage()} />
-          : <Spinner />
-        }
+        {prevSlideIndex !== null && (
+          <img
+            src={getUrlImage(prevSlideIndex)}
+            className="carousel_image carousel_image--fade-out"
+            alt={getTitleImage(prevSlideIndex)}
+          />
+        )}
+
+        {slideImages.length > 0 ? (
+          <img
+            src={getUrlImage()}
+            className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
+            alt={getTitleImage()}
+          />
+        ) : (
+          <Spinner />
+        )}
       </div>
     </div>
 
@@ -113,14 +151,14 @@ const Carousel = () => {
     </div>
 
     <div className="carousel_dots">
-      {
-        slideImages.map((ele: CarouselImage, i: number) => {
-          return <button 
+      {slideImages.map((ele: CarouselImage, i: number) => {
+        return (
+          <button
             key={ele._id}
-            className={`carousel_dot ${slideIndex === i && 'active'}`} 
+            className={`carousel_dot ${slideIndex === i ? 'active' : ''}`}
             onClick={() => onClickDot(i)}></button>
-        })
-      }
+        )
+      })}
     </div>
   </div>
 }

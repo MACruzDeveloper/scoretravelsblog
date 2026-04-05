@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { URL } from '../config'
-import { ScoreType } from '../store/slice-scores'
+import type { ScoreType } from '../store/scoresStore'
 
 type PropsScore = {
   scores: Array<ScoreType>

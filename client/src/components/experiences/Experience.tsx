@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
-import { useAppDispatch, useAppSelector } from '../../hooks/useDispatchSelector'
-import { ScoreType, fetchScores, scoresSelector } from '../../store/slice-scores'
+import { useScoresStore } from '../../store/scoresStore'
 import axios from 'axios'
 import { URL } from '../../config'
 import { useParams } from 'react-router-dom'
@@ -61,25 +60,11 @@ const Experience = ({ user }: PropsExperience) => {
   }, [experience])
 
   // fetch scores
-  const [scores, setScores] = useState<Array<ScoreType>>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | undefined>(undefined)
-  const selectedScores = useAppSelector(scoresSelector)
-  const dispatch = useAppDispatch()
+  const { scores, loading, error, fetchScores } = useScoresStore()
 
   useEffect(() => {
-    setLoading(selectedScores.loading)
-    setError(selectedScores.error)
-    setScores(selectedScores.scores)
-  }, [selectedScores])
-
-  function handleFetchScores() {
-    dispatch(fetchScores())
-  }
-
-  useEffect(() => {
-    handleFetchScores()
-  }, [])
+    fetchScores()
+  }, [fetchScores])
 
 
   // comments

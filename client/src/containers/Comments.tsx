@@ -3,40 +3,25 @@ import axios from 'axios'
 import { sortBy } from "lodash"
 import Moment from 'react-moment'
 import { MdDelete } from 'react-icons/md'
-import { useAppDispatch, useAppSelector } from '../hooks/useDispatchSelector'
-import { Comment, fetchComments, commentsSelector } from '../store/slice-comments'
+import { useCommentsStore } from '../store/commentsStore'
 import { URL } from '../config'
 import Pagination from '../components/common/Pagination'
 import Msgbox from '../components/common/Msgbox'
 
 const Comments = () => {
-// fetch Comments
-const [comments, setComments] = useState<Array<Comment>>([])
-const [loading, setLoading] = useState<boolean>(false)
-const [message, setMessage] = useState({ body: '', classname: '' })
-const [error, setError] = useState<string | undefined>(undefined)
-const selectedCats = useAppSelector(commentsSelector)
-const dispatch = useAppDispatch()
+  // fetch Comments
+  const { comments, loading, error, fetchComments } = useCommentsStore()
+  const [message, setMessage] = useState({ body: '', classname: '' })
 
-useEffect(() => {
-  setLoading(selectedCats.loading)
-  setError(selectedCats.error)
-  setComments(selectedCats.comments)
-}, [selectedCats])
-
-function handleFetchCats() {
-  dispatch(fetchComments())
-}
-
-useEffect(() => {
-  handleFetchCats()
-}, [])
+  useEffect(() => {
+    fetchComments()
+  }, [fetchComments])
 
   const onClickDelete = async (id: string) => {
     try {
       let url = `${URL}/admin/comments/delete`
       await axios.post(url, { _id: id })
-      handleFetchCats()
+      fetchComments()
       setMessage({ body: `Comment deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)

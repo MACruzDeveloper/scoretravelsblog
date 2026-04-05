@@ -1,7 +1,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import axios from 'axios'
 import { URL } from '../../config'
-import { Experience } from '../../store/slice-experiences'
+import { Experience } from '../../store/experienceStore'
 import SelectCategories from '../../components/common/SelectCategories'
 import Msgbox, { ParamsMsgBox } from '../../components/common/Msgbox'
 import ImageUpload from '../ImageUpload'

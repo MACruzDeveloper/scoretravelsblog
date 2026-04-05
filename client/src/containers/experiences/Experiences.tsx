@@ -3,8 +3,7 @@ import axios from 'axios'
 import Moment from 'react-moment'
 import { sortBy } from "lodash"
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
-import { useAppDispatch, useAppSelector } from '../../hooks/useDispatchSelector'
-import { Experience, fetchExperiences, experiencesSelector } from '../../store/slice-experiences'
+import { useExperienceStore, Experience } from '../../store/experienceStore'
 import { URL } from '../../config'
 import { MyGlobalContext } from '../../App'
 import AddExperience from './AddExperience'
@@ -22,25 +21,11 @@ const Experiences = () => {
   const [updateActive, setUpdateActive] = useState(null)
 
   // fetch Experiences
-  const [experiences, setExperiences] = useState<Array<Experience>>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | undefined>(undefined)
-  const selectedExperiences = useAppSelector(experiencesSelector)
-  const dispatch = useAppDispatch()
+  const { experiences, loading, error, fetchExperiences } = useExperienceStore()
 
   useEffect(() => {
-    setLoading(selectedExperiences.loading)
-    setError(selectedExperiences.error)
-    setExperiences(selectedExperiences.experiences)
-  }, [selectedExperiences])
-
-  function handleFetchExperiences() {
-    dispatch(fetchExperiences())
-  }
-
-  useEffect(() => {
-    handleFetchExperiences()
-  }, [])
+    fetchExperiences()
+  }, [fetchExperiences])
 
   // Show Add experience form
   const [isFormAddVisible, setIsFormAddVisible] = useState(false)
@@ -57,7 +42,7 @@ const Experiences = () => {
     try {
       let url = `${URL}/admin/experiences/delete`
       await axios.post(url, { _id: id })
-      handleFetchExperiences()
+      fetchExperiences()
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
@@ -95,7 +80,7 @@ const Experiences = () => {
         content: newValues.content,
         score: newValues.score
       })
-      handleFetchExperiences()
+      fetchExperiences()
       setUpdateActive(null)
       setMessage({ body: `Experience updated!`, classname: 'msg_ok' })
     } catch (error) {
@@ -127,7 +112,7 @@ const Experiences = () => {
 
     <AddExperience
       user={user}
-      handleFetchExperiences={handleFetchExperiences}
+      handleFetchExperiences={fetchExperiences}
       isFormAddVisible={isFormAddVisible}
       setIsFormAddVisible={setIsFormAddVisible}
     />

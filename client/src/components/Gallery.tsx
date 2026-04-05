@@ -1,39 +1,21 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { chunk } from 'lodash'
 import { MdArrowUpward } from 'react-icons/md'
-import { useAppSelector, useAppDispatch } from "../hooks/useDispatchSelector"
-import { Experience, experiencesSelector, fetchExperiences } from "../store/slice-experiences"
+import { useExperienceStore, Experience } from "../store/experienceStore"
 import { URL } from '../config'
 import { scrollToTop } from '../utils/utils'
 
 const Gallery = () => {
-  // fetch Experiences
-  const [experiences, setExperiences] = useState<Array<Experience>>([])
-  const [experiencesByGroup, setExperiencesByGroup] = useState([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | undefined>(undefined)
-  const selectedExperiences = useAppSelector(experiencesSelector)
-  const dispatch = useAppDispatch()
+  const { experiences, loading, error, fetchExperiences } = useExperienceStore()
 
   useEffect(() => {
-    setLoading(selectedExperiences.loading)
-    setError(selectedExperiences.error)
-    setExperiences(selectedExperiences.experiences)
-  }, [selectedExperiences])
-
-  function handleFetchExperiences() {
-    dispatch(fetchExperiences())
-  }
-
-  useEffect(() => {
-    handleFetchExperiences()
-  }, [])
+    fetchExperiences()
+  }, [fetchExperiences])
 
   // Filter and Group experiences in chunks of 3
-  useEffect(() => {
+  const experiencesByGroup = useMemo(() => {
     const expsWithImage = experiences.filter((exp) => exp.image).sort(() => Math.random() - 0.5)
-    const chunks = chunk(expsWithImage, 3)
-    setExperiencesByGroup(chunks)
+    return chunk(expsWithImage, 3)
   }, [experiences])
 
   const getImageClass = (index: number) => {

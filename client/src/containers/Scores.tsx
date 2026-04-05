@@ -2,41 +2,25 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { sortBy } from 'lodash'
 import { MdDelete } from 'react-icons/md'
-import { useAppDispatch, useAppSelector } from '../hooks/useDispatchSelector'
-import { ScoreType, fetchScores, scoresSelector } from '../store/slice-scores'
+import { useScoresStore } from '../store/scoresStore'
 import { URL } from '../config'
 import Pagination from '../components/common/Pagination'
 import Msgbox from '../components/common/Msgbox'
 
 const Scores = () => {
   // fetch scores
-  const [scores, setScores] = useState<Array<ScoreType>>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | undefined>(undefined)
-  const selectedScores = useAppSelector(scoresSelector)
-  const dispatch = useAppDispatch()
-
-  useEffect(() => {
-    setLoading(selectedScores.loading)
-    setError(selectedScores.error)
-    setScores(selectedScores.scores)
-  }, [selectedScores])
-
-  function handleFetchScores() {
-    dispatch(fetchScores())
-  }
-
-  useEffect(() => {
-    handleFetchScores()
-  }, [])
-
+  const { scores, loading, error, fetchScores } = useScoresStore()
   const [message, setMessage] = useState({ body: '', classname: '' })
+
+  useEffect(() => {
+    fetchScores()
+  }, [fetchScores])
 
   const onClickDelete = async (id: string) => {
     try {
       let url = `${URL}/admin/scores/delete`
       await axios.post(url, { _id: id })
-      handleFetchScores()
+      fetchScores()
       setMessage({ body: `Score deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
