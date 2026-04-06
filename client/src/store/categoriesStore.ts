@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import { getData } from '../utils/utils'
+
 import { URL } from '../config'
 
 export interface Cat {
@@ -27,7 +28,7 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await axios.get(`${URL}/admin/categories`)
+      const response = await getData(`${URL}/admin/categories`)
       set({ cats: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false, hasFetched: true })

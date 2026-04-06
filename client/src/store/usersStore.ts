@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import { getData } from '../utils/utils'
+
 import { URL } from '../config'
 
 export interface UserType {
@@ -28,7 +29,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await axios.get(`${URL}/admin/users`)
+      const response = await getData(`${URL}/admin/users`)
       set({ users: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false, hasFetched: true })

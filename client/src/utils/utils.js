@@ -20,6 +20,41 @@ export const checkFileSize = (file) => {
   return file.size < maxAllowedSize
 }
 
+const parseResponse = async (response) => {
+  if (!response.ok) {
+    const contentType = response.headers.get('content-type') || ''
+    const errorBody = contentType.includes('application/json') ? await response.json() : await response.text()
+    const errorMessage = errorBody?.message || JSON.stringify(errorBody) || response.statusText
+    throw new Error(errorMessage)
+  }
+  return { data: await response.json(), status: response.status, ok: true }
+}
+
+export const fetchData = async (url, options = {}) => {
+  const response = await fetch(url, options)
+  return parseResponse(response)
+}
+
+export const getData = async (url, options = {}) => {
+  return fetchData(url, { method: 'GET', ...options })
+}
+
+export const postData = async (url, body, options = {}) => {
+  return fetchData(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    },
+    body: JSON.stringify(body),
+    ...options
+  })
+}
+
+export const deleteData = async (url, options = {}) => {
+  return fetchData(url, { method: 'DELETE', ...options })
+}
+
 // scroll to Top
 export const scrollToTop = () => {
   window.scrollTo({

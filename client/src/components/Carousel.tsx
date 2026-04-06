@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { getData } from '../utils/utils'
 import { URL } from '../config'
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Spinner from './common/Spinner'
@@ -30,7 +30,7 @@ const Carousel = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await axios.get(`${URL}/images/fetch_images`)
+        const res = await getData(`${URL}/images/fetch_images`)
         const data = res.data.images
         const imagesFeatured = data?.filter((item: CarouselImage) => item.featured)
         setSlideImages(imagesFeatured)

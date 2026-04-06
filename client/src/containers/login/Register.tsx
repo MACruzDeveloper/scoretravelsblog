@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
+import { postData } from '../../utils/utils'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { URL } from '../../config'
 import Msgbox from '../../components/common/Msgbox'
 
@@ -21,7 +21,7 @@ const Register = ({ login, logout }: PropsRegister) => {
 
   const loginRegister = async () => {
     try {
-      const response = await axios.post(`${URL}/users/login`, {
+      const response = await postData(`${URL}/users/login`, {
         email: values.email,
         password: values.password
       })
@@ -44,7 +44,7 @@ const Register = ({ login, logout }: PropsRegister) => {
     e.preventDefault()
     logout()
     try {
-      const response = await axios.post(`${URL}/users/register`, {
+      const response = await postData(`${URL}/users/register`, {
         email: values.email,
         password: values.password,
         password2: values.password2

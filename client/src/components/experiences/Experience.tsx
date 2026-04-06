@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
+import { getData, postData } from '../../utils/utils'
 import { useScoresStore } from '../../store/scoresStore'
-import axios from 'axios'
 import { URL } from '../../config'
 import { useParams } from 'react-router-dom'
 import Moment from 'react-moment'
@@ -36,12 +36,15 @@ const Experience = ({ user }: PropsExperience) => {
 
   // get experience from id param
   useEffect(() => {
-    axios
-      .get(`${URL}/admin/experiences/${exp}`)
-      .then((res) => {
+    const fetchExperience = async () => {
+      try {
+        const res = await getData(`${URL}/admin/experiences/${exp}`)
         setExperience(res.data)
-      })
-      .catch((err) => console.log(err))
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    fetchExperience()
   }, [])
 
   // To read html code from data api
@@ -75,7 +78,7 @@ const Experience = ({ user }: PropsExperience) => {
   const getCommentsByExp = async () => {
     let url = `${URL}/admin/comments`
     try {
-      const res = await axios.get(url)
+      const res = await getData(url)
       let data = res.data
       let tempComm = []
       for (let ele of data) {
@@ -99,7 +102,7 @@ const Experience = ({ user }: PropsExperience) => {
     try {
       let url = `${URL}/admin/comments/add`
       if (comment) {
-        await axios.post(url, { user: user, experience: exp, content: comment })
+        await postData(url, { user: user, experience: exp, content: comment })
         getCommentsByExp()
         setMessage({ body: `Comment added!`, classname: 'msg_ok' })
       } else {

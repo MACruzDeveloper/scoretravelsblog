@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent } from 'react'
-import axios from 'axios'
+import { getData, postData } from '../utils/utils'
 import { NavLink } from 'react-router-dom'
 import { MyGlobalContext } from '../App'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
@@ -22,7 +22,7 @@ const Users = () => {
   const getUsers = async () => {
     let url = `${URL}/users`
     try {
-      const res = await axios.get(url)
+      const res = await getData(url)
       setUsers(res.data)
     } catch (error) {
       console.log(error)
@@ -52,7 +52,7 @@ const Users = () => {
     try {
       let url = `${URL}/users/update`
       if (newRole !== '') {
-        await axios.post(url, { _id: idx, role: newRole })
+        await postData(url, { _id: idx, role: newRole })
         setUpdateActive(null)
         setRole(newRole)
         getUsers()
@@ -68,7 +68,7 @@ const Users = () => {
   const onClickDelete = async (idx: string) => {
     try {
       let url = `${URL}/users/delete`
-      await axios.post(url, { _id: idx })
+      await postData(url, { _id: idx })
       getUsers()
       setMessage({ body: `User deleted!`, classname: 'msg_ok' })
     } catch (error) {

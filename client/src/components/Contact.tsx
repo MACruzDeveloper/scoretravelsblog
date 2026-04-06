@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import axios from 'axios'
 import { URL } from '../config'
 import Msgbox from './common/Msgbox'
-import { validateEmail } from '../utils/utils'
+import { validateEmail, postData } from '../utils/utils'
 
 const Contact = () => {
   const [isChecked, setIsChecked] = useState(false)
@@ -23,7 +22,7 @@ const Contact = () => {
     }
 
     if (validateEmail(data.email)) {
-      axios.post(`${URL}/emails/send_email`, data)
+      postData(`${URL}/emails/send_email`, data)
         .then((res) => {
           console.log(res)
           nameInput.value = ""

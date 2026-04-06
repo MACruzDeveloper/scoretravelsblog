@@ -1,5 +1,4 @@
 import { useState, FormEvent } from 'react'
-import axios from 'axios'
 import { checkFileSize } from '../utils/utils'
 import { URL } from '../config'
 import Msgbox, { ParamsMsgBox } from '../components/common/Msgbox'
@@ -39,32 +38,35 @@ const ImageUpload = ({ setSelectedFilename, fetch_images, isImageWithTitle }: pr
     }
   }
 
-  const uploadImage = (file: File) => {
+  const uploadImage = async (file: File) => {
     const data = new FormData()
     data.append('file', file)
-    isImageWithTitle && data.append('title', valueInputAdd)
+    data.append('title', valueInputAdd || '')
     setLoadingFile(true)
 
-    axios
-      .post(`${URL}/images/upload`, data, {
-        onUploadProgress: progressEvent => {
-          const { loaded, total } = progressEvent
-          const result = Math.floor((loaded * 100) / total)
-          setLoaded(result)
-        }
+    try {
+      const response = await fetch(`${URL}/images/upload`, {
+        method: 'POST',
+        body: data
       })
-      .then(res => {
-        console.log("upload success", res.data.filename)
-        setSelectedFilename(res.data.filename)
-        setSelectedFile(null)
-        setLoadingFile(false)
-        isImageWithTitle && fetch_images()
-        setMessage({ body: `Image uploaded!`, classname: 'msg_ok' })
-      })
-      .catch(err => {
-        console.log(err)
-        //setMessage({ body: `upload fail`, classname: 'msg_error' })
-      })
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || response.statusText)
+      }
+      const res = await response.json()
+      console.log("upload success", res.filename, "title=", valueInputAdd)
+      setSelectedFilename(res.filename)
+      setSelectedFile(null)
+      setValueInputAdd('')
+      setLoadingFile(false)
+      setLoaded(100)
+      setMessage({ body: `Image uploaded!`, classname: 'msg_ok' })
+      await fetch_images?.()
+    } catch (err) {
+      console.log(err)
+      setLoadingFile(false)
+      //setMessage({ body: `upload fail`, classname: 'msg_error' })
+    }
   }
 
   return <div className="image_upload">

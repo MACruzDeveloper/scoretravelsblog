@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react'
-import axios from 'axios'
+import { postData } from '../utils/utils'
 import { MdStar, MdStarBorder } from 'react-icons/md'
 import { URL } from '../config'
 import { MyGlobalContext } from '../App'
@@ -27,7 +27,7 @@ const Stars = ({ exp }: PropsStars) => {
   const onClickScore = async (i: number) => {
     try {
       let url = `${URL}/admin/scores/add`
-      await axios.post(url, { experience: exp, user: user, score: i+1 })
+      await postData(url, { experience: exp, user: user, score: i+1 })
       window.location.reload() // To calculate the Score with the new value
       setMessage({ body: `Score added!`, classname: 'msg_ok' })
     } catch (error) {

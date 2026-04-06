@@ -2,30 +2,23 @@ const multer = require("multer");
 const Images = require("../models/imagesModel");
 const fs = require("file-system");
 
-const upload_image = async (req, res, upload) => {
+const upload_image = async (req, res) => {
   try {
-    upload(req, res, async function(err) {
-      if (err instanceof multer.MulterError) {
-        return res.status(500).json(err);
-        // A Multer error occurred when uploading.
-      } else if (err) {
-        return res.status(500).json(err);
-        // An unknown error occurred when uploading.
-      }
-      // here we can add filename or path to the DB
-      console.log(
-        `this could go to the DB: ${req.file.filename}, or this: ${req.file.path}`
-      );
-      await Images.create({
-        pathname: req.file.path,
-        filename: req.file.filename,
-        title: req.body.title
-      });
-      return res.status(200).json(req.file);
-      // Everything went fine.
-    });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    console.log(`req.body =======>`, req.body)
+
+    await Images.create({
+      pathname: req.file.path,
+      filename: req.file.filename,
+      title: req.body.title || ''
+    })
+    return res.status(200).json({ file: req.file, title: req.body.title || '' })
   } catch (error) {
-    console.log("error =====>", error);
+    console.log("error =====>", error)
+    return res.status(500).json({ error: error.message || 'Upload failed' })
   }
 };
 

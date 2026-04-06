@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent, MouseEvent } from 'react'
-import axios from 'axios'
+import { postData } from '../../utils/utils'
 import Moment from 'react-moment'
 import { sortBy } from "lodash"
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
@@ -41,7 +41,7 @@ const Experiences = () => {
   const onClickDelete = async (id: string) => {
     try {
       let url = `${URL}/admin/experiences/delete`
-      await axios.post(url, { _id: id })
+      await postData(url, { _id: id })
       fetchExperiences()
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
     } catch (error) {
@@ -71,7 +71,7 @@ const Experiences = () => {
   const updateExperience = async (id: string) => {
     try {
       let url = `${URL}/admin/experiences/update`
-      await axios.post(url, {
+      await postData(url, {
         _id: id,
         user: user,
         image: selectedFilename || newValues.image,

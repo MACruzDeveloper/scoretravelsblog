@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { postData } from '../utils/utils'
 import { sortBy } from "lodash"
 import Moment from 'react-moment'
 import { MdDelete } from 'react-icons/md'
@@ -20,7 +20,7 @@ const Comments = () => {
   const onClickDelete = async (id: string) => {
     try {
       let url = `${URL}/admin/comments/delete`
-      await axios.post(url, { _id: id })
+      await postData(url, { _id: id })
       fetchComments()
       setMessage({ body: `Comment deleted!`, classname: 'msg_ok' })
     } catch (error) {

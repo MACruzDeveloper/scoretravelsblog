@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage }).single("file");
 router.post("/upload", upload, async (req, res) => {
   console.log("req.body =======>", req.body);
-  return await controller.upload_image(req, res, upload);
+  return await controller.upload_image(req, res);
 });
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
-import axios from 'axios'
+import { deleteData, getData, postData } from '../utils/utils'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { URL } from '../config'
 import ImageUpload from './ImageUpload'
@@ -20,7 +20,7 @@ const Images = () => {
 
   const fetch_images = async () => {
     try {
-      const res = await axios.get(`${URL}/images/fetch_images`)
+      const res = await getData(`${URL}/images/fetch_images`)
       const dataImages = res.data.images
       setImages(dataImages.reverse())
     } catch (error) {
@@ -46,7 +46,7 @@ const Images = () => {
   const onClickUpdate = async (idx: string) => {
     try {
       let url = `${URL}/images/update_image`
-      await axios.post(url, { _id: idx, featured: featured })
+      await postData(url, { _id: idx, featured: featured })
       fetch_images()
       setMessage({ body: `Image updated!`, classname: 'msg_ok' })
     } catch (error) {
@@ -58,7 +58,7 @@ const Images = () => {
     console.log(message)
     try {
       let url = `${URL}/images/delete_image/${idx}/${filename}`
-      await axios.delete(url)
+      await deleteData(url)
       fetch_images()
       setMessage({ body: `Image removed!`, classname: 'msg_ok' })
     } catch (error) {
@@ -117,7 +117,7 @@ const Images = () => {
                   />
                 </div>
                 <div className="tCol">
-                  <span>{item.title}</span>
+                  <span>{item.title || 'No title'}</span>
                 </div>
 
                 <div className="tCol">

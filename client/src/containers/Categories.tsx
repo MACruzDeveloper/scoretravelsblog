@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
-import axios from 'axios'
+import { postData } from '../utils/utils'
 import { sortBy } from 'lodash'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { useCategoriesStore, Cat } from '../store/categoriesStore'
@@ -53,7 +53,7 @@ const Categories = () => {
       let result = cats.findIndex(item => item.name === valuesInputAdd.name)
       if (result === -1) {
         if (reg.exec(valuesInputAdd.name)) {
-          await axios.post(url, { name: valuesInputAdd.name, continent: valuesInputAdd.continent })
+          await postData(url, { name: valuesInputAdd.name, continent: valuesInputAdd.continent })
           fetchCats()
           setMessage({ body: `Category ${valuesInputAdd.name} added!`, classname: 'msg_ok' })
         } else {
@@ -72,7 +72,7 @@ const Categories = () => {
     setUpdateActive(null)
     try {
       let url = `${URL}/admin/categories/delete`
-      await axios.post(url, { name: ele.name })
+      await postData(url, { name: ele.name })
       fetchCats()
       setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
     } catch (error) {
@@ -98,7 +98,7 @@ const Categories = () => {
     try {
       let url = `${URL}/admin/categories/update`
       if (reg.exec(valuesInputUpdate.name)) {
-        await axios.post(url, {
+        await postData(url, {
           _id: idx,
           name: valuesInputUpdate.name,
           continent: valuesInputUpdate.continent

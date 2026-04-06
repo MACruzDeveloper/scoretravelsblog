@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, useMemo } from 'react'
+import { postData } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
-import axios from 'axios'
 import { URL } from './config'
 import AdminLayout from './layouts/AdminLayout'
 import Header from './components/common/Header'
@@ -62,8 +62,9 @@ function App() {
 
   const verify_token = async () => {
     try {
-      axios.defaults.headers.common['Authorization'] = token
-      const response = await axios.post(`${URL}/users/verify_token`)
+      const response = await postData(`${URL}/users/verify_token`, {}, {
+        headers: { Authorization: token || '' }
+      })
       if (response.data.succ) {
         setRole(response.data.succ.role)
         setUser(response.data.succ.email)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { postData } from '../utils/utils'
 import { URL } from '../config'
 import type { ScoreType } from '../store/scoresStore'
 
@@ -35,7 +35,7 @@ const Score = ({ scores, exp }: PropsScore) => {
   const uploadScore = async (scoreNum: number) => {
     try {
       let url = `${URL}/admin/experiences/update_score`
-      await axios.post(url, {
+      await postData(url, {
         _id: exp,
         score: scoreNum 
       })

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { postData } from '../utils/utils'
 import { sortBy } from 'lodash'
 import { MdDelete } from 'react-icons/md'
 import { useScoresStore } from '../store/scoresStore'
@@ -19,7 +19,7 @@ const Scores = () => {
   const onClickDelete = async (id: string) => {
     try {
       let url = `${URL}/admin/scores/delete`
-      await axios.post(url, { _id: id })
+      await postData(url, { _id: id })
       fetchScores()
       setMessage({ body: `Score deleted!`, classname: 'msg_ok' })
     } catch (error) {

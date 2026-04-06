@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
+import { postData } from '../../utils/utils'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { URL } from '../../config'
 import Msgbox from '../../components/common/Msgbox'
 
@@ -25,7 +25,7 @@ const Login = ({ login }: PropsLogin) => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      const response = await axios.post(`${URL}/users/login`, {
+      const response = await postData(`${URL}/users/login`, {
         email: values.email,
         password: values.password
       })

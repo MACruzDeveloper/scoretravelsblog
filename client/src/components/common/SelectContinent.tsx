@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { getData } from '../../utils/utils'
 
 export type PropsSelectContinent = {
   handleChange: any
@@ -16,8 +16,7 @@ const SelectContinent = ({ handleChange, selected }: PropsSelectContinent) => {
   // Get continents from public api
   // new Set to store unique values
   const getContinents = async () => {
-    axios
-      .get(`https://restcountries.com/v3.1/all?fields=continents`)
+    getData(`https://restcountries.com/v3.1/all?fields=continents`)
       .then((res) => {
         const data = res.data
         const jsonObject = data.map(JSON.stringify)

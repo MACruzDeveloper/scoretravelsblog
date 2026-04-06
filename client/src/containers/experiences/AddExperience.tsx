@@ -1,5 +1,5 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
-import axios from 'axios'
+import { postData } from '../../utils/utils'
 import { URL } from '../../config'
 import { Experience } from '../../store/experienceStore'
 import SelectCategories from '../../components/common/SelectCategories'
@@ -31,7 +31,7 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
     e.preventDefault()
     try {
       if (!loadingFile) {
-        await axios.post(`${URL}/admin/experiences/add`, {
+        await postData(`${URL}/admin/experiences/add`, {
           user: user,
           title: values.title,
           category: values.category,

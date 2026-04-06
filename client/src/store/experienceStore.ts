@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import { getData } from '../utils/utils'
+
 import { URL } from '../config'
 
 export interface Experience {
@@ -33,7 +34,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await axios.get(`${URL}/admin/experiences`)
+      const response = await getData(`${URL}/admin/experiences`)
       set({ experiences: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false, hasFetched: true })

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import { getData } from '../utils/utils'
+
 import { URL } from '../config'
 
 export interface Comment {
@@ -29,7 +30,7 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await axios.get(`${URL}/admin/comments`)
+      const response = await getData(`${URL}/admin/comments`)
       set({ comments: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false, hasFetched: true })
