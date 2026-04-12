@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { getData } from '../utils/utils'
+import { getData } from '@utils/utils'
 
 import { URL } from '../config'
 

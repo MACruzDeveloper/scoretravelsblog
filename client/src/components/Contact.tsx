@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { URL } from '../config'
 import Msgbox from './common/Msgbox'
-import { validateEmail, postData } from '../utils/utils'
+import { validateEmail, postData } from '@utils/utils'
 
 const Contact = () => {
   const [isChecked, setIsChecked] = useState(false)

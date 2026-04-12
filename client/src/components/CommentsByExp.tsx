@@ -1,5 +1,5 @@
 import Moment from 'react-moment'
-import type { Comment } from '../store/commentsStore'
+import type { Comment } from '@/store/commentsStore'
 
 type PropsComments = {
   comments: Array<Comment>

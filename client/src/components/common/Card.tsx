@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import Moment from 'react-moment'
 import { URL } from '../../config'
-import thumb from '../../assets/images/thumb.png'
+import thumb from '@images/thumb.png'
 
 export type PropsCard = {
   _id: string

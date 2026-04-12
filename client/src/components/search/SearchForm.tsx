@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useOutsideClick from '../../hooks/useOutsideClick'
+import useOutsideClick from '@/hooks/useOutsideClick'
 import { MdSearch, MdClose } from 'react-icons/md'
 
 const SearchForm = () => {

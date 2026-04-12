@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import africa from '../../assets/images/africa-bg.png'
-import northamerica from '../../assets/images/northamerica-bg.png'
-import southamerica from '../../assets/images/southamerica-bg.png'
-import asia from '../../assets/images/asia-bg.png'
-import europe from '../../assets/images/europe-bg.png'
-import australia from '../../assets/images/australia-bg.png'
+import africa from '@images/africa-bg.png'
+import northamerica from '@images/northamerica-bg.png'
+import southamerica from '@images/southamerica-bg.png'
+import asia from '@images/asia-bg.png'
+import europe from '@images/europe-bg.png'
+import australia from '@images/australia-bg.png'
 
 const SearchByContinent = () => {
   const urlSearchPage = '/search-by-continent'

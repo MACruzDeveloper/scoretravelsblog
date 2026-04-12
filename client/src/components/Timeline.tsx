@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { URL } from '../config'
-import { useTimelineExperiences } from '../hooks/useExperienceHooks'
-import useScrollPosition from '../hooks/useScrollPosition'
+import { useTimelineExperiences } from '@/hooks/useExperienceHooks'
+import useScrollPosition from '@/hooks/useScrollPosition'
 
-import thumb from '../assets/images/thumb.png'
+import thumb from '@images/thumb.png'
 
 const Timeline = () => {
   const { timelineExperiences, loading, error } = useTimelineExperiences()

@@ -79,6 +79,17 @@
   }
 
   &_nav {
+    position: relative;
+    z-index: 899;
+
+    &.sticky {
+      width: 100%;
+      position: fixed;
+      top: map-get($header-size, 'small');
+      left: 0;
+      background-color: $color5;
+    }
+
     ul {
       display: flex;
       flex-wrap: nowrap;
@@ -107,6 +118,14 @@
           }
         }
       }
+    }
+
+    + .admin_nav_placeholder {
+      display: none;
+    }
+
+    + .admin_nav_placeholder.visible {
+      display: block;
     }
   }
    

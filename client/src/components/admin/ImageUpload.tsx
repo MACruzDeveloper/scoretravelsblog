@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react'
-import { checkFileSize } from '../utils/utils'
-import { URL } from '../config'
-import Msgbox, { ParamsMsgBox } from '../components/common/Msgbox'
+import { checkFileSize } from '@utils/utils'
+import { URL } from '../../config'
+import Msgbox, { ParamsMsgBox } from '@common/Msgbox'
 
 type propsImageUpload = {
   setSelectedFilename?: (c: string) => void

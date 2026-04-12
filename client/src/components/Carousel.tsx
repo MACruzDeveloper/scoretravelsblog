@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getData } from '../utils/utils'
+import { getData } from '@utils/utils'
 import { URL } from '../config'
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Spinner from './common/Spinner'

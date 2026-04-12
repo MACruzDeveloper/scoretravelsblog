@@ -142,4 +142,14 @@
       }
     }
   }
+
+  .table_header {
+    position: relative;
+  }
+
+  .btn_table-sort {
+    font-size: 2rem;
+    position: absolute;
+    top: 0;
+  }
 }

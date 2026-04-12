@@ -2,6 +2,7 @@ import { defineConfig, UserConfig } from 'vite'
 import type { InlineConfig } from 'vitest'
 import react from '@vitejs/plugin-react'
 import sass from 'sass'
+import path from 'path'
 
 interface VitestConfigExport extends UserConfig {
   test: InlineConfig
@@ -11,7 +12,17 @@ interface VitestConfigExport extends UserConfig {
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    mainFields: []
+    mainFields: [],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@hooks': path.resolve(__dirname, './src/hooks'),
+      '@images': path.resolve(__dirname, './src/assets/images'),
+      '@admin': path.resolve(__dirname, './src/components/admin'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@common': path.resolve(__dirname, './src/components/common'),
+      '@store': path.resolve(__dirname, './src/store'),
+      '@utils': path.resolve(__dirname, './src/utils'),
+    },
   },
   css: {
     preprocessorOptions: {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
-import { getData, postData } from '../../utils/utils'
+import { getData, postData } from '@utils/utils'
 import { useScoresStore } from '../../store/scoresStore'
 import { URL } from '../../config'
 import { useParams } from 'react-router-dom'

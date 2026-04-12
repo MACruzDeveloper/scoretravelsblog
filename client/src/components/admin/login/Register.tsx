@@ -1,29 +1,25 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
-import { postData } from '../../utils/utils'
+import { postData } from '@/utils/utils'
 import { useNavigate } from 'react-router-dom'
-import { URL } from '../../config'
-import Msgbox from '../../components/common/Msgbox'
+import { URL } from '../../../config'
+import Msgbox from '@/components/common/Msgbox'
 
-type PropsLogin = {
+type PropsRegister = {
   login: (token: string, role: string) => void
+  logout: () => void
 }
 
-const Login = ({ login }: PropsLogin) => {
+const Register = ({ login, logout }: PropsRegister) => {
   const navigate = useNavigate()
+  const [values, setValues] = useState({ email: '', password: '', password2: '' })
   const [message, setMessage] = useState({ body: '', classname: '' })
-
-  const [values, setValues] = useState({
-    email: '',
-    password: ''
-  })
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.currentTarget
     if (target) setValues({ ...values, [target.name]: target.value })
   }
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const loginRegister = async () => {
     try {
       const response = await postData(`${URL}/users/login`, {
         email: values.email,
@@ -44,20 +40,39 @@ const Login = ({ login }: PropsLogin) => {
     }
   }
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    logout()
+    try {
+      const response = await postData(`${URL}/users/register`, {
+        email: values.email,
+        password: values.password,
+        password2: values.password2
+      })
+      loginRegister()
+      setMessage({ body: response.data.message, classname: 'msg_ok' })
+    }
+    catch (error) {
+      console.log(error)
+    }
+
+  }
   return <div className="page login">
-    <h2 className="title">Login</h2>
+    <h2 className="title">Register</h2>
 
     <form
       onSubmit={handleSubmit}
-      className="form"
+      className='form'
     >
       <input type="text" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
       <input type="password" name="password" className="form_control" placeholder="Write your password" onChange={handleChange} />
-      <button className="btn" disabled={!values.email || !values.password}>login</button>
+      <input type="password" name="password2" className="form_control" placeholder="Confirm your password" onChange={handleChange} />
+      <button className="btn">Register</button>
     </form>
 
     <Msgbox body={message.body} classname={message.classname} />
   </div>
+
 }
 
-export default Login
+export default Register

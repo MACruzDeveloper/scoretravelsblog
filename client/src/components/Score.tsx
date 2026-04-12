@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { postData } from '../utils/utils'
+import { postData } from '@/utils/utils'
 import { URL } from '../config'
-import type { ScoreType } from '../store/scoresStore'
+import type { ScoreType } from '@/store/scoresStore'
 
 type PropsScore = {
   scores: Array<ScoreType>

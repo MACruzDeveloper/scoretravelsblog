@@ -2,7 +2,7 @@
 import { useEffect, useState, useContext } from 'react'
 import { Navigate } from 'react-router-dom'
 import { MyGlobalContext } from '../App'
-import NavAdmin from '../containers/NavAdmin'
+import NavAdmin from '../components/admin/NavAdmin'
 
 type ParamsAdminLayout = {
   children: JSX.Element
@@ -11,15 +11,18 @@ type ParamsAdminLayout = {
 const AdminLayout = ({ children }: ParamsAdminLayout) => {
   const { token, isLoggedInValue } = useContext(MyGlobalContext)
 
-  const [displayCurtain, setDisplayCurtain] = useState(true)
+  const [showCurtain, setShowCurtain] = useState(() => !sessionStorage.getItem('adminCurtainShown'))
   useEffect(() => {
-    setTimeout(() => {
-      setDisplayCurtain(false)
-    }, 4000)
-  }, [])
+    if (showCurtain) {
+      setTimeout(() => {
+        setShowCurtain(false)
+        sessionStorage.setItem('adminCurtainShown', 'true')
+      }, 4000)
+    }
+  }, [showCurtain])
 
   return <div className="page admin">
-      <div className={displayCurtain ? 'curtain on' : 'curtain'}>
+      <div className={showCurtain ? 'curtain on' : 'curtain'}>
         <span></span>
 
         <div className="loader">

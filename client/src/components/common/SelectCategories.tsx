@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { sortBy } from 'lodash'
-import { useCategoriesStore } from '../../store/categoriesStore'
+import { useCategoriesStore } from '@/store/categoriesStore'
 
 export type PropsSelectCategories = {
   handleChange: any

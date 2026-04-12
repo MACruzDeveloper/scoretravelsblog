@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react"
 import { chunk } from 'lodash'
 import { MdArrowUpward } from 'react-icons/md'
-import { useExperienceStore, Experience } from "../store/experienceStore"
+import { useExperienceStore, Experience } from "@/store/experienceStore"
 import { URL } from '../config'
-import { scrollToTop } from '../utils/utils'
+import { scrollToTop } from '@/utils/utils'
 
 const Gallery = () => {
   const { experiences, loading, error, fetchExperiences } = useExperienceStore()

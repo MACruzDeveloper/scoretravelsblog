@@ -70,12 +70,29 @@
   }
 
   &_score {
+    display: block;
+    width: 4rem;
+    height: 4rem;
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 0;
+    right: 0;
     z-index: 100;
     font-size: 2rem;
+    line-height: 2;
     color: #fff;
+    text-align: center;
+
+    &::before {
+      content: '';
+      width: 10rem;
+      height: 10rem;
+      position: absolute;
+      top: -5rem;
+      right: -5rem;
+      z-index: -1;
+      border-radius: 50%;
+      background-color: $color2;
+    }
   }
 
   &_title {

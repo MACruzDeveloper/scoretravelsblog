@@ -3,25 +3,25 @@ import { postData } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { URL } from './config'
 import AdminLayout from './layouts/AdminLayout'
-import Header from './components/common/Header'
-import Breadcrumb from './components/common/Breadcrumb'
-import Footer from './components/common/Footer'
-import Home from './components/Home'
-import Login from './containers/login/Login'
-import Register from './containers/login/Register'
-import SearchPage from './components/search/SearchPage'
-import SearchPageContinent from './components/search/SearchPageContinent'
-import Experience from './components/experiences/Experience'
-import AllExperiences from './components/experiences/AllExperiences'
-import Gallery from './components/Gallery'
-import Contact from './components/Contact'
-import Experiences from './containers/experiences/Experiences'
-import Categories from './containers/Categories'
-import Comments from './containers/Comments'
-import Scores from './containers/Scores'
-import Users from './containers/Users'
-import Images from './containers/Images'
-import ScrollToTop from './components/common/ScrollToTop'
+import Header from '@/components/common/Header'
+import Breadcrumb from '@/components/common/Breadcrumb'
+import Footer from '@/components/common/Footer'
+import Home from '@/components/Home'
+import Login from './components/admin/login/Login'
+import Register from './components/admin/login/Register'
+import SearchPage from '@/components/search/SearchPage'
+import SearchPageContinent from '@/components/search/SearchPageContinent'
+import Experience from '@/components/experiences/Experience'
+import AllExperiences from '@/components/experiences/AllExperiences'
+import Gallery from '@/components/Gallery'
+import Contact from '@/components/Contact'
+import Experiences from './components/admin/experiences/Experiences'
+import Categories from './components/admin/Categories'
+import Comments from './components/admin/Comments'
+import Scores from './components/admin/Scores'
+import Users from './components/admin/Users'
+import Images from './components/admin/Images'
+import ScrollToTop from '@/components/common/ScrollToTop'
 import './assets/sass/main.scss'
 
 export type GlobalContent = {
@@ -85,6 +85,7 @@ function App() {
   
   const logout = () => {
     localStorage.removeItem('token')
+    sessionStorage.removeItem('adminCurtainShown')
     setIsLoggedIn(false)
   }
 

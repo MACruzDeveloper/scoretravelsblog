@@ -3,8 +3,8 @@ import { useNavigate, NavLink } from 'react-router-dom'
 import { MdMenu, MdOutlineLogout, MdOutlinePermIdentity } from 'react-icons/md'
 import { MyGlobalContext } from '../../App'
 import SearchForm from '../search/SearchForm.js'
-import { useResizer } from '../../hooks/useResizer'
-import useOutsideClick from '../../hooks/useOutsideClick'
+import { useResizer } from '@/hooks/useResizer'
+import useOutsideClick from '@/hooks/useOutsideClick'
 import Msgbox from './Msgbox'
 
 type PropsNavbar = {

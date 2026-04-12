@@ -1,4 +1,4 @@
-import { useLastExperiences } from '../../hooks/useExperienceHooks'
+import { useLastExperiences } from '@/hooks/useExperienceHooks'
 import Card from '../common/Card'
 
 const LastExperiences = () => {
