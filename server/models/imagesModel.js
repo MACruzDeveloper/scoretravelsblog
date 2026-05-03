@@ -2,7 +2,10 @@ const mongoose = require("mongoose");
 
 const imagesSchema = new mongoose.Schema({
   title: String,
-  featured: Boolean,
+  featured: { 
+    type: Boolean, 
+    default: false 
+  },
   pathname: {
     type: String,
     required: true

@@ -30,6 +30,7 @@ app.use(cors());
 // =============== ROUTES ==============================
 app.use('/users', require('./routes/usersRoute'));
 app.use('/admin/categories', require('./routes/categoriesRoute'));
+app.use('/admin/cities', require('./routes/citiesRoute'));
 app.use('/admin/experiences', require('./routes/experiencesRoute'));
 app.use('/admin/comments', require('./routes/commentsRoute'));
 app.use('/admin/scores', require('./routes/scoresRoute'));

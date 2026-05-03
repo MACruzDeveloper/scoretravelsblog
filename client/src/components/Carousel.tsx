@@ -134,6 +134,7 @@ const Carousel = () => {
             src={getUrlImage()}
             className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
             alt={getTitleImage()}
+            fetchpriority="high"
           />
         ) : (
           <Spinner />

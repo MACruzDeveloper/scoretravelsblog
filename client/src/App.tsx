@@ -13,6 +13,7 @@ import SearchPage from '@/components/search/SearchPage'
 import SearchPageContinent from '@/components/search/SearchPageContinent'
 import Experience from '@/components/experiences/Experience'
 import AllExperiences from '@/components/experiences/AllExperiences'
+import About from '@components/About'
 import Gallery from '@/components/Gallery'
 import Contact from '@/components/Contact'
 import Experiences from './components/admin/experiences/Experiences'
@@ -136,6 +137,7 @@ function App() {
       <main>
         <Routes>
           <Route index element={<Home />} />
+          <Route path="/about" element={<About />} />
           <Route path="/experiences" element={<AllExperiences />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />

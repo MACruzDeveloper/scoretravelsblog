@@ -73,7 +73,7 @@ const ImageUpload = ({ setSelectedFilename, fetch_images, isImageWithTitle }: pr
     <input
       type="file"
       name="image"
-      accept="image/png,image/gif,image/jpeg"
+      accept="image/png,image/gif,image/jpeg,image/avif"
       onChange={onChangeHandlerFile}
     />
     

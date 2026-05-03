@@ -54,8 +54,8 @@ const Timeline = () => {
                   <span className="line"></span>
                   <span className="thumb">
                     {ele.image ?
-                      <img src={`${URL}/static/images/${ele.image}`} alt={ele.category} />
-                      : <img src={thumb} alt={ele.category} />
+                      <img src={`${URL}/static/images/${ele.image}`} loading="lazy" alt={ele.category} />
+                      : <img src={thumb} loading="lazy" alt={ele.category} />
                     }
                   </span>
 

@@ -16,6 +16,7 @@ const LastExperiences = () => {
             _id={ele._id}
             title={ele.title}
             category={ele.category}
+            city={ele.city}
             content={ele.content}
             date={ele.date}
             score={ele.score}

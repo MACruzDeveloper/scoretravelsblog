@@ -3,16 +3,28 @@ import { getData } from '@utils/utils'
 
 import { URL } from '../config'
 
+export interface City {
+  _id: string
+  name: string
+  country: string
+  continent: string
+  lat: number
+  lng: number
+}
+
 export interface Experience {
   _id: string
   user?: string,
   title: string,
   category?: string,
+  city?: City | string,
   date?: Date,
   year?: number,
   image?: string,
   content?: string,
-  score?: number
+  score?: number,
+  lat?: number,
+  lng?: number
 }
 
 interface ExperienceState {

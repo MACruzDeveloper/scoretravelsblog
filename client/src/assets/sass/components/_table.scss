@@ -49,6 +49,7 @@
     vertical-align: middle;
     padding: 1rem 0.5rem;
     border-top: 0.1rem solid $colorTableHeader;
+    overflow: hidden;
     @media (min-width: $screenSm) {
       padding: 1rem 2rem;
     }

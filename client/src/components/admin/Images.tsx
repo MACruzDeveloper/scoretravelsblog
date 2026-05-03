@@ -11,11 +11,23 @@ const Images = () => {
   const [images, setImages] = useState([])
   const [selectedFilename, setSelectedFilename] = useState(null)
   const [featured, setFeatured] = useState(null)
+
+  const [sortColumn, setSortColumn] = useState<string | null>('title')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const itemsPerPage = 10
+
   const [updateActive, setUpdateActive] = useState<string | null>(null)
   const [message, setMessage] = useState({ body: '', classname: '' })
 
+  // table columns
+  const columns = [
+    { key: 'featured', label: 'Featured', sortable: true, width: 'w15', align: 'center' },
+    { key: 'image', label: 'Image', sortable: false, width: 'w25' },
+    { key: 'title', label: 'Title', sortable: true, width: 'w25' },
+    { key: 'actions', label: 'Action', sortable: false, width: 'w15', align: 'right' }
+  ]
+
   useEffect(() => {
-    console.log(selectedFilename)
     fetch_images()
   }, [])
 
@@ -23,7 +35,7 @@ const Images = () => {
     try {
       const res = await getData(`${URL}/images/fetch_images`)
       const dataImages = res.data.images
-      setImages(dataImages.reverse())
+      setImages([...dataImages].reverse())
     } catch (error) {
       console.log("error ==>", error)
     }
@@ -56,7 +68,6 @@ const Images = () => {
   }
 
   const onClickDelete = async (idx: string, filename: string) => {
-    console.log(message)
     try {
       let url = `${URL}/images/delete_image/${idx}/${filename}`
       await deleteData(url)
@@ -66,10 +77,6 @@ const Images = () => {
       console.log("error ==>", error)
     }
   }
-
-  const [sortColumn, setSortColumn] = useState<string | null>('title')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-  const itemsPerPage = 10
 
   const handleSort = (key: string) => {
     if (sortColumn === key) {
@@ -85,18 +92,16 @@ const Images = () => {
     return [...images].sort((a, b) => {
       const aVal = (a as any)[sortColumn]
       const bVal = (b as any)[sortColumn]
+
+      if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+        return sortDirection === 'asc' ? Number(aVal) - Number(bVal) : Number(bVal) - Number(aVal)
+      }
+
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
   }, [images, sortColumn, sortDirection])
-
-  const columns = [
-    { key: 'featured', label: 'Featured', sortable: false, width: 'w15', align: 'center' },
-    { key: 'image', label: 'Image', sortable: false, width: 'w25' },
-    { key: 'title', label: 'Title', sortable: true, width: 'w25' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w15', align: 'right' }
-  ]
 
   const renderRow = (item: any) => {
     const actions = [

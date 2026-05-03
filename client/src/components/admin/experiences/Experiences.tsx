@@ -8,6 +8,7 @@ import { URL } from '../../../config'
 import { MyGlobalContext } from '../../../App'
 import AddExperience from './AddExperience'
 import SelectCategories from '@/components/common/SelectCategories'
+import { CitySearch } from './CitySearch'
 import Msgbox from '@/components/common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -17,6 +18,7 @@ import thumb from '@images/thumb.png'
 const Experiences = () => {
   const { user, role } = useContext(MyGlobalContext)
   const [newValues, setNewValues] = useState<Experience>()
+  const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [selectedFilename, setSelectedFilename] = useState(null)
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [updateActive, setUpdateActive] = useState(null)
@@ -52,6 +54,7 @@ const Experiences = () => {
 
   const onClickClose = () => {
     setUpdateActive(null)
+    setSelectedCity(null)
   }
 
   const onClickShowUpdate = (idx: string) => {
@@ -62,6 +65,7 @@ const Experiences = () => {
       user: experiences[idExp].user,
       image: experiences[idExp].image,
       title: experiences[idExp].title,
+      city: experiences[idExp].city,
       category: experiences[idExp].category,
       content: experiences[idExp].content,
       score: experiences[idExp].score
@@ -70,19 +74,28 @@ const Experiences = () => {
 
   const updateExperience = async (id: string) => {
     try {
-      let url = `${URL}/admin/experiences/update`
-      await postData(url, {
+      let cityId = newValues.city  // mantiene la ciudad existente por defecto
+
+      if (selectedCity) {
+        const cityRes = await postData(`${URL}/admin/cities/add`, selectedCity)
+        console.log('cityRes:', cityRes) 
+        cityId = cityRes.data.city._id
+      }
+
+      await postData(`${URL}/admin/experiences/update`, {
         _id: id,
-        user: user,
+        user,
         image: selectedFilename || newValues.image,
         title: newValues.title,
         category: newValues.category,
+        city: cityId,
         content: newValues.content,
-        score: newValues.score
+        score: newValues.score,
       })
       fetchExperiences()
       setUpdateActive(null)
-      setMessage({ body: `Experience updated!`, classname: 'msg_ok' })
+      setSelectedCity(null)
+      setMessage({ body: 'Experience updated!', classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
     }
@@ -117,6 +130,7 @@ const Experiences = () => {
     { key: 'date', label: 'Date', sortable: true, width: 'w7_5' },
     { key: 'user', label: 'User', sortable: true, width: 'w10' },
     { key: 'image', label: 'Image', sortable: false, width: 'w15' },
+    { key: 'city', label: 'City', sortable: true, width: 'w10' },
     { key: 'category', label: 'Category', sortable: true, width: 'w10' },
     { key: 'title', label: 'Title', sortable: true, width: 'w15' },
     { key: 'content', label: 'Content', sortable: false, width: 'w27_5' },
@@ -172,6 +186,9 @@ const Experiences = () => {
             <img src={ele.image ? `${URL}/static/images/${ele.image}` : thumb} alt={ele.title} />
           </div>
           <div className="tCol">
+            <span>{typeof ele.city === 'object' ? ele.city?.name : ele.city}</span>
+          </div>
+          <div className="tCol">
             <span>{ele.category}</span>
           </div>
           <div className="tCol">
@@ -193,6 +210,12 @@ const Experiences = () => {
             <div className="tCol"></div>
             <div className="tCol">
               <ImageUpload setSelectedFilename={setSelectedFilename} isImageWithTitle={false} />
+            </div>
+            <div className="tCol">
+              <CitySearch
+                onSelect={setSelectedCity}
+                value={typeof ele.city === 'object' ? ele.city?.name : ele.city}
+              />
             </div>
             <div className="tCol">
               <SelectCategories handleChange={handleChangeUpdate} selected={ele.category} />

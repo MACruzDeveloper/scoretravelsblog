@@ -21,7 +21,6 @@ const SelectContinent = ({ handleChange, selected }: PropsSelectContinent) => {
         const data = res.data
         const jsonObject = data.map(JSON.stringify)
         const uniqueSet = new Set(jsonObject)
-        // @ts-ignore
         const uniqueArray = Array.from(uniqueSet).map(JSON.parse)
         setContinents(uniqueArray)
         return uniqueArray
