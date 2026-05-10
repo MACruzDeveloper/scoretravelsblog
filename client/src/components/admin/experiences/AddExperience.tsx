@@ -84,9 +84,9 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
             <SelectCategories handleChange={handleChangeNew} />
 
             <CitySearch onSelect={setSelectedCity} />
-
-            <button className="btn btn_admin">Add Experience</button>
           </div>
+
+          <button className="btn btn_admin">Add Experience</button>
         </form>
       </div>
     }

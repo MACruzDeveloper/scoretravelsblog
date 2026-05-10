@@ -3,14 +3,14 @@ import { postData } from '@/utils/utils'
 import Moment from 'react-moment'
 import { sortBy } from "lodash"
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
-import { useExperienceStore, Experience } from '@/store/experienceStore'
+import { useExperienceStore, Experience, City } from '@/store/experienceStore'
 import { URL } from '../../../config'
 import { MyGlobalContext } from '../../../App'
 import AddExperience from './AddExperience'
 import SelectCategories from '@/components/common/SelectCategories'
 import { CitySearch } from './CitySearch'
-import Msgbox from '@/components/common/Msgbox'
 import Table from '@/components/common/Table'
+import Msgbox from '@/components/common/Msgbox'
 import TableActions from '@/components/common/TableActions'
 import ImageUpload from '../ImageUpload'
 import thumb from '@images/thumb.png'
@@ -25,10 +25,11 @@ const Experiences = () => {
 
   // fetch Experiences
   const { experiences, loading, error, fetchExperiences } = useExperienceStore()
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
-    fetchExperiences()
-  }, [fetchExperiences])
+    fetchExperiences(true)
+  }, [fetchExperiences, refreshTrigger])
 
   // Show Add experience form
   const [isFormAddVisible, setIsFormAddVisible] = useState(false)
@@ -45,11 +46,53 @@ const Experiences = () => {
     try {
       let url = `${URL}/admin/experiences/delete`
       await postData(url, { _id: id })
-      fetchExperiences()
+      setRefreshTrigger(prev => prev + 1)
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
     }
+  }
+
+  const handleCitySelect = (city: any) => {
+    // Convert CitySearch city to store City format
+    const storeCity: City = {
+      _id: '', // Will be set when saving
+      name: city.name,
+      country: city.country,
+      countryCode: city.countryCode,
+      continent: city.continent,
+      lat: city.lat,
+      lng: city.lng,
+    }
+    setSelectedCity(storeCity)
+  }
+
+  const onClickShowUpdate = (idx: string) => {
+    setUpdateActive(idx)
+    let idExp = experiences.findIndex(e => e._id === idx)
+    const experience = experiences[idExp]
+
+    setNewValues({
+      _id: idx,
+      user: experience.user,
+      image: experience.image,
+      title: experience.title,
+      city: experience.city && typeof experience.city === 'object' ? experience.city._id : (experience.city || null),
+      category: experience.category,
+      content: experience.content,
+      score: experience.score
+    })
+    // Set selected city if experience has a city object
+    if (experience.city && typeof experience.city === 'object') {
+      setSelectedCity(experience.city as City)
+    } else {
+      setSelectedCity(null)
+    }
+    setSelectedFilename(null)
+  }
+
+  const handleRefreshExperiences = () => {
+    setRefreshTrigger(prev => prev + 1)
   }
 
   const onClickClose = () => {
@@ -57,42 +100,32 @@ const Experiences = () => {
     setSelectedCity(null)
   }
 
-  const onClickShowUpdate = (idx: string) => {
-    setUpdateActive(idx)
-    let idExp = experiences.findIndex(e => e._id === idx)
-    setNewValues({
-      _id: idx,
-      user: experiences[idExp].user,
-      image: experiences[idExp].image,
-      title: experiences[idExp].title,
-      city: experiences[idExp].city,
-      category: experiences[idExp].category,
-      content: experiences[idExp].content,
-      score: experiences[idExp].score
-    })
-  }
-
   const updateExperience = async (id: string) => {
+    if (!newValues) {
+      console.error('newValues is undefined')
+      return
+    }
+
     try {
       let cityId = newValues.city  // mantiene la ciudad existente por defecto
 
       if (selectedCity) {
         const cityRes = await postData(`${URL}/admin/cities/add`, selectedCity)
-        console.log('cityRes:', cityRes) 
-        cityId = cityRes.data.city._id
+        if (cityRes.data && cityRes.data.city) {
+          cityId = cityRes.data.city._id
+        } else if ((cityRes as any).city) {
+          // Fallback: maybe postData doesn't wrap the response
+          cityId = (cityRes as any).city._id
+        } else {
+          console.error('API response does not have city data:', cityRes)
+          throw new Error('Failed to create city')
+        }
+      } else if (!cityId) {
+        console.warn('No city selected and no existing city. Setting cityId to null.')
+        cityId = null
       }
 
-      await postData(`${URL}/admin/experiences/update`, {
-        _id: id,
-        user,
-        image: selectedFilename || newValues.image,
-        title: newValues.title,
-        category: newValues.category,
-        city: cityId,
-        content: newValues.content,
-        score: newValues.score,
-      })
-      fetchExperiences()
+      setRefreshTrigger(prev => prev + 1)
       setUpdateActive(null)
       setSelectedCity(null)
       setMessage({ body: 'Experience updated!', classname: 'msg_ok' })
@@ -211,23 +244,23 @@ const Experiences = () => {
             <div className="tCol">
               <ImageUpload setSelectedFilename={setSelectedFilename} isImageWithTitle={false} />
             </div>
-            <div className="tCol">
+            <div className="tCol visible">
               <CitySearch
-                onSelect={setSelectedCity}
+                onSelect={handleCitySelect}
                 value={typeof ele.city === 'object' ? ele.city?.name : ele.city}
               />
             </div>
             <div className="tCol">
-              <SelectCategories handleChange={handleChangeUpdate} selected={ele.category} />
+              <SelectCategories handleChange={handleChangeUpdate} selected={newValues?.category} />
             </div>
             <div className="tCol">
-              <input type="text" name="title" className="form_control" placeholder="Write your title" defaultValue={ele.title} onChange={handleChangeUpdate} />
+              <input type="text" name="title" className="form_control" placeholder="Write your title" value={newValues?.title || ''} onChange={handleChangeUpdate} />
             </div>
             <div className="tCol">
-              <textarea name="content" className="form_control" placeholder="Write your content" defaultValue={ele.content} onChange={handleChangeUpdate} />
+              <textarea name="content" className="form_control" placeholder="Write your content" value={newValues?.content || ''} onChange={handleChangeUpdate} />
             </div>
             <div className="tCol score center">
-              <input type="text" name="score" className="form_control" placeholder="" defaultValue={ele.score} onChange={handleChangeUpdate} />
+              <input type="text" name="score" className="form_control" placeholder="" value={newValues?.score?.toString() || ''} onChange={handleChangeUpdate} />
             </div>
             <div className="tCol">
               <div className="icons">
@@ -256,7 +289,7 @@ const Experiences = () => {
 
     <AddExperience
       user={user}
-      handleFetchExperiences={fetchExperiences}
+      handleFetchExperiences={handleRefreshExperiences}
       isFormAddVisible={isFormAddVisible}
       setIsFormAddVisible={setIsFormAddVisible}
     />

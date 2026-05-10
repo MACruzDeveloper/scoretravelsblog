@@ -1,4 +1,3 @@
-//import axios from "axios"
 
 const localHosts = ['localhost', '127.0.0.1', '0.0.0.0']
 const URL = localHosts.includes(window.location.hostname)

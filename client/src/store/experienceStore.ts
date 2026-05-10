@@ -7,6 +7,7 @@ export interface City {
   _id: string
   name: string
   country: string
+  countryCode: string
   continent: string
   lat: number
   lng: number
@@ -32,7 +33,7 @@ interface ExperienceState {
   loading: boolean
   error: string | undefined
   hasFetched: boolean
-  fetchExperiences: () => Promise<void>
+  fetchExperiences: (force?: boolean) => Promise<void>
 }
 
 export const useExperienceStore = create<ExperienceState>((set, get) => ({
@@ -40,9 +41,9 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   loading: false,
   error: undefined,
   hasFetched: false,
-  fetchExperiences: async () => {
+  fetchExperiences: async (force = false) => {
     const { hasFetched } = get()
-    if (hasFetched) return // Avoid duplicate fetches
+    if (hasFetched && !force) return // Avoid duplicate fetches unless forced
 
     set({ loading: true })
     try {

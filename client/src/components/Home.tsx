@@ -24,7 +24,7 @@ const Home = () => {
     <div className="block">
       <div className="container">
         <Suspense fallback={<Spinner />}>
-          <LastExperiences />
+          <BestExperiences />
         </Suspense>
       </div>
     </div>
@@ -40,7 +40,7 @@ const Home = () => {
     <div className="block">
       <div className="container">
         <Suspense fallback={<Spinner />}>
-          <BestExperiences />
+          <LastExperiences />
         </Suspense>
       </div>
     </div>

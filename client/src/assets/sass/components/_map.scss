@@ -9,4 +9,66 @@
 .leaflet-container {
   width: 100%;
   height: 100%;
+  background-color: #f7f7f7;
+
+  .leaflet-control-attribution {
+    background-color: rgba(255, 255, 255, 0.85);
+    color: #334155;
+    font-size: 0.75rem;
+
+    a {
+      color: #2563eb;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Custom continent marker styles
+.continent-marker {
+  filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.15));
+  transition: transform 0.18s ease, filter 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.2));
+  }
+}
+
+// Light popup styling
+.leaflet-popup-content-wrapper {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+
+  .leaflet-popup-content {
+    margin: 12px 14px;
+    font-size: 0.93rem;
+    line-height: 1.4;
+
+    strong {
+      font-size: 1.3rem;
+      line-height: 1.6rem;
+      color: #1c2b39;
+      display: block;
+      margin-bottom: 4px;
+    }
+  }
+}
+
+.leaflet-popup-tip-container {
+  width: 40px;
+  height: 20px;
+  left: 50%;
+  margin-left: -20px;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff;
+  border-top-color: rgba(15, 23, 42, 0.12);
 }

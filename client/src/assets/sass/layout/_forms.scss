@@ -230,6 +230,57 @@ input[type="range"] {
   }  
 }
 
+/* CITY SEARCH */
+.city_search {
+  flex-grow: 1;
+  position: relative;
+
+  & .city_search_input_wrapper {
+    & input[type=text].form_control {
+      width: 100%;
+    }
+  }
+
+  & .city_search_clear {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: $color3;
+    cursor: pointer;
+  }
+
+  & .city_search_empty {
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: $color3;
+  }
+  
+  &_dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 0.1rem solid $color4;
+    z-index: 900;
+
+    .city_search_option {
+      font-size: 1.3rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+
+      &:hover {
+        background-color: $colorTableHeader;
+      }
+    }
+  }
+}
+
 /* FILTERS */
 .filters {
   display: flex;

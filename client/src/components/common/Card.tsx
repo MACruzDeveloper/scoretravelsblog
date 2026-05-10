@@ -18,7 +18,7 @@ export type PropsCard = {
 
 const Card = ({ _id, title, category, city, content, date, image, score }: PropsCard) => {
   const cityName = city && typeof city === 'object' ? city.name : (typeof city === 'string' ? city : null)
-  const displayLabel = cityName || category || 'Travel'
+  const displayLabel = cityName
 
   return <div className="card">
     <NavLink className="card_link" to={`/experience/${_id}`}>
