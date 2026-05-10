@@ -18,13 +18,13 @@ export type PropsCard = {
 
 const Card = ({ _id, title, category, city, content, date, image, score }: PropsCard) => {
   const cityName = city && typeof city === 'object' ? city.name : (typeof city === 'string' ? city : null)
-  const displayLabel = cityName
+  const countryName = city && typeof city === 'object' ? city.country : null
 
   return <div className="card">
     <NavLink className="card_link" to={`/experience/${_id}`}>
       <span className="ima f16x9">
         <span className="backOp"></span>
-        <span className="card_category">{displayLabel}</span>
+        <span className="card_category">{countryName}</span>
         { score && score > 0 ? <span className="card_score">{score}</span> : null }
         <img src={image ? `${URL}/static/images/${image}` : thumb} alt={title} />
       </span>
