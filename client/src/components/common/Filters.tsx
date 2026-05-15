@@ -38,51 +38,59 @@ const Filters = ({
       </div>
 
       {/* Score */}
-      <div className="filter_group">
-        <label>Min. score</label>
-        <select className="form_control" value={filters.score} onChange={e => setFilter('score', e.target.value)}>
-          <option value="">All</option>
-          {[1, 2, 3, 4, 5].map(n => (
-            <option key={n} value={n}>{n}+</option>
-          ))}
-        </select>
-      </div>
+      {categories.length > 0 && (
+        <div className="filter_group">
+          <label>Min. score</label>
+          <select className="form_control" value={filters.score} onChange={e => setFilter('score', e.target.value)}>
+            <option value="">All</option>
+            {[1, 2, 3, 4, 5].map(n => (
+              <option key={n} value={n}>{n}+</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Category */}
-      <div className="filter_group">
-        <label>Category</label>
-        <select className="form_control" value={filters.category} onChange={e => setFilter('category', e.target.value)}>
-          <option value="">All</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-      </div>
+      {categories.length > 0 && (
+        <div className="filter_group">
+          <label>Category</label>
+          <select className="form_control" value={filters.category} onChange={e => setFilter('category', e.target.value)}>
+            <option value="">All</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* City */}
-      <div className="filter_group">
-        <label>City</label>
-        <select className="form_control" value={filters.city} onChange={e => setFilter('city', e.target.value)}>
-          <option value="">All</option>
-          {cities.map(c => (
-            <option key={c._id} value={c._id}>{c.name}</option>
-          ))}
-        </select>
-      </div>
+      {cities.length > 0 && (
+        <div className="filter_group">
+          <label>City</label>
+          <select className="form_control" value={filters.city} onChange={e => setFilter('city', e.target.value)}>
+            <option value="">All</option>
+            {cities.map(c => (
+              <option key={c._id} value={c._id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Year */}
-      <div className="filter_group">
-        <label>Year</label>
-        <select className="form_control" value={filters.year} onChange={e => {
-          setFilter('year', e.target.value)
-          setFilter('month', '') // reset month when year changes
-        }}>
-          <option value="">All</option>
-          {availableYears.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
-      </div>
+      {availableYears.length > 0 && (
+        <div className="filter_group">
+          <label>Year</label>
+          <select className="form_control" value={filters.year} onChange={e => {
+            setFilter('year', e.target.value)
+            setFilter('month', '') // reset month when year changes
+          }}>
+            <option value="">All</option>
+            {availableYears.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Month — solo visible si hay año seleccionado */}
       {filters.year && (

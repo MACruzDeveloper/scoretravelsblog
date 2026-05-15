@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react"
 import { chunk } from 'lodash'
 import { MdArrowUpward } from 'react-icons/md'
 import { useExperienceStore, Experience } from "@/store/experienceStore"
+import { useExperienceFilters } from "@/hooks/useExperienceFilters"
+import Filters from '@common/Filters'
 import { URL } from '../config'
 import { scrollToTop } from '@/utils/utils'
 
@@ -12,11 +14,27 @@ const Gallery = () => {
     fetchExperiences()
   }, [fetchExperiences])
 
+  // Use filters hook
+  const { filters, setFilter, resetFilters, hasActiveFilters, filtered } = useExperienceFilters(experiences)
+
+  // Extract unique cities from filtered experiences
+  const cities = useMemo(() => {
+    const cityMap = new Map()
+    filtered.forEach(exp => {
+      if (exp.city && typeof exp.city === 'object') {
+        if (!cityMap.has(exp.city._id)) {
+          cityMap.set(exp.city._id, { _id: exp.city._id, name: exp.city.name })
+        }
+      }
+    })
+    return Array.from(cityMap.values())
+  }, [filtered])
+
   // Filter and Group experiences in chunks of 3
   const experiencesByGroup = useMemo(() => {
-    const expsWithImage = experiences.filter((exp) => exp.image).sort(() => Math.random() - 0.5)
+    const expsWithImage = filtered.filter((exp) => exp.image).sort(() => Math.random() - 0.5)
     return chunk(expsWithImage, 3)
-  }, [experiences])
+  }, [filtered])
 
   const getImageClass = (index: number) => {
     return index % 2 ? 'gallery_chunk--right' : 'gallery_chunk--left'
@@ -37,24 +55,37 @@ const Gallery = () => {
         </div>
 
         <div className="content">
+          <Filters
+            filters={filters}
+            setFilter={setFilter}
+            resetFilters={resetFilters}
+            hasActiveFilters={hasActiveFilters}
+            categories={[]}
+            cities={cities}
+            availableYears={[]}
+          />
+
           <div className="gallery_content">
-          {
-            !loading && experiencesByGroup.slice(0, next)?.map((item, idx) => {
-              return <div key={`chunk-${idx}`} className={`gallery_chunk ${getImageClass(idx)}`}>
-                {
-                  item.map((ele: Experience) => {
-                    return <div key={ele._id} className="gallery_item">
-                      <img loading="lazy" src={`${URL}/static/images/${ele.image}`} alt={ele.title} />
-                      <span className="card_category">{ele.category}</span>
-                    </div>
-                  })
-                }
-              </div>
-            })
-          }
+            {
+              !loading && experiencesByGroup.slice(0, next)?.map((item, idx) => {
+                return <div key={`chunk-${idx}`} className={`gallery_chunk ${getImageClass(idx)}`}>
+                  {
+                    item.map((ele: Experience) => {
+                      return <div key={ele._id} className="gallery_item">
+                        <img loading="lazy" src={`${URL}/static/images/${ele.image}`} alt={ele.title} />
+                        <p className="gallery_item_info">
+                          <span className="city">{typeof ele.city === 'object' ? ele.city.name : ele.city}</span>
+                          <span className="country">{typeof ele.city === 'object' ? ele.city.country : ''}</span>
+                        </p>
+                      </div>
+                    })
+                  }
+                </div>
+              })
+            }
           </div>
 
-          { next < experiencesByGroup?.length && (
+          {next < experiencesByGroup?.length && (
             <div className="gallery_actions">
               <button className="btn btn_show_more" onClick={handleMoreChunks}>Show more</button>
               <button className="btn_icon btn_top" onClick={scrollToTop}>

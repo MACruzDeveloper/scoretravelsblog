@@ -21,21 +21,35 @@
           @media (min-width: $screenSm) {
             width: 66.66666%;
             height: 50rem;
-            padding-right: 0.5rem;
+            margin-right: 0.5rem;
+
+            &::before {
+              left: 0;
+            }
           }
         }
 
         &:nth-of-type(2) {
           @media (min-width: $screenSm) {
-            padding-left: 0.5rem;
+            margin-left: 0.5rem;
             margin-bottom: 0.5rem;
+
+            &::before {
+              left: auto;
+              right: 0;
+            }
           }
         }
 
         &:nth-of-type(3) {
           @media (min-width: $screenSm) {
-            padding-left: 0.5rem;
+            margin-left: 0.5rem;
             margin-top: 0.5rem;
+
+            &::before {
+              left: auto;
+              right: 0;
+            }
           }
         }
       }
@@ -45,15 +59,23 @@
       .gallery_item {
         &:first-of-type {
           @media (min-width: $screenSm) {
-            padding-right: 0.5rem;
+            margin-right: 0.5rem;
             margin-bottom: 0.5rem;
+
+            &::before {
+              left: 0;
+            }
           }
         }
 
         &:nth-of-type(2) {
           @media (min-width: $screenSm) {
-            padding-right: 0.5rem;
+            margin-right: 0.5rem;
             margin-top: 0.5rem;
+
+            &::before {
+              left: 0;
+            }
           }
         }
 
@@ -61,7 +83,12 @@
           @media (min-width: $screenSm) {
             width: 66.66666%;
             height: 50rem;
-            padding-left: 0.5rem;
+            margin-left: 0.5rem;
+
+            &::before {
+              left: auto;
+              right: 0;
+            }
           }
         }
       }
@@ -80,21 +107,66 @@
         margin-bottom: 0;
       }
 
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 10;
+        width: 100%;
+        height: 100%;
+        background-color: rgba($color1, 0.3);
+        transition: all 0.3s ease-in-out;
+      }
+
       >img {
         display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
         object-position: center center;
+        transition: transform 0.5s;
       }
 
-      .card_category {
+      &_info {
+        width: max-content;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 70;
+        transform: translate(-50%,-50%);
+        color:#fff;
+        font-size: 2rem;
+        line-height: 1.3;
+        padding: 1rem 2rem;
+        text-align: center;
         transition: all 0.3s ease-in-out;
+
+        > span {
+          display: block;
+
+          &.city {
+            font-size: 1.6rem;
+          }
+
+          &.country {
+            font-weight: $fontBold;
+            font-size: 1.7rem;
+          }
+        }
       }
 
       &:hover {
-        .card_category {
-          text-shadow: 0.2rem 0.2rem 0.4rem $color1;
+        &::before {
+          opacity: 0;
+        }
+
+        img {
+          transform: scale(1.1);
+        }
+
+        .gallery_item_info {
+          background: rgba($color1, 0.5);
         }
       }
     }

@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const categorySchema = new Schema({
   name: { type: String, required: true, unique: true},
-  continent: String
+  description: String
 })
 
 module.exports =  mongoose.model('categories', categorySchema);

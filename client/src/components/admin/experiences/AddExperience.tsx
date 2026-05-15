@@ -1,7 +1,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@/utils/utils'
 import { URL } from '../../../config'
-import { Experience } from '@/store/experienceStore'
+import { Experience, City } from '@/store/experienceStore'
 import SelectCategories from '@/components/common/SelectCategories'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import ImageUpload from '../ImageUpload'
@@ -86,7 +86,9 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
             <CitySearch onSelect={setSelectedCity} />
           </div>
 
-          <button className="btn btn_admin">Add Experience</button>
+          <button className="btn btn_admin">
+            Add Experience
+          </button>
         </form>
       </div>
     }

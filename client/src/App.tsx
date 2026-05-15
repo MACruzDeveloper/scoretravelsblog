@@ -4,7 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom'
 import { URL } from './config'
 import AdminLayout from './layouts/AdminLayout'
 import Header from '@/components/common/Header'
-import Breadcrumb from '@/components/common/Breadcrumb'
+import Breadcrumbs from '@/components/common/Breadcrumbs'
 import Footer from '@/components/common/Footer'
 import Home from '@/components/Home'
 import Login from './components/admin/login/Login'
@@ -23,6 +23,7 @@ import Scores from './components/admin/Scores'
 import Users from './components/admin/Users'
 import Images from './components/admin/Images'
 import ScrollToTop from '@/components/common/ScrollToTop'
+import { PAGES_WITH_BREADCRUMBS } from '@/utils/constants'
 import './assets/sass/main.scss'
 
 export type GlobalContent = {
@@ -94,12 +95,6 @@ function App() {
     verify_token()
   }, [])
 
-  // breadcrumbs
-  const pagesWithBreadcrumbs = [
-    { page: 'experiences' },
-    { page: 'experience' }
-  ]
-
   const location = useLocation()
   const [page, setPage] = useState('')
   const [showBreadcrumb, setShowBreadcrumb] = useState(false)
@@ -108,12 +103,12 @@ function App() {
     const pathname = location.pathname.split('/')[1]
     setPage(pathname)
 
-    if (pagesWithBreadcrumbs.some((item) => item.page === page)) {
+    if (PAGES_WITH_BREADCRUMBS.some((item) => item.page === pathname)) {
       setShowBreadcrumb(true)
     } else {
       setShowBreadcrumb(false)
     }
-  }, [location, page])
+  }, [location])
 
   const contextValues = {
     token,
@@ -131,7 +126,7 @@ function App() {
       <Header isLoggedIn={isLoggedIn} logout={logout} />
 
       { showBreadcrumb &&
-      <Breadcrumb page={page} />
+      <Breadcrumbs page={page} />
       }
 
       <main>

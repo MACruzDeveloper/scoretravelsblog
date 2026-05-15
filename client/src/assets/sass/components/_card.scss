@@ -17,23 +17,24 @@
     }
   }
 
-  .backOp {
-    display: block;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 50;
-    background-color: rgba(0,0,0,.25);
-    transition: background-color 0.3s ease-in-out;
-  }
-
   .ima {
     margin-bottom: 1rem;
 
+    &::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 50;
+      background-color: rgba($color1, 0.3);
+      transition: background-color 0.3s ease-in-out;
+    }
+
     > img{
-      transition: transform 0.3s;
+      transition: transform 0.5s;
     }
   }
 
@@ -43,12 +44,18 @@
 
   &_link {
     &:hover {
-      img {
-        transform: scale(1.5);
+      .ima {
+        &::before {
+          opacity: 0;
+        }
       }
 
-      .backOp {
-        background-color: transparent;
+      img {
+        transform: scale(1.1);
+      }
+
+      .card_category {
+        background-color: rgba($color1, 0.5);
       }
 
       .card_more {
@@ -60,6 +67,7 @@
   }
 
   &_category {
+    width: max-content;
     position: absolute;
     left: 50%;
     top: 50%;
@@ -68,6 +76,7 @@
     color:#fff;
     font-size: 2rem;
     line-height: 1.3;
+    padding: 1rem 2rem;
     text-align: center;
   }
 

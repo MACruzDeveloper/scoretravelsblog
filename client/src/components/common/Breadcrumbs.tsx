@@ -2,12 +2,19 @@ import { useContext } from 'react'
 import { NavLink } from 'react-router-dom'
 import { MyGlobalContext } from '../../App'
 
-export type ParamsBreadcrumb = {
+export type ParamsBreadcrumbs = {
   page: string
 }
 
-const Breadcrumb = ({ page }: ParamsBreadcrumb) => {
+const PAGE_LABELS: Record<string, string> = {
+  experiences: 'Experiences',
+  experience: 'Experiences',
+  gallery: 'Gallery',
+}
+
+const Breadcrumbs = ({ page }: ParamsBreadcrumbs) => {
   const { titleExperience }: any = useContext(MyGlobalContext)
+  const pageLabel = PAGE_LABELS[page] ?? page
 
   return <div className="breadcrumbs">
     <div className="container">
@@ -16,23 +23,24 @@ const Breadcrumb = ({ page }: ParamsBreadcrumb) => {
           <li>
             <NavLink className="breadcrumbs_link" to="/">Home</NavLink>
           </li>
-          <li>
-            {
-              page !== 'experiences' ?
+          {page === 'experience' ? (
+            <>
+              <li>
                 <NavLink className="breadcrumbs_link" to="/experiences">Experiences</NavLink>
-              : <span>Experiences</span>
-            }
-          </li>
-          {
-            page === 'experience' &&
+              </li>
+              <li>
+                <span>{titleExperience}</span>
+              </li>
+            </>
+          ) : (
             <li>
-              <span>{titleExperience}</span>
+              <span>{pageLabel}</span>
             </li>
-          }
+          )}
         </ul>
       </nav>
     </div>
   </div>
 }
 
-export default Breadcrumb
+export default Breadcrumbs

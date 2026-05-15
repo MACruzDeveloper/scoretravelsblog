@@ -58,6 +58,16 @@ button {
     font-size: 1.6rem;
     white-space: nowrap;
     padding: 0.5rem 2rem;
+
+    &.icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      & span {
+        margin-left: 0.5rem;
+      }
+    }
   }
 
   &_action {

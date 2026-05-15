@@ -1,55 +1,55 @@
-const categories = require('../models/categoriesModel');
+const categories = require('../models/categoriesModel')
 
 class categoriesController {
   async findAllCategories(req, res) {
     try {
-      const cats = await categories.find();
-      res.send(cats);
+      const cats = await categories.find()
+      res.send(cats)
     }
     catch (error) {
-      //console.log(error);
+      //console.log(error)
       res.send({ error })
     }
   }
 
   async addNewCategory(req, res) {
-    let params = req.body;
+    let params = req.body
     try {
-      const done = await categories.create({name: params.name, continent: params.continent});
+      const done = await categories.create({name: params.name, description: params.description})
       res.send(done)
     }
     catch (error) {
-      //console.log(e);
+      //console.log(e)
       res.send({ error })
     }
   }
 
   async deleteCategory(req, res) {
-    let { name } = req.body;  
+    let { name } = req.body  
 
     try {
-      const removed = await categories.deleteOne({ name: name });
-      res.send({ removed });
+      const removed = await categories.deleteOne({ name: name })
+      res.send({ removed })
     }
     catch (error) {
-      console.log(error);
-      res.send({ error });
-    };
+      console.log(error)
+      res.send({ error })
+    }
   }
 
   async updateCategory(req, res) {
-    let params = req.body; 
+    let params = req.body 
     
     try {
       const updated = await categories.updateOne(
-        { _id: params._id }, { name: params.name, continent: params.continent }
-      );
-      res.send({ updated });
+        { _id: params._id }, { name: params.name, description: params.description }
+      )
+      res.send({ updated })
     }
     catch (error) {
-      console.log(error);
-      res.send({ error });
-    };
+      console.log(error)
+      res.send({ error })
+    }
   }
 
   async findOneCategory(req, res) {
@@ -57,4 +57,4 @@ class categoriesController {
   }
 }
 
-module.exports = new categoriesController();
+module.exports = new categoriesController()

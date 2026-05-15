@@ -6,6 +6,7 @@ import { URL } from '../config'
 export interface Cat {
   readonly _id: string
   name: string
+  description?: string
   continent?: string
 }
 
@@ -14,7 +15,7 @@ interface CategoriesState {
   loading: boolean
   error: string | undefined
   hasFetched: boolean
-  fetchCats: () => Promise<void>
+  fetchCats: (force?: boolean) => Promise<void>
 }
 
 export const useCategoriesStore = create<CategoriesState>((set, get) => ({
@@ -22,9 +23,9 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
   loading: false,
   error: undefined,
   hasFetched: false,
-  fetchCats: async () => {
+  fetchCats: async (force = false) => {
     const { hasFetched } = get()
-    if (hasFetched) return
+    if (hasFetched && !force) return
 
     set({ loading: true })
     try {

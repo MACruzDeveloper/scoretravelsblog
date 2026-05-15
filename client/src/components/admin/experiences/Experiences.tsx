@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, ChangeEvent, useMemo } from 'react'
 import { postData } from '@/utils/utils'
 import Moment from 'react-moment'
 import { sortBy } from "lodash"
-import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
+import { MdDelete, MdEdit, MdClose, MdCheckCircle, MdAddCircleOutline } from 'react-icons/md'
 import { useExperienceStore, Experience, City } from '@/store/experienceStore'
 import { URL } from '../../../config'
 import { MyGlobalContext } from '../../../App'
@@ -37,7 +37,7 @@ const Experiences = () => {
     !isFormAddVisible ? setIsFormAddVisible(true) : setIsFormAddVisible(false)
   }
 
-  const handleChangeUpdate = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChangeUpdate = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const target = e.currentTarget
     if (target) setNewValues({ ...newValues, [target.name]: target.value })
   }
@@ -125,9 +125,21 @@ const Experiences = () => {
         cityId = null
       }
 
+      await postData(`${URL}/admin/experiences/update`, {
+        _id: id,
+        user: newValues.user,
+        title: newValues.title,
+        category: newValues.category,
+        city: cityId,
+        image: selectedFilename || newValues.image,
+        content: newValues.content,
+        score: newValues.score,
+      })
+
       setRefreshTrigger(prev => prev + 1)
       setUpdateActive(null)
       setSelectedCity(null)
+      setSelectedFilename(null)
       setMessage({ body: 'Experience updated!', classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
@@ -282,8 +294,18 @@ const Experiences = () => {
     <div className="content_top">
       <h2 className="content_top_title">Experiences</h2>
 
-      <button type="button" className="btn btn_admin" onClick={showFormAdd}>
-        {!isFormAddVisible ? 'Add new experience' : 'Close Add'}
+      <button type="button" className="btn btn_admin icon" onClick={showFormAdd}>
+        {!isFormAddVisible ?
+          <>
+            <MdAddCircleOutline />
+            <span>Add new experience</span>
+          </>
+          :
+          <>
+            <MdClose />
+            <span>Close</span>
+          </>
+        }
       </button>
     </div>
 

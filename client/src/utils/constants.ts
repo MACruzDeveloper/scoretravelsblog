@@ -1,3 +1,10 @@
+// breadcrumbs
+export const PAGES_WITH_BREADCRUMBS = [
+  { page: 'experiences' },
+  { page: 'experience' },
+  { page: 'gallery' }
+]
+
 // map of continents
 export const COUNTRY_TO_CONTINENT: Record<string, string> = {
   // Africa
