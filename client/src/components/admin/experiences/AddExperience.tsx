@@ -1,11 +1,11 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@/utils/utils'
 import { URL } from '../../../config'
-import { Experience, City } from '@/store/experienceStore'
+import { Experience } from '@/store/experienceStore'
 import SelectCategories from '@/components/common/SelectCategories'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import ImageUpload from '../ImageUpload'
-import { CitySearch } from './CitySearch'
+import { CitySearch, City as SearchCity } from './CitySearch'
 
 type PropsAddExperience = {
   user: string
@@ -16,12 +16,10 @@ type PropsAddExperience = {
 
 const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFormAddVisible }: PropsAddExperience) => {
   const [values, setValues] = useState<Experience>()
-  const [selectedCity, setSelectedCity] = useState<City | null>(null)
-  //const [selectedFile, setSelectedFile] = useState(null)
-  const [selectedFilename, setSelectedFilename] = useState(null)
+  const [selectedCity, setSelectedCity] = useState<SearchCity | null>(null)
+  const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
   //const [isFileValid, setIsFileValid] = useState(false)
   //const [loadingFile, setLoadingFile] = useState(false)
-  const loadingFile = false
   const [message, setMessage] = useState<ParamsMsgBox>({ body: '', classname: '' })
 
   const handleChangeNew = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -39,17 +37,20 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
         cityId = cityRes.data.city._id
       }
 
+      const validFilenames = selectedFilenames.filter((name) => !!name)
       await postData(`${URL}/admin/experiences/add`, {
         user,
         title: values.title,
         category: values.category,
         city: cityId,                    // guardamos el ObjectId
-        image: selectedFilename,
+        image: validFilenames[0] || '',
+        images: validFilenames,
         content: values.content,
       })
       setMessage({ body: 'New Experience added!', classname: 'msg_ok' })
       handleFetchExperiences()
       setIsFormAddVisible(false)
+      setSelectedFilenames([])
     } catch (error) {
       console.log(error)
     }
@@ -78,7 +79,13 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
             required
           />
 
-          <ImageUpload setSelectedFilename={setSelectedFilename} isImageWithTitle={false} />
+          <ImageUpload
+            addSelectedFilename={(filename) => setSelectedFilenames(prev => [...prev, filename])}
+            allowMultiple={true}
+            maxImages={5}
+            currentImages={selectedFilenames}
+            isImageWithTitle={false}
+          />
 
           <div className="form_group flex">
             <SelectCategories handleChange={handleChangeNew} />

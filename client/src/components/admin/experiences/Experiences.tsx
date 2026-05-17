@@ -19,7 +19,7 @@ const Experiences = () => {
   const { user, role } = useContext(MyGlobalContext)
   const [newValues, setNewValues] = useState<Experience>()
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
-  const [selectedFilename, setSelectedFilename] = useState(null)
+  const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [updateActive, setUpdateActive] = useState(null)
 
@@ -72,10 +72,17 @@ const Experiences = () => {
     let idExp = experiences.findIndex(e => e._id === idx)
     const experience = experiences[idExp]
 
+    const existingImages = Array.isArray(experience.images)
+      ? experience.images.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
+      : experience.image && experience.image !== 'null'
+        ? [experience.image]
+        : []
+
     setNewValues({
       _id: idx,
       user: experience.user,
       image: experience.image,
+      images: existingImages,
       title: experience.title,
       city: experience.city && typeof experience.city === 'object' ? experience.city._id : (experience.city || null),
       category: experience.category,
@@ -88,7 +95,7 @@ const Experiences = () => {
     } else {
       setSelectedCity(null)
     }
-    setSelectedFilename(null)
+    setSelectedFilenames(existingImages)
   }
 
   const handleRefreshExperiences = () => {
@@ -98,6 +105,15 @@ const Experiences = () => {
   const onClickClose = () => {
     setUpdateActive(null)
     setSelectedCity(null)
+    setSelectedFilenames([])
+  }
+
+  const removeSelectedImage = (index: number) => {
+    setSelectedFilenames((prev) => prev.filter((_, idx) => idx !== index))
+    setNewValues((prev) => prev ? {
+      ...prev,
+      images: Array.isArray(prev.images) ? prev.images.filter((_, idx) => idx !== index) : prev.images,
+    } : prev)
   }
 
   const updateExperience = async (id: string) => {
@@ -125,13 +141,16 @@ const Experiences = () => {
         cityId = null
       }
 
+      const validFilenames = selectedFilenames.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
+
       await postData(`${URL}/admin/experiences/update`, {
         _id: id,
         user: newValues.user,
         title: newValues.title,
         category: newValues.category,
         city: cityId,
-        image: selectedFilename || newValues.image,
+        image: validFilenames[0] || '',
+        images: validFilenames,
         content: newValues.content,
         score: newValues.score,
       })
@@ -139,7 +158,7 @@ const Experiences = () => {
       setRefreshTrigger(prev => prev + 1)
       setUpdateActive(null)
       setSelectedCity(null)
-      setSelectedFilename(null)
+      setSelectedFilenames([])
       setMessage({ body: 'Experience updated!', classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
@@ -253,8 +272,15 @@ const Experiences = () => {
           <div className="tRow sup">
             <div className="tCol"></div>
             <div className="tCol"></div>
-            <div className="tCol">
-              <ImageUpload setSelectedFilename={setSelectedFilename} isImageWithTitle={false} />
+            <div className="tCol" style={{ height: 'auto', overflow: 'visible' }}>
+              <ImageUpload
+                addSelectedFilename={(filename) => setSelectedFilenames(prev => [...prev, filename])}
+                removeSelectedFilename={removeSelectedImage}
+                currentImages={selectedFilenames}
+                allowMultiple={true}
+                maxImages={5}
+                isImageWithTitle={false}
+              />
             </div>
             <div className="tCol visible">
               <CitySearch

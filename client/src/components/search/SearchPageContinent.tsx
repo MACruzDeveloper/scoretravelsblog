@@ -1,5 +1,5 @@
 import { useMemo, useEffect, Fragment } from 'react'
-import { useExperienceStore, Experience } from '@store/experienceStore'
+import { useExperienceStore } from '@store/experienceStore'
 import { useLocation } from 'react-router-dom'
 import Card from '../common/Card'
 import Spinner from '../common/Spinner'
@@ -43,6 +43,7 @@ const SearchPageContinent = () => {
                       date={ele.date}
                       score={ele.score}
                       image={ele.image}
+                      images={ele.images}
                     />
                   </Fragment>
                 ))}

@@ -67,7 +67,7 @@ export const useCitiesStore = create<CitiesState>((set, get) => ({
         hasFetched: true
       })
     } catch (error: any) {
-      set({ error: error.message, loading: false, hasFetched: true })
+      set({ error: error.message, loading: false })
     }
   },
 

@@ -21,6 +21,7 @@ const LastExperiences = () => {
             date={ele.date}
             score={ele.score}
             image={ele.image}
+            images={ele.images}
           />
         })
       }

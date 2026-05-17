@@ -1,5 +1,30 @@
 const experiences = require('../models/experiencesModel');
 
+const normalizeExperienceImages = (params) => {
+  const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
+  const hasImagePayload = Object.prototype.hasOwnProperty.call(params, 'image')
+
+  const rawImages = hasImagesPayload
+    ? Array.isArray(params.images)
+      ? params.images
+      : params.images
+        ? [params.images]
+        : []
+    : []
+
+  const images = rawImages
+    .filter((item) => typeof item === 'string' && item && item !== 'null')
+    .slice(0, 5)
+
+  const image = images.length
+    ? images[0]
+    : hasImagePayload && typeof params.image === 'string' && params.image && params.image !== 'null'
+      ? params.image
+      : ''
+
+  return { images, image, hasImagesPayload, hasImagePayload }
+}
+
 class experiencesController {
   async findAllExperiences(req, res) {
     try {
@@ -22,11 +47,14 @@ class experiencesController {
 
   async addNewExperience(req, res) {
     let params = req.body
+    const { images, image } = normalizeExperienceImages(params)
+
     try {
       const done = await experiences.create({
         user: params.user,
         title: params.title,
-        image: params.image,
+        image,
+        images,
         category: params.category,
         city: params.city,       // llega el ObjectId desde el frontend
         content: params.content,
@@ -53,12 +81,43 @@ class experiencesController {
 
   async updateExperience(req, res) {
     let params = req.body
+    const currentExp = await experiences.findById(params._id)
+    if (!currentExp) {
+      return res.status(404).send({ error: 'Experience not found' })
+    }
+
+    const {
+      images: normalizedImages,
+      image: normalizedImage,
+      hasImagesPayload,
+      hasImagePayload
+    } = normalizeExperienceImages(params)
+
+    const existingImages = Array.isArray(currentExp.images)
+      ? currentExp.images.filter((item) => typeof item === 'string' && item)
+      : []
+
+    const images = hasImagesPayload
+      ? normalizedImages
+      : existingImages.length > 0
+        ? existingImages
+        : currentExp.image
+          ? [currentExp.image]
+          : []
+
+    const image = hasImagesPayload
+      ? normalizedImage
+      : hasImagePayload
+        ? normalizedImage
+        : currentExp.image || (images.length ? images[0] : '')
+
     try {
       await experiences.updateOne(
         { _id: params._id },
         {
           user: params.user,
-          image: params.image,
+          image,
+          images,
           title: params.title,
           category: params.category,
           city: params.city,     // ObjectId

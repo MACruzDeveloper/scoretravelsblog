@@ -32,7 +32,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
       const response = await getData(`${URL}/admin/scores`)
       set({ scores: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
-      set({ error: error.message, loading: false, hasFetched: true })
+      set({ error: error.message, loading: false })
     }
   }
 }))

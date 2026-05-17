@@ -9,6 +9,7 @@ import Score from '../Score'
 import Stars from '../Stars'
 import Msgbox from '../common/Msgbox'
 import Spinner from '../common/Spinner'
+import Carousel from '../Carousel'
 import { MyGlobalContext } from '../../App'
 
 type PropsExperience = {
@@ -22,6 +23,7 @@ type SingleExperience = {
   category?: string
   date: Date
   image?: string
+  images?: string[]
   content?: string
   score?: number
 }
@@ -29,7 +31,6 @@ type SingleExperience = {
 const Experience = ({ user }: PropsExperience) => {
   const { exp } = useParams()
   const [experience, setExperience] = useState<SingleExperience>()
-
   const [comments, setComments] = useState([])
   const [comment, setComment] = useState('')
   const [message, setMessage] = useState({ body: '', classname: '' })
@@ -49,7 +50,7 @@ const Experience = ({ user }: PropsExperience) => {
 
   // To read html code from data api
   const getDataParsed = (data: string) => {
-    const theObj = {__html: data}
+    const theObj = { __html: data }
     return <span dangerouslySetInnerHTML={theObj} />
   }
 
@@ -69,6 +70,13 @@ const Experience = ({ user }: PropsExperience) => {
     fetchScores()
   }, [fetchScores])
 
+  const validExperienceImages = experience?.images?.filter((src): src is string => typeof src === 'string' && src && src !== 'null') || []
+  const fallbackImage = experience?.image && experience.image !== 'null' ? experience.image : undefined
+  const experienceImages = validExperienceImages.length > 0
+    ? validExperienceImages
+    : fallbackImage
+      ? [fallbackImage]
+      : []
 
   // comments
   useEffect(() => {
@@ -124,10 +132,15 @@ const Experience = ({ user }: PropsExperience) => {
                 <Score exp={exp} scores={scores} />
               </div>
 
-              { experience.image &&
-                <span className="content_image ima f16x9">
-                  <img src={`${URL}/static/images/${experience.image}`} alt={experience.title} />
-                </span>
+              {experienceImages.length > 0 &&
+                <Carousel
+                  images={experienceImages}
+                  showTitle={false}
+                  title={experience.title}
+                  subtitle={experience.category || ''}
+                  autoplay={false}
+                  interval={4000}
+                />
               }
 
               <p className="content_info">

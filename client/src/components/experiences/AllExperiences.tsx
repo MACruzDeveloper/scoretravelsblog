@@ -79,6 +79,7 @@ const AllExperiences = () => {
                   score={ele.score}
                   date={ele.date}
                   image={ele.image}
+                  images={ele.images}
                   title={ele.title}
                   _id={ele._id}
                 />

@@ -12,7 +12,16 @@ type CarouselImage = {
   title?: string
 }
 
-const Carousel = () => {
+type CarouselProps = {
+  images?: string[]
+  title?: string
+  subtitle?: string
+  autoplay?: boolean
+  interval?: number
+  showTitle?: boolean
+}
+
+const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, showTitle = true }: CarouselProps) => {
   const [slideImages, setSlideImages] = useState<Array<CarouselImage>>([])
   const [slideIndex, setSlideIndex] = useState<number>(0)
   const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
@@ -22,12 +31,21 @@ const Carousel = () => {
   const numSlides = slideImages.length
 
   const options = {
-    autoplay: false,
-    time: 5000,
+    autoplay,
+    time: interval,
     transition: 600
   }
 
   useEffect(() => {
+    if (images && images.length > 0) {
+      const validImages = images
+        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0 && item !== 'null')
+        .map((filename, index) => ({ _id: `image-${index}`, filename }))
+      setSlideImages(validImages)
+      setSlideIndex(0)
+      return
+    }
+
     const fetchImages = async () => {
       try {
         const res = await getData(`${URL}/images/fetch_images`)
@@ -40,7 +58,7 @@ const Carousel = () => {
     }
 
     fetchImages()
-  }, [])
+  }, [images])
 
   useEffect(() => {
     if (!transitioning) return
@@ -61,15 +79,18 @@ const Carousel = () => {
 
   const getUrlImage = (index = slideIndex) => {
     const image = slideImages[index]
-    return image ? `${URL}/static/images/${image.filename}` : ''
+    return image && image.filename ? `${URL}/static/images/${image.filename}` : ''
   }
 
   const getTitleImage = (index = slideIndex) => {
-    return slideImages[index]?.title
+    return slideImages[index]?.title || title || ''
   }
 
+  const isPrevDisabled = slideIndex === 0 || numSlides <= 1
+  const isNextDisabled = slideIndex === numSlides - 1 || numSlides <= 1
+
   const changeSlide = (nextIndex: number) => {
-    if (nextIndex === slideIndex || numSlides === 0) return
+    if (nextIndex === slideIndex || numSlides === 0 || nextIndex < 0 || nextIndex >= numSlides) return
 
     if ('startViewTransition' in document) {
       // Use View Transition API for smooth transition
@@ -89,7 +110,7 @@ const Carousel = () => {
   useEffect(() => {
     const interval = window.setInterval(() => {
       if (slideStop && options.autoplay && numSlides > 0) {
-        const nextIndex = slideIndex === numSlides - 1 ? 0 : slideIndex + 1
+        const nextIndex = slideIndex === numSlides - 1 ? slideIndex : slideIndex + 1
         changeSlide(nextIndex)
       }
     }, options.time)
@@ -98,15 +119,13 @@ const Carousel = () => {
   }, [slideIndex, slideStop, numSlides, options.autoplay, options.time])
 
   const handleClickPrev = () => {
-    if (numSlides === 0) return
-    const nextIndex = slideIndex === 0 ? numSlides - 1 : slideIndex - 1
-    changeSlide(nextIndex)
+    if (isPrevDisabled) return
+    changeSlide(slideIndex - 1)
   }
 
   const handleClickNext = () => {
-    if (numSlides === 0) return
-    const nextIndex = slideIndex === numSlides - 1 ? 0 : slideIndex + 1
-    changeSlide(nextIndex)
+    if (isNextDisabled) return
+    changeSlide(slideIndex + 1)
   }
 
   const onClickDot = (i: number) => {
@@ -115,10 +134,12 @@ const Carousel = () => {
 
   return <div className="carousel">
     <div className="carousel_wrapper">
-      <div className="carousel_title">
-        <h2>Score Travels</h2>
-        <p>Help the trips to highlight!</p>
-      </div>
+      {showTitle && (
+        <div className="carousel_title">
+          <h2>{title || 'Score Travels'}</h2>
+          <p>{subtitle || 'Help the trips to highlight!'}</p>
+        </div>
+      )}
 
       <div className="carousel_images">
         {prevSlideIndex !== null && (
@@ -134,7 +155,6 @@ const Carousel = () => {
             src={getUrlImage()}
             className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
             alt={getTitleImage()}
-            fetchpriority="high"
           />
         ) : (
           <Spinner />
@@ -142,25 +162,29 @@ const Carousel = () => {
       </div>
     </div>
 
-    <div className="carousel_navs">
-      <button className="carousel_nav prev" onClick={handleClickPrev}>
-        <MdChevronLeft />
-      </button>
-      <button className="carousel_nav next" onClick={handleClickNext}>
-        <MdChevronRight />
-      </button>
-    </div>
+    {numSlides > 1 && (
+      <div className="carousel_navs">
+        <button className={`carousel_nav prev ${isPrevDisabled ? 'disabled' : ''}`} onClick={handleClickPrev} disabled={isPrevDisabled}>
+          <MdChevronLeft />
+        </button>
+        <button className={`carousel_nav next ${isNextDisabled ? 'disabled' : ''}`} onClick={handleClickNext} disabled={isNextDisabled}>
+          <MdChevronRight />
+        </button>
+      </div>
+    )}
 
-    <div className="carousel_dots">
-      {slideImages.map((ele: CarouselImage, i: number) => {
-        return (
-          <button
-            key={ele._id}
-            className={`carousel_dot ${slideIndex === i ? 'active' : ''}`}
-            onClick={() => onClickDot(i)}></button>
-        )
-      })}
-    </div>
+    {numSlides > 1 && (
+      <div className="carousel_dots">
+        {slideImages.map((ele: CarouselImage, i: number) => {
+          return (
+            <button
+              key={ele._id}
+              className={`carousel_dot ${slideIndex === i ? 'active' : ''}`}
+              onClick={() => onClickDot(i)}></button>
+          )
+        })}
+      </div>
+    )}
   </div>
 }
 

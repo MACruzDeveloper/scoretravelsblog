@@ -1,0 +1,237 @@
+.page.about {
+  .about_intro {
+    margin-bottom: 4rem;
+    p {
+      max-width: 72rem;
+      margin: 1.5rem auto 0;
+      font-size: 1.7rem;
+      line-height: 1.8;
+      color: $color4;
+    }
+  }
+
+  .about_journey {
+    display: grid;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+
+  .about_road {
+    position: relative;
+    width: 100%;
+    max-width: 120rem;
+    margin: 0 auto 2rem;
+    min-height: 16rem;
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+
+    &.dragging {
+      cursor: grabbing;
+    }
+  }
+
+  .road_line {
+    position: absolute;
+    top: 55%;
+    left: 2.5%;
+    right: 2.5%;
+    height: 1rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba($color3, 0.95), rgba($color4, 0.35));
+    box-shadow: inset 0 0 0.5rem rgba($color1, 0.12);
+  }
+
+  .road_point {
+    position: absolute;
+    top: 50%;
+    width: 1.6rem;
+    height: 1.6rem;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 0.4rem solid rgba($color5, 0.9);
+    background-color: $color4;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 5;
+
+    &.active {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-color: $color2;
+      background-color: $color2;
+    }
+  }
+
+  .road_point_label {
+    position: absolute;
+    top: 1.8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 1.2rem;
+    color: $colorWhite;
+    width: 10rem;
+    margin-top: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .road_car {
+    position: absolute;
+    top: 45%;
+    left: 2.5%;
+    width: 5.2rem;
+    height: 2.8rem;
+    transform: translate(-50%, -50%);
+    transition: transform 0.55s ease;
+    background: $color2;
+    border-radius: 1.4rem;
+    z-index: 10;
+    box-shadow: 0 1rem 2rem rgba($color1, 0.18);
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -0.75rem;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background: $color1;
+    }
+
+    &::before {
+      left: 0.8rem;
+    }
+
+    &::after {
+      right: 0.8rem;
+    }
+
+    .car_window {
+      position: absolute;
+      top: 0.45rem;
+      left: 0.7rem;
+      right: 0.7rem;
+      height: 1rem;
+      border-radius: 0.8rem;
+      background: rgba($color5, 0.9);
+      box-shadow: inset 0 0 0.4rem rgba($color1, 0.25);
+    }
+  }
+
+  .about_stage {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: minmax(0, 1.3fr) minmax(25rem, 1fr);
+
+    @media (max-width: $screenSm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .road_hint {
+    max-width: 120rem;
+    margin: 0 auto 2rem;
+    text-align: center;
+    color: $color3;
+    font-size: 1.3rem;
+  }
+
+  .stage_card {
+    padding: 2.5rem;
+    border-radius: 1.4rem;
+    background: rgba($color5, 0.95);
+    box-shadow: 0 1.5rem 3rem rgba($color1, 0.08);
+    border: 1px solid rgba($color1, 0.08);
+
+    .stage_meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+
+      .stage_year {
+        font-size: 3.5rem;
+        color: $color1;
+        font-weight: $fontBold;
+      }
+
+      .stage_label {
+        font-size: 1.3rem;
+        color: $color3;
+        text-transform: uppercase;
+        letter-spacing: 0.2rem;
+      }
+    }
+
+    .stage_text {
+      font-size: 1.5rem;
+      line-height: 1.9;
+      color: $color4;
+    }
+  }
+
+  .stage_list {
+    display: grid;
+    gap: 1rem;
+
+    .stage_item {
+      padding: 1.5rem;
+      border-radius: 1.1rem;
+      border: 1px solid rgba($color1, 0.08);
+      background: rgba($color5, 0.92);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+
+      &.active {
+        border-color: $color2;
+        background: rgba($color2, 0.12);
+        transform: translateX(0.3rem);
+      }
+
+      &:hover {
+        border-color: $color2;
+      }
+
+      .stage_item_year {
+        font-size: 1.25rem;
+        color: $color1;
+        font-weight: $fontBold;
+        margin-bottom: 0.5rem;
+      }
+
+      .stage_item_title {
+        font-size: 1.2rem;
+        color: $color3;
+      }
+    }
+  }
+
+  .about_controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    button {
+      flex: 1 1 12rem;
+      border: none;
+      border-radius: 1rem;
+      padding: 1rem 1.5rem;
+      background: $color1;
+      color: $colorWhite;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+
+      &:hover {
+        background: darken($color1, 5%);
+      }
+
+      &:disabled {
+        background: rgba($color3, 0.4);
+        cursor: not-allowed;
+      }
+    }
+  }
+}

@@ -22,6 +22,7 @@ export interface Experience {
   date?: Date,
   year?: number,
   image?: string,
+  images?: string[],
   content?: string,
   score?: number,
   lat?: number,
@@ -50,7 +51,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
       const response = await getData(`${URL}/admin/experiences`)
       set({ experiences: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
-      set({ error: error.message, loading: false, hasFetched: true })
+      set({ error: error.message, loading: false })
     }
   }
 }))

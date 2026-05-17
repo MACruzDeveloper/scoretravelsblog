@@ -111,8 +111,9 @@
       right: 2rem;
     }
 
-    &:hover {
-      opacity: 0.8;
+    &:hover,
+    &.disabled {
+      opacity: 0.4;
     }
   }
 
