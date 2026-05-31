@@ -249,20 +249,43 @@ const Experiences = () => {
           <div className="tCol thumb">
             <img src={ele.image ? `${URL}/static/images/${ele.image}` : thumb} alt={ele.title} />
           </div>
-          <div className="tCol">
+          <div className="tCol visible">
+            {updateActive === ele._id ? (
+              <CitySearch
+                onSelect={handleCitySelect}
+                value={typeof ele.city === 'object' ? ele.city?.name : ele.city}
+              />
+            ) : (
             <span>{typeof ele.city === 'object' ? ele.city?.name : ele.city}</span>
+            )}
           </div>
           <div className="tCol">
-            <span>{ele.category}</span>
+            {updateActive === ele._id ? (
+              <SelectCategories handleChange={handleChangeUpdate} selected={newValues?.category} />
+            ) : (
+              <span>{ele.category}</span>
+            )}
           </div>
           <div className="tCol">
-            <span>{ele.title}</span>
+            {updateActive === ele._id ? (
+              <input type="text" name="title" className="form_control" placeholder="Write your title" value={newValues?.title || ''} onChange={handleChangeUpdate} />
+            ) : (
+              <span>{ele.title}</span>
+            )}
           </div>
           <div className="tCol cont">
-            <span>{ele.content}</span>
+            {updateActive === ele._id ? (
+              <textarea name="content" className="form_control" placeholder="Write your content" value={newValues?.content || ''} onChange={handleChangeUpdate} />
+            ) : (
+              <span>{ele.content}</span>
+            )}
           </div>
           <div className="tCol center">
-            <span>{ele.score}</span>
+            {updateActive === ele._id ? (
+              <input type="text" name="score" className="form_control" placeholder="" value={newValues?.score?.toString() || ''} onChange={handleChangeUpdate} />
+            ) : (
+              <span>{ele.score}</span>
+            )}
           </div>
           <div className="tCol center">
             <TableActions actions={actions} item={ele} />
@@ -270,9 +293,7 @@ const Experiences = () => {
         </div>
         {updateActive === ele._id ? (
           <div className="tRow sup">
-            <div className="tCol"></div>
-            <div className="tCol"></div>
-            <div className="tCol" style={{ height: 'auto', overflow: 'visible' }}>
+            <div className="tCol">
               <ImageUpload
                 addSelectedFilename={(filename) => setSelectedFilenames(prev => [...prev, filename])}
                 removeSelectedFilename={removeSelectedImage}
@@ -281,34 +302,6 @@ const Experiences = () => {
                 maxImages={5}
                 isImageWithTitle={false}
               />
-            </div>
-            <div className="tCol visible">
-              <CitySearch
-                onSelect={handleCitySelect}
-                value={typeof ele.city === 'object' ? ele.city?.name : ele.city}
-              />
-            </div>
-            <div className="tCol">
-              <SelectCategories handleChange={handleChangeUpdate} selected={newValues?.category} />
-            </div>
-            <div className="tCol">
-              <input type="text" name="title" className="form_control" placeholder="Write your title" value={newValues?.title || ''} onChange={handleChangeUpdate} />
-            </div>
-            <div className="tCol">
-              <textarea name="content" className="form_control" placeholder="Write your content" value={newValues?.content || ''} onChange={handleChangeUpdate} />
-            </div>
-            <div className="tCol score center">
-              <input type="text" name="score" className="form_control" placeholder="" value={newValues?.score?.toString() || ''} onChange={handleChangeUpdate} />
-            </div>
-            <div className="tCol">
-              <div className="icons">
-                <button type="button" className="btn_action green" onClick={() => updateExperience(ele._id)}>
-                  <MdCheckCircle />
-                </button>
-                <button type="button" className="btn_action" onClick={onClickClose}>
-                  <MdClose />
-                </button>
-              </div>
             </div>
           </div>
         ) : null}

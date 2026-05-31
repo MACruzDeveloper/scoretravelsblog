@@ -32,13 +32,23 @@
 
   .tRow {
     display: table-row;
+    position: relative;
 
     &.sup {
+      display: block;
+      @include full_width_escape();
       background-color: $colorTableHeader;
 
-      .tCol {
+      > .tCol {
+        display: block;
+        height: auto;
+        overflow: visible;
         border: 0;
         padding: 1rem 0.5rem;
+
+        @media (min-width: $screenSm) {
+          padding: 1rem;
+        }
       }
     }
   }

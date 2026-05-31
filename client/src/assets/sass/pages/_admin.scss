@@ -289,34 +289,41 @@
   }
 
   .image_upload {
+    display: flex;
+    padding: 1rem;
     @media (min-width: $screenSm){
-      display: flex;
-       align-items: flex-end;
+      padding: 0 1rem;
     }
 
-    &_cta {
+    > input[type="file"] {
+      flex: 0 0 auto;
+      min-width: 30rem;
       @media (min-width: $screenSm){
-        display: flex;
-        align-items: flex-end;
+        align-self: center;
+        margin-right: 4rem;
       }
     }
 
+    &_cta {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
     &_list {
-      margin-top: 1.2rem;
       ul {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
         padding: 0;
-        margin: 0.8rem 0 0;
+        margin: 0.4rem 0 0;
         list-style: none;
       }
 
       .image_upload_item {
         position: relative;
-        width: 9rem;
-        height: 9rem;
-        border-radius: 1.2rem;
+        width: 8rem;
+        height: 4rem;
         overflow: hidden;
         background: rgba($color1, 0.08);
         box-shadow: 0 0.5rem 1.2rem rgba($color1, 0.08);
@@ -330,15 +337,15 @@
 
         .image_upload_remove {
           position: absolute;
-          top: 0.6rem;
-          right: 0.6rem;
-          width: 2.2rem;
-          height: 2.2rem;
+          top: 0.2rem;
+          right: 0.2rem;
+          width: 1.8rem;
+          height: 1.8rem;
           border-radius: 50%;
           border: none;
           background: rgba($color1, 0.9);
           color: $colorWhite;
-          font-size: 1.2rem;
+          font-size: 1.1rem;
           display: flex;
           align-items: center;
           justify-content: center;

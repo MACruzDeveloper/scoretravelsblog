@@ -39,6 +39,7 @@ textarea {
   &.form_control {
     height: auto;
     min-height: 10rem;
+    resize: vertical;
   }
 }
 

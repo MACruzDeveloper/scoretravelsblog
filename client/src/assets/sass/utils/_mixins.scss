@@ -69,3 +69,21 @@ $numGutter: 10;
     transform: translateY(-50%);
   }
 }
+
+// Full width escape for elements that need to break out of the container
+@mixin full_width_escape($padding: 1rem) {
+  width: calc(100vw - #{$padding * 2});
+
+  @media (min-width: $screenSm) {
+    width: calc(#{$containerSm} - #{$padding * 2});
+  }
+  @media (min-width: $screenMd) {
+    width: calc(#{$containerMd} - #{$padding * 2});
+  }
+  @media (min-width: $screenLg) {
+    width: calc(#{$containerLg} - #{$padding * 2});
+  }
+  @media (min-width: $screenXlg) {
+    width: calc(#{$containerXlg} - #{$padding * 2});
+  }
+}
