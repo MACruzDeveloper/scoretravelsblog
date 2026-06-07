@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useRef, ChangeEvent, FormEvent } from 'react'
 import { checkFileSize } from '@utils/utils'
 import { URL } from '../../config'
 import Msgbox, { ParamsMsgBox } from '@common/Msgbox'
@@ -24,6 +24,7 @@ const ImageUpload = ({
   maxImages = allowMultiple ? 5 : 1,
   currentImages = [],
 }: propsImageUpload) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [loaded, setLoaded] = useState(0)
   const [loadingFile, setLoadingFile] = useState(false)
@@ -35,27 +36,35 @@ const ImageUpload = ({
     if (target) setValueInputAdd(target.value)
   }
 
-  const onChangeHandlerFile = (e: FormEvent<HTMLInputElement>) => {
+  const onChangeHandlerFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.currentTarget
-    if (!target || !target.files) return
+    if (!target || !target.files || target.files.length === 0) return
 
     const files = Array.from(target.files)
     if (allowMultiple && currentImages.length + files.length > maxImages) {
       setMessage({ body: `You can upload up to ${maxImages} images`, classname: 'msg_error' })
+      target.value = ''
       return
     }
 
-    files.forEach(file => {
-      if (checkFileSize(file)) {
-        setSelectedFile(file)
-        setLoaded(0)
-        !isImageWithTitle && uploadImage(file)
-      } else {
+    setLoaded(0)
+    for (const file of files) {
+      if (!checkFileSize(file)) {
         console.log('Error: file too much big')
-        setMessage({ body: `file too much big. Max 1MB`, classname: 'msg_error' })
+        setMessage({ body: `File too big. Max 5MB`, classname: 'msg_error' })
         setSelectedFile(null)
+        continue
       }
-    })
+
+      setSelectedFile(file)
+      if (!isImageWithTitle) {
+        await uploadImage(file)
+      }
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const uploadImage = async (file: File) => {
@@ -100,6 +109,7 @@ const ImageUpload = ({
 
   return <div className="image_upload">
     <input
+      ref={fileInputRef}
       type="file"
       name="image"
       accept="image/png,image/gif,image/jpeg,image/avif"

@@ -16,7 +16,7 @@ export const validateEmail = (email) => {
 
 // validation for size files
 export const checkFileSize = (file) => {
-  const maxAllowedSize = 1 * 1024 * 1024
+  const maxAllowedSize = 5 * 1024 * 1024
   return file.size < maxAllowedSize
 }
 

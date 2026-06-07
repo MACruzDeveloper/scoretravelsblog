@@ -37,9 +37,16 @@ const milestones: Milestone[] = [
 const About = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [dragging, setDragging] = useState(false)
+  const [interpolatedYear, setInterpolatedYear] = useState(milestones[0].year)
   const roadRef = useRef<HTMLDivElement | null>(null)
   const activeMilestone = milestones[currentIndex]
+  const pointOffset = 2.5
   const step = milestones.length > 1 ? 100 / (milestones.length - 1) : 0
+  const getPointLeft = (index: number) => `${Math.min(index * step + pointOffset, 97.5)}%`
+  const getRoadPercent = (p: number) => Math.round(p * (100 - pointOffset * 2) + pointOffset)
+
+  const minYear = Math.min(...milestones.map(m => m.year))
+  const maxYear = Math.max(...milestones.map(m => m.year))
 
   const handlePrev = () => {
     setCurrentIndex((prev) => Math.max(0, prev - 1))
@@ -49,46 +56,101 @@ const About = () => {
     setCurrentIndex((prev) => Math.min(milestones.length - 1, prev + 1))
   }
 
-  const getIndexFromPointer = (clientX: number) => {
+  const getProgressFromPointer = (clientX: number) => {
     const bounds = roadRef.current?.getBoundingClientRect()
-    if (!bounds) return currentIndex
+    if (!bounds) return 0
     const x = Math.min(Math.max(clientX - bounds.left, 0), bounds.width)
     const ratio = x / bounds.width
-    return Math.round(ratio * (milestones.length - 1))
+    return Math.min(Math.max(ratio, 0), 1)
   }
+
+  useEffect(() => {
+    let mounted = true
+    import('trig-js')
+      .then((mod) => {
+        if (!mounted) return
+        const trig = (mod && (mod.default || mod.trig || mod)) as any
+        if (trig && typeof trig.trigInit === 'function') {
+          try {
+            trig.trigInit()
+          } catch (e) {
+            // ignore
+          }
+        }
+      })
+      .catch(() => {
+        // ignore
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     roadRef.current?.setPointerCapture(event.pointerId)
     setDragging(true)
-    setCurrentIndex(getIndexFromPointer(event.clientX))
+    const p = getProgressFromPointer(event.clientX)
+    const percent = getRoadPercent(p)
+    if (roadRef.current) {
+      roadRef.current.style.setProperty('--trig', `${percent}%`)
+    }
+    setCurrentIndex(Math.round(p * (milestones.length - 1)))
+    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging) return
-    setCurrentIndex(getIndexFromPointer(event.clientX))
+    const p = getProgressFromPointer(event.clientX)
+    const percent = getRoadPercent(p)
+    if (roadRef.current) {
+      roadRef.current.style.setProperty('--trig', `${percent}%`)
+    }
+    setCurrentIndex(Math.round(p * (milestones.length - 1)))
+    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     roadRef.current?.releasePointerCapture(event.pointerId)
     setDragging(false)
-    setCurrentIndex(getIndexFromPointer(event.clientX))
+    const p = getProgressFromPointer(event.clientX)
+    const percent = getRoadPercent(p)
+    if (roadRef.current) {
+      roadRef.current.style.setProperty('--trig', `${percent}%`)
+    }
+    setCurrentIndex(Math.round(p * (milestones.length - 1)))
+    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'ArrowRight' || event.code === 'ArrowDown' || event.code === 'KeyD') {
-        event.preventDefault()
-        handleNext()
-      }
+        if (event.code === 'ArrowRight' || event.code === 'ArrowDown' || event.code === 'KeyD') {
+          event.preventDefault()
+          const next = Math.min(milestones.length - 1, currentIndex + 1)
+          setCurrentIndex(next)
+        }
 
-      if (event.code === 'ArrowLeft' || event.code === 'ArrowUp' || event.code === 'KeyA') {
-        event.preventDefault()
-        handlePrev()
+        if (event.code === 'ArrowLeft' || event.code === 'ArrowUp' || event.code === 'KeyA') {
+          event.preventDefault()
+          const prev = Math.max(0, currentIndex - 1)
+          setCurrentIndex(prev)
+        }
       }
-    }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentIndex])
+
+  // Trig.js will handle scroll-driven CSS variables; we keep keyboard/pointer writes to --trig
+
+  // sync CSS var and derived state when currentIndex changes (keyboard, click)
+  useEffect(() => {
+    const p = milestones.length > 1 ? currentIndex / (milestones.length - 1) : 0
+    const percent = getRoadPercent(p)
+    if (roadRef.current) {
+      roadRef.current.style.setProperty('--trig', `${percent}%`)
+    }
+    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }, [currentIndex])
 
   return (
@@ -111,7 +173,7 @@ const About = () => {
             <div className="about_journey">
               <div
               ref={roadRef}
-              className={`about_road ${dragging ? 'dragging' : ''}`}
+              className={`about_road road ${dragging ? 'dragging' : ''}`}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -120,23 +182,38 @@ const About = () => {
               <div className="road_line" />
 
               {milestones.map((milestone, index) => {
-                const left = `${index * step}%`
+                const left = getPointLeft(index)
                 return (
                   <button
                     key={milestone.year}
                     type="button"
                     className={`road_point ${currentIndex === index ? 'active' : ''}`}
                     style={{ left }}
-                    onClick={() => setCurrentIndex(index)}>
+                    onClick={() => {
+                      const p = index / (milestones.length - 1)
+                      const percent = getRoadPercent(p)
+                      if (roadRef.current) {
+                        roadRef.current.style.setProperty('--trig', `${percent}%`)
+                      }
+                      setCurrentIndex(index)
+                      setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
+                    }}>
                     <span className="road_point_label">{milestone.year}</span>
                   </button>
                 )
               })}
 
-              <div
-                className="road_car"
-                style={{ transform: `translateX(calc(${currentIndex * step}%))` }}>
-                <div className="car_window" />
+              <div className="carBox">
+                <div className="carContainer">
+                  <div className="car">
+                    <div className="car_window" />
+                    <div className="wheel front" />
+                    <div className="wheel back" />
+                  </div>
+                </div>
+              </div>
+              <div className="road_year_overlay">
+                <span>{interpolatedYear}</span>
               </div>
             </div>
             <p className="road_hint">Arrastra el coche o usa las flechas del teclado para avanzar y retroceder.</p>

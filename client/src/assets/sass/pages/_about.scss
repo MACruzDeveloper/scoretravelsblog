@@ -21,102 +21,196 @@
     width: 100%;
     max-width: 120rem;
     margin: 0 auto 2rem;
-    min-height: 16rem;
+    min-height: 22rem;
+    padding: 3rem 0 4rem;
     cursor: grab;
     touch-action: pan-y;
     user-select: none;
-
+    background: #2c2c2c;
+    border: 1px solid rgba($color1, 0.12);
+    border-radius: 2rem;
+    overflow: visible;
+    box-shadow: inset 0 1rem 1.5rem rgba($color1, 0.08), 0 1rem 2rem rgba($color1, 0.05);
+    transform: skewY(-9deg);
+    transform-origin: top center;
     &.dragging {
       cursor: grabbing;
     }
-  }
 
-  .road_line {
-    position: absolute;
-    top: 55%;
-    left: 2.5%;
-    right: 2.5%;
-    height: 1rem;
-    border-radius: 999px;
-    background: linear-gradient(90deg, rgba($color3, 0.95), rgba($color4, 0.35));
-    box-shadow: inset 0 0 0.5rem rgba($color1, 0.12);
-  }
-
-  .road_point {
-    position: absolute;
-    top: 50%;
-    width: 1.6rem;
-    height: 1.6rem;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 0.4rem solid rgba($color5, 0.9);
-    background-color: $color4;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 5;
-
-    &.active {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-color: $color2;
-      background-color: $color2;
+    .road_line {
+      position: absolute;
+      top: 50%;
+      left: 2.5%;
+      right: 2.5%;
+      height: 1rem;
+      border-radius: 999px;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba($colorWhite, 0.9),
+        rgba($colorWhite, 0.9) 40px,
+        transparent 40px,
+        transparent 60px
+      );
+      box-shadow: inset 0 0 0.5rem rgba($color1, 0.12);
+      transform: translateY(-50%);
     }
-  }
 
-  .road_point_label {
-    position: absolute;
-    top: 1.8rem;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    font-size: 1.2rem;
-    color: $colorWhite;
-    width: 10rem;
-    margin-top: 0.8rem;
-    white-space: nowrap;
-  }
+    .road_point {
+      position: absolute;
+      top: 50%;
+      width: 1.6rem;
+      height: 1.6rem;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 0.35rem solid rgba($color5, 0.9);
+      background-color: $color4;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 5;
 
-  .road_car {
-    position: absolute;
-    top: 45%;
-    left: 2.5%;
-    width: 5.2rem;
-    height: 2.8rem;
-    transform: translate(-50%, -50%);
-    transition: transform 0.55s ease;
-    background: $color2;
-    border-radius: 1.4rem;
-    z-index: 10;
-    box-shadow: 0 1rem 2rem rgba($color1, 0.18);
+      &.active {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-color: $color2;
+        background-color: $color2;
+      }
+    }
 
-    &::before,
-    &::after {
+    .road_point_label {
+      position: absolute;
+      top: 1.8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: 1.2rem;
+      color: $colorWhite;
+      width: 10rem;
+      margin-top: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .carBox {
+      position: absolute;
+      top: 45%;
+      left: var(--trig, 2.5%);
+      transform: translate(-50%, -50%);
+      transition: left 0.35s ease, transform 0.35s ease;
+      z-index: 12;
+      pointer-events: none;
+    }
+
+    .carContainer {
+      position: relative;
+      width: 154px;
+      height: 60px;
+    }
+
+    .car {
+      position: absolute;
+      width: 154px;
+      height: 60px;
+      background: $color2;
+      border-radius: 10px;
+      clip-path: polygon(
+        23% 28%,
+        19% 52%,
+        3% 52%,
+        0% 80%,
+        0 100%,
+        43% 100%,
+        75% 100%,
+        97% 100%,
+        100% 62%,
+        64% 59%,
+        54% 28%
+      );
+      box-shadow: 0 1rem 2rem rgba($color1, 0.16);
+    }
+
+    .car::before {
       content: '';
       position: absolute;
-      bottom: -0.75rem;
-      width: 1rem;
-      height: 1rem;
-      border-radius: 50%;
-      background: $color1;
+      width: 59px;
+      height: 17px;
+      background: rgba($color5, 0.95);
+      top: 19px;
+      left: 66px;
+      border-radius: 0.6rem;
     }
 
-    &::before {
-      left: 0.8rem;
-    }
-
-    &::after {
-      right: 0.8rem;
+    .car::after {
+      content: '';
+      position: absolute;
+      width: 46px;
+      height: 17px;
+      background: rgba($color5, 0.95);
+      top: 19px;
+      left: 11px;
+      clip-path: polygon(25% 0%, 100% 0%, 96% 100%, 0% 56%);
+      border-radius: 0.4rem;
     }
 
     .car_window {
       position: absolute;
-      top: 0.45rem;
-      left: 0.7rem;
-      right: 0.7rem;
-      height: 1rem;
+      top: 16px;
+      left: 60px;
+      right: 16px;
+      height: 18px;
       border-radius: 0.8rem;
-      background: rgba($color5, 0.9);
+      background: rgba($color5, 0.95);
       box-shadow: inset 0 0 0.4rem rgba($color1, 0.25);
+    }
+
+    .wheel {
+      position: absolute;
+      bottom: -10px;
+      width: 25px;
+      height: 25px;
+      background: #000;
+      border-radius: 50%;
+    }
+
+    .wheel.front {
+      left: 15px;
+    }
+
+    .wheel.back {
+      right: 15px;
+    }
+
+    .wheel::before {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 4px;
+      width: 18px;
+      height: 18px;
+      background-color: #493d3d;
+      border-radius: 50%;
+    }
+
+    &.dragging .carBox {
+      transition: none;
+    }
+
+    .road_year_overlay {
+      position: absolute;
+      top: 15%;
+      left: var(--trig, 2.5%);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 13;
+      transition: left 0.35s ease, opacity 0.25s ease, transform 0.35s ease;
+
+      span {
+        display: inline-block;
+        background: rgba($color1, 0.95);
+        color: $colorWhite;
+        padding: 0.6rem 0.9rem;
+        border-radius: 0.8rem;
+        font-weight: $fontBold;
+        box-shadow: 0 0.6rem 1.2rem rgba($color1, 0.08);
+      }
     }
   }
 

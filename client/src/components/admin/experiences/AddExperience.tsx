@@ -22,6 +22,10 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
   //const [loadingFile, setLoadingFile] = useState(false)
   const [message, setMessage] = useState<ParamsMsgBox>({ body: '', classname: '' })
 
+  const removeSelectedImage = (index: number) => {
+    setSelectedFilenames(prev => prev.filter((_, idx) => idx !== index))
+  }
+
   const handleChangeNew = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const target = e.currentTarget
     if (target) setValues({ ...values, [target.name]: target.value })
@@ -81,6 +85,7 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
 
           <ImageUpload
             addSelectedFilename={(filename) => setSelectedFilenames(prev => [...prev, filename])}
+            removeSelectedFilename={removeSelectedImage}
             allowMultiple={true}
             maxImages={5}
             currentImages={selectedFilenames}
