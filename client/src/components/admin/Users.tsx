@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useMemo, ChangeEvent } from 'react'
 import { getData, postData } from '@utils/utils'
 import { NavLink } from 'react-router-dom'
-import { MyGlobalContext } from '../../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
 import { URL } from '../../config'
 import Msgbox from '@common/Msgbox'
@@ -11,6 +11,7 @@ import TableActions from '@/components/common/TableActions'
 const Users = () => {
   const [users, setUsers] = useState([])
   const [newRole, setNewRole] = useState('')
+  const [newUsername, setNewUsername] = useState('')
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [updateActive, setUpdateActive] = useState(null)
 
@@ -40,10 +41,16 @@ const Users = () => {
     if (target) setNewRole(target.value)
   }
 
+  const handleChangeUsername = (e: ChangeEvent<HTMLInputElement>) => {
+    const target = e.currentTarget
+    if (target) setNewUsername(target.value)
+  }
+
   const onClickShowUpdate = async (idx: string) => {
     setUpdateActive(idx)
     let idUser = users.findIndex(e => e._id === idx)
     setNewRole(users[idUser].role)
+    setNewUsername(users[idUser].username || '')
   }
 
   const onClickClose = async () => {
@@ -53,14 +60,14 @@ const Users = () => {
   const onClickUpdate = async (idx: string) => {
     try {
       let url = `${URL}/users/update`
-      if (newRole !== '') {
-        await postData(url, { _id: idx, role: newRole })
+      if (newRole !== '' && newUsername !== '') {
+        await postData(url, { _id: idx, role: newRole, username: newUsername })
         setUpdateActive(null)
         setRole(newRole)
         getUsers()
         setMessage({ body: `User updated!`, classname: 'msg_ok' })
       } else {
-        setMessage({ body: 'Write a role', classname: 'msg_error' })
+        setMessage({ body: 'Write a username and role', classname: 'msg_error' })
       }
     } catch (error) {
       console.log(error)
@@ -103,10 +110,11 @@ const Users = () => {
   }, [users, sortColumn, sortDirection])
 
   const columns = [
-    { key: 'email', label: 'Email', sortable: true, width: 'w40' },
-    { key: 'password', label: 'Password', sortable: false, width: 'w30', align: 'scroll' },
-    { key: 'role', label: 'Role', sortable: true, width: 'w20', align: 'center' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w10', align: 'right' }
+    { key: 'username', label: 'Username', sortable: true, width: 'w20' },
+    { key: 'email', label: 'Email', sortable: true, width: 'w25' },
+    { key: 'password', label: 'Password', sortable: false, width: 'w25', align: 'scroll' },
+    { key: 'role', label: 'Role', sortable: true, width: 'w15', align: 'center' },
+    { key: 'actions', label: 'Action', sortable: false, width: 'w15', align: 'right' }
   ]
 
   const renderRow = (ele: any) => {
@@ -142,6 +150,18 @@ const Users = () => {
     return (
       <div className="tGroup" key={ele._id}>
         <div className="tRow">
+          <div className="tCol">
+            {updateActive !== ele._id ? (
+              <span>{ele.username}</span>
+            ) : (
+              <input
+                type="text"
+                className="form_control"
+                value={newUsername}
+                onChange={handleChangeUsername}
+              />
+            )}
+          </div>
           <div className="tCol">
             <span>{ele.email}</span>
           </div>

@@ -2,7 +2,7 @@ import { useState, useContext } from 'react'
 import { postData } from '@utils/utils'
 import { MdStar, MdStarBorder } from 'react-icons/md'
 import { URL } from '../config'
-import { MyGlobalContext } from '../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import Msgbox from './common/Msgbox'
 
 type PropsStars = {

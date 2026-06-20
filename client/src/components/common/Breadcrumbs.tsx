@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { NavLink } from 'react-router-dom'
-import { MyGlobalContext } from '../../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 
 export type ParamsBreadcrumbs = {
   page: string

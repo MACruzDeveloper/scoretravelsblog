@@ -5,8 +5,8 @@ const validator = require('validator')
 const jwt_secret = process.env.JWT_SECRET
 
 const register = async (req, res) => {
-  const { email, password, password2 } = req.body
-  if (!email || !password || !password2) return res.json({ ok: false, message: 'All field are required' })
+  const { username, email, password, password2 } = req.body
+  if (!username || !email || !password || !password2) return res.json({ ok: false, message: 'All field are required' })
   if (password !== password2) return res.json({ ok: false, message: 'Passwords must match' })
   if (!validator.isEmail(email)) return res.json({ ok: false, message: 'Please provide a valid email' })
 
@@ -16,6 +16,7 @@ const register = async (req, res) => {
     const hash = await argon2.hash(password)
     console.log('hash ==>', hash)
     const newUser = {
+      username,
       email,
       password: hash,
       role: 'author'
@@ -39,7 +40,7 @@ const login = async (req, res) => {
     if (match) {
       const token = jwt.sign(user.toJSON(), jwt_secret, { expiresIn: 100080 }) // 365d
       const role = user.role
-      res.json({ ok: true, message: `Hi ${user.email}!`, token, email, role })
+      res.json({ ok: true, message: `Hi ${user.username}!`, token, username: user.username, email, role })
     } else return res.json({ ok: false, message: 'Invalid password' })
   } catch (error) {
     res.json({ ok: false, error })
@@ -67,7 +68,12 @@ const findAllUsers = async (req, res) => {
 const addNewUser = async (req, res) => {
   let params = req.body
   try {
-    const done = await User.create({ email: params.email, password: params.password, role: params.role })
+    const done = await User.create({ 
+      username: params.username,
+      email: params.email, 
+      password: params.password, 
+      role: params.role 
+    })
     res.send(done)
   }
   catch (error) {
@@ -90,8 +96,11 @@ const updateUser = async (req, res) => {
   let params = req.body
 
   try {
+    const updateData = {}
+    if (params.role) updateData.role = params.role
+    if (typeof params.username === 'string') updateData.username = params.username
     const updated = await User.updateOne(
-      { _id: params._id }, { role: params.role }
+      { _id: params._id }, updateData
     )
     res.send({ updated })
   }

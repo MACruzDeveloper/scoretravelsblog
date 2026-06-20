@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { MyGlobalContext } from '../../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 
 const NavbarAdmin = () => {
   const { role } = useContext(MyGlobalContext)

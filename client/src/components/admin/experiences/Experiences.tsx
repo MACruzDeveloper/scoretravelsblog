@@ -5,7 +5,7 @@ import { sortBy } from "lodash"
 import { MdDelete, MdEdit, MdClose, MdCheckCircle, MdAddCircleOutline } from 'react-icons/md'
 import { useExperienceStore, Experience, City } from '@/store/experienceStore'
 import { URL } from '../../../config'
-import { MyGlobalContext } from '../../../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import AddExperience from './AddExperience'
 import SelectCategories from '@/components/common/SelectCategories'
 import { CitySearch } from './CitySearch'

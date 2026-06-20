@@ -5,13 +5,18 @@ import { URL } from '../../../config'
 import Msgbox from '@/components/common/Msgbox'
 
 type PropsRegister = {
-  login: (token: string, role: string) => void
+  login: (token: string, role: string, username: string, email: string) => void
   logout: () => void
 }
 
 const Register = ({ login, logout }: PropsRegister) => {
   const navigate = useNavigate()
-  const [values, setValues] = useState({ email: '', password: '', password2: '' })
+  const [values, setValues] = useState({ 
+    username: '',
+    email: '', 
+    password: '', 
+    password2: '' 
+  })
   const [message, setMessage] = useState({ body: '', classname: '' })
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -22,6 +27,7 @@ const Register = ({ login, logout }: PropsRegister) => {
   const loginRegister = async () => {
     try {
       const response = await postData(`${URL}/users/login`, {
+        username: values.username,
         email: values.email,
         password: values.password
       })
@@ -29,7 +35,7 @@ const Register = ({ login, logout }: PropsRegister) => {
 
       if (response.data.ok) {
         setTimeout(() => {
-          login(response.data.token, response.data.role)
+          login(response.data.token, response.data.role, response.data.username, response.data.email)
           navigate('/admin/')
         }, 2000)
       }
@@ -45,6 +51,7 @@ const Register = ({ login, logout }: PropsRegister) => {
     logout()
     try {
       const response = await postData(`${URL}/users/register`, {
+        username: values.username,
         email: values.email,
         password: values.password,
         password2: values.password2
@@ -64,7 +71,8 @@ const Register = ({ login, logout }: PropsRegister) => {
       onSubmit={handleSubmit}
       className='form'
     >
-      <input type="text" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
+      <input type="text" name="username" className="form_control" placeholder="Write your username" onChange={handleChange} />
+      <input type="email" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
       <input type="password" name="password" className="form_control" placeholder="Write your password" onChange={handleChange} />
       <input type="password" name="password2" className="form_control" placeholder="Confirm your password" onChange={handleChange} />
       <button className="btn">Register</button>

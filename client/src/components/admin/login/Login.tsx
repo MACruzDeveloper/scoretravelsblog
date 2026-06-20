@@ -5,7 +5,7 @@ import { URL } from '../../../config'
 import Msgbox from '@common/Msgbox'
 
 type PropsLogin = {
-  login: (token: string, role: string) => void
+  login: (token: string, role: string, username?: string, email?: string) => void
 }
 
 const Login = ({ login }: PropsLogin) => {
@@ -33,7 +33,7 @@ const Login = ({ login }: PropsLogin) => {
 
       if (response.data.ok) {
         setTimeout(() => {
-          login(response.data.token, response.data.role)
+          login(response.data.token, response.data.role, response.data.username, response.data.email)
           navigate('/admin/')
         }, 2000)
       }

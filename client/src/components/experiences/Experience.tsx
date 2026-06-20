@@ -10,7 +10,7 @@ import Stars from '../Stars'
 import Msgbox from '../common/Msgbox'
 import Spinner from '../common/Spinner'
 import Carousel from '../Carousel'
-import { MyGlobalContext } from '../../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 
 type PropsExperience = {
   user: string

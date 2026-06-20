@@ -1,7 +1,7 @@
 //import { Outlet } from 'react-router-dom'
 import { useEffect, useState, useContext } from 'react'
 import { Navigate } from 'react-router-dom'
-import { MyGlobalContext } from '../App'
+import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import NavAdmin from '../components/admin/NavAdmin'
 
 type ParamsAdminLayout = {

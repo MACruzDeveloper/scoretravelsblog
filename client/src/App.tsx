@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { postData } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { URL } from './config'
@@ -24,34 +24,14 @@ import Users from './components/admin/Users'
 import Images from './components/admin/Images'
 import ScrollToTop from '@/components/common/ScrollToTop'
 import { PAGES_WITH_BREADCRUMBS } from '@/utils/constants'
+import { MyGlobalContext } from './components/context/useGlobalContext'
 import './assets/sass/main.scss'
-
-export type GlobalContent = {
-  token: string
-  isLoggedInValue: any
-  user: string
-  role: string
-  setRole:(c: string) => void
-  titleExperience: string
-  setTitleExperience:(c: string) => void
-}
-
-export const MyGlobalContext = createContext<GlobalContent>({
-  token: '',
-  isLoggedInValue: null,
-  user: '',
-  role: '',
-  setRole: () => {},
-  titleExperience: '',
-  setTitleExperience: () => {}
-})
-
-export const useGlobalContext = () => useContext(MyGlobalContext)
 
 function App() {
   const token = JSON.parse(localStorage.getItem('token'))
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
   const [user, setUser] = useState('')
+  const [username, setUsername] = useState('')
   const [role, setRole] = useState('')
   // Experience title for context
   const [titleExperience, setTitleExperience] = useState('')
@@ -70,6 +50,7 @@ function App() {
       if (response.data.succ) {
         setRole(response.data.succ.role)
         setUser(response.data.succ.email)
+        setUsername(response.data.succ.username || response.data.succ.email)
       }
       return response.data.ok ? setIsLoggedIn(true) : setIsLoggedIn(false)
     }
@@ -78,9 +59,10 @@ function App() {
     }
   }
 
-  const login = (token: string, role: string) => {
-    //console.log('token ===>'+token)
+  const login = (token: string, role: string, username?: string, email?: string) => {
     setRole(role)
+    if (username) setUsername(username)
+    if (email) setUser(email)
     localStorage.setItem('token', JSON.stringify(token))
     setIsLoggedIn(true)
   }
@@ -89,6 +71,9 @@ function App() {
     localStorage.removeItem('token')
     sessionStorage.removeItem('adminCurtainShown')
     setIsLoggedIn(false)
+    setUser('')
+    setUsername('')
+    setRole('')
   }
 
   useEffect(() => {
@@ -114,6 +99,7 @@ function App() {
     token,
     isLoggedInValue, 
     user,
+    username,
     role,
     setRole,
     titleExperience, 
