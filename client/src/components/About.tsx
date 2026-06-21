@@ -36,131 +36,88 @@ const milestones: Milestone[] = [
 
 const About = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [dragging, setDragging] = useState(false)
   const [interpolatedYear, setInterpolatedYear] = useState(milestones[0].year)
   const roadRef = useRef<HTMLDivElement | null>(null)
+  const sectionRef = useRef<HTMLDivElement | null>(null)
   const activeMilestone = milestones[currentIndex]
   const pointOffset = 2.5
   const step = milestones.length > 1 ? 100 / (milestones.length - 1) : 0
   const getPointLeft = (index: number) => `${Math.min(index * step + pointOffset, 97.5)}%`
+  const getTooltipLeft = (index: number) => `${Math.min(Math.max(index * step + pointOffset, 7), 93)}%`
   const getRoadPercent = (p: number) => Math.round(p * (100 - pointOffset * 2) + pointOffset)
 
   const minYear = Math.min(...milestones.map(m => m.year))
   const maxYear = Math.max(...milestones.map(m => m.year))
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1))
-  }
+  const updateRoadPosition = (progress: number) => {
+    const p = Math.min(Math.max(progress, 0), 1)
+    const percent = getRoadPercent(p)
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(milestones.length - 1, prev + 1))
-  }
+    if (roadRef.current) {
+      roadRef.current.style.setProperty('--trig', `${percent}%`)
+      roadRef.current.style.setProperty('--scroll', `${p}`)
+    }
 
-  const getProgressFromPointer = (clientX: number) => {
-    const bounds = roadRef.current?.getBoundingClientRect()
-    if (!bounds) return 0
-    const x = Math.min(Math.max(clientX - bounds.left, 0), bounds.width)
-    const ratio = x / bounds.width
-    return Math.min(Math.max(ratio, 0), 1)
+    const nextIndex = Math.round(p * (milestones.length - 1))
+    setCurrentIndex((prev) => (prev !== nextIndex ? nextIndex : prev))
+    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }
 
   useEffect(() => {
-    let mounted = true
-    import('trig-js')
-      .then((mod) => {
-        if (!mounted) return
-        const trig = (mod && (mod.default || mod.trig || mod)) as any
-        if (trig && typeof trig.trigInit === 'function') {
-          try {
-            trig.trigInit()
-          } catch (e) {
-            // ignore
-          }
-        }
-      })
-      .catch(() => {
-        // ignore
-      })
+    const handleScroll = () => {
+      if (!sectionRef.current) return
+      const scrollY = window.scrollY || window.pageYOffset
+      const sectionTop = sectionRef.current.offsetTop
+      const sectionHeight = sectionRef.current.offsetHeight
+      const start = sectionTop
+      const end = sectionTop + sectionHeight - window.innerHeight
+      const progress = end > start ? (scrollY - start) / (end - start) : 0
+      updateRoadPosition(progress)
+    }
 
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleScroll)
     return () => {
-      mounted = false
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
     }
   }, [])
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    roadRef.current?.setPointerCapture(event.pointerId)
-    setDragging(true)
-    const p = getProgressFromPointer(event.clientX)
-    const percent = getRoadPercent(p)
-    if (roadRef.current) {
-      roadRef.current.style.setProperty('--trig', `${percent}%`)
-    }
-    setCurrentIndex(Math.round(p * (milestones.length - 1)))
-    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
-  }
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragging) return
-    const p = getProgressFromPointer(event.clientX)
-    const percent = getRoadPercent(p)
-    if (roadRef.current) {
-      roadRef.current.style.setProperty('--trig', `${percent}%`)
-    }
-    setCurrentIndex(Math.round(p * (milestones.length - 1)))
-    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
-  }
-
-  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    roadRef.current?.releasePointerCapture(event.pointerId)
-    setDragging(false)
-    const p = getProgressFromPointer(event.clientX)
-    const percent = getRoadPercent(p)
-    if (roadRef.current) {
-      roadRef.current.style.setProperty('--trig', `${percent}%`)
-    }
-    setCurrentIndex(Math.round(p * (milestones.length - 1)))
-    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
-  }
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.code === 'ArrowRight' || event.code === 'ArrowDown' || event.code === 'KeyD') {
-          event.preventDefault()
-          const next = Math.min(milestones.length - 1, currentIndex + 1)
-          setCurrentIndex(next)
-        }
-
-        if (event.code === 'ArrowLeft' || event.code === 'ArrowUp' || event.code === 'KeyA') {
-          event.preventDefault()
-          const prev = Math.max(0, currentIndex - 1)
-          setCurrentIndex(prev)
-        }
+      if (event.code === 'ArrowRight' || event.code === 'ArrowDown' || event.code === 'KeyD') {
+        event.preventDefault()
+        setCurrentIndex((prev) => Math.min(milestones.length - 1, prev + 1))
       }
+
+      if (event.code === 'ArrowLeft' || event.code === 'ArrowUp' || event.code === 'KeyA') {
+        event.preventDefault()
+        setCurrentIndex((prev) => Math.max(0, prev - 1))
+      }
+    }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentIndex])
+  }, [])
 
-  // Trig.js will handle scroll-driven CSS variables; we keep keyboard/pointer writes to --trig
-
-  // sync CSS var and derived state when currentIndex changes (keyboard, click)
   useEffect(() => {
     const p = milestones.length > 1 ? currentIndex / (milestones.length - 1) : 0
     const percent = getRoadPercent(p)
     if (roadRef.current) {
       roadRef.current.style.setProperty('--trig', `${percent}%`)
+      roadRef.current.style.setProperty('--scroll', `${p}`)
     }
     setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }, [currentIndex])
 
   return (
     <div className="page about">
-      <div className="container">
-        <div className="wrapper">
+      <section className="about_slide intro_slide">
+        <div className="slide_inner">
           <div className="top">
             <h2 className="title">About me</h2>
           </div>
-
           <div className="content">
             <div className="about_intro">
               <p>
@@ -169,91 +126,57 @@ const About = () => {
                 coche y cinco hitos importantes.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="about_journey">
-              <div
-              ref={roadRef}
-              className={`about_road road ${dragging ? 'dragging' : ''}`}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              onPointerLeave={handlePointerUp}>
-              <div className="road_line" />
+      <section ref={sectionRef} className="about_slide road_slide">
+        <div className="road_panel">
+          <div
+            ref={roadRef}
+            className="about_road road"
+            aria-label="Carretera interactiva con hitos"
+          >
+            <div className="road_background" />
+            <div className="road_line" />
 
-              {milestones.map((milestone, index) => {
-                const left = getPointLeft(index)
-                return (
-                  <button
-                    key={milestone.year}
-                    type="button"
-                    className={`road_point ${currentIndex === index ? 'active' : ''}`}
-                    style={{ left }}
-                    onClick={() => {
-                      const p = index / (milestones.length - 1)
-                      const percent = getRoadPercent(p)
-                      if (roadRef.current) {
-                        roadRef.current.style.setProperty('--trig', `${percent}%`)
-                      }
-                      setCurrentIndex(index)
-                      setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
-                    }}>
-                    <span className="road_point_label">{milestone.year}</span>
-                  </button>
-                )
-              })}
-
-              <div className="carBox">
-                <div className="carContainer">
-                  <div className="car">
-                    <div className="car_window" />
-                    <div className="wheel front" />
-                    <div className="wheel back" />
-                  </div>
+            {milestones.map((milestone, index) => {
+              const left = getPointLeft(index)
+              return (
+                <div
+                  key={milestone.year}
+                  className={`road_point ${currentIndex === index ? 'active' : ''}`}
+                  style={{ left }}
+                >
+                  <span className="road_point_label">{milestone.year}</span>
                 </div>
-              </div>
-              <div className="road_year_overlay">
-                <span>{interpolatedYear}</span>
+              )
+            })}
+
+            <div className="carBox">
+              <div className="carContainer">
+                <div className="car">
+                  <div className="car_window" />
+                  <div className="wheel front" />
+                  <div className="wheel back" />
+                </div>
               </div>
             </div>
-            <p className="road_hint">Arrastra el coche o usa las flechas del teclado para avanzar y retroceder.</p>
 
-              <div className="about_stage">
-                <article className="stage_card">
-                  <div className="stage_meta">
-                    <span className="stage_year">{activeMilestone.year}</span>
-                    <span className="stage_label">Hito</span>
-                  </div>
-                  <h3>{activeMilestone.title}</h3>
-                  <p className="stage_text">{activeMilestone.description}</p>
-                </article>
+            <div className="road_year_overlay">
+              <span>{interpolatedYear}</span>
+            </div>
 
-                <div className="stage_list">
-                  {milestones.map((milestone, index) => (
-                    <button
-                      key={milestone.year}
-                      type="button"
-                      className={`stage_item ${currentIndex === index ? 'active' : ''}`}
-                      onClick={() => setCurrentIndex(index)}>
-                      <span className="stage_item_year">{milestone.year}</span>
-                      <span className="stage_item_title">{milestone.title}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="about_controls">
-                <button type="button" onClick={handlePrev} disabled={currentIndex === 0}>
-                  Paso anterior
-                </button>
-                <button type="button" onClick={handleNext} disabled={currentIndex === milestones.length - 1}>
-                  Siguiente paso
-                </button>
+            <div className="road_tooltip" style={{ left: getTooltipLeft(currentIndex) }}>
+              <div className="tooltip_card">
+                <span className="tooltip_tag">{activeMilestone.year}</span>
+                <h3>{activeMilestone.title}</h3>
+                <p>{activeMilestone.description}</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }
