@@ -60,6 +60,7 @@ const SearchForm = () => {
           value={value} 
           onChange={handleChange} 
           autoComplete="off"
+          aria-label="search"
         />
 
         <button 

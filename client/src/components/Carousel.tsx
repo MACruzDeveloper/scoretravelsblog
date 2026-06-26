@@ -3,12 +3,14 @@ import { getData } from '@utils/utils'
 import { URL } from '../config'
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Spinner from './common/Spinner'
+import video from '../assets/videos/home.mp4'
 
-type CarouselImage = {
-  readonly _id?: string,
-  filename?: string,
-  pathname?: string,
-  featured?: boolean,
+type CarouselSlide = {
+  readonly _id: string
+  filename: string
+  type: 'image' | 'video'
+  pathname?: string
+  featured?: boolean
   title?: string
 }
 
@@ -19,16 +21,18 @@ type CarouselProps = {
   autoplay?: boolean
   interval?: number
   showTitle?: boolean
+  hasVideo?: boolean
 }
 
-const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, showTitle = true }: CarouselProps) => {
-  const [slideImages, setSlideImages] = useState<Array<CarouselImage>>([])
+const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, showTitle = true, hasVideo = false }: CarouselProps) => {
+  const videoSlide: CarouselSlide = { _id: 'video-slide', filename: video, type: 'video', title }
+  const [slideItems, setSlideItems] = useState<Array<CarouselSlide>>(hasVideo ? [videoSlide] : [])
   const [slideIndex, setSlideIndex] = useState<number>(0)
   const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
   const [slideStop, setSlideStop] = useState<boolean>(true)
   const [transitioning, setTransitioning] = useState<boolean>(false)
   const [entering, setEntering] = useState<boolean>(false)
-  const numSlides = slideImages.length
+  const numSlides = slideItems.length
 
   const options = {
     autoplay,
@@ -40,8 +44,8 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
     if (images && images.length > 0) {
       const validImages = images
         .filter((item): item is string => typeof item === 'string' && item.trim().length > 0 && item !== 'null')
-        .map((filename, index) => ({ _id: `image-${index}`, filename }))
-      setSlideImages(validImages)
+        .map((filename, index) => ({ _id: `image-${index}`, filename, type: 'image' } as CarouselSlide))
+      setSlideItems([...(hasVideo ? [videoSlide] : []), ...validImages])
       setSlideIndex(0)
       return
     }
@@ -50,15 +54,22 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
       try {
         const res = await getData(`${URL}/images/fetch_images`)
         const data = res.data.images
-        const imagesFeatured = data?.filter((item: CarouselImage) => item.featured)
-        setSlideImages(imagesFeatured)
+        const imagesFeatured = data?.filter((item: CarouselSlide) => item.featured)
+          .map((image: CarouselSlide, index: number) => ({
+            _id: `image-${index}`,
+            filename: image.filename,
+            type: 'image',
+            title: image.title,
+            featured: image.featured
+          })) || []
+        setSlideItems([...(hasVideo ? [videoSlide] : []), ...imagesFeatured])
       } catch (error) {
         console.log('error =>', error)
       }
     }
 
     fetchImages()
-  }, [images])
+  }, [images, title])
 
   useEffect(() => {
     if (!transitioning) return
@@ -77,13 +88,15 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
     }
   }, [entering])
 
-  const getUrlImage = (index = slideIndex) => {
-    const image = slideImages[index]
-    return image && image.filename ? `${URL}/static/images/${image.filename}` : ''
+  const getUrlForSlide = (index = slideIndex) => {
+    const slide = slideItems[index]
+    if (!slide || !slide.filename) return ''
+
+    return slide.type === 'image' ? `${URL}/static/images/${slide.filename}` : slide.filename
   }
 
-  const getTitleImage = (index = slideIndex) => {
-    return slideImages[index]?.title || title || ''
+  const getTitleForSlide = (index = slideIndex) => {
+    return slideItems[index]?.title || title || ''
   }
 
   const isPrevDisabled = slideIndex === 0 || numSlides <= 1
@@ -142,21 +155,51 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
       )}
 
       <div className="carousel_images">
-        {prevSlideIndex !== null && (
-          <img
-            src={getUrlImage(prevSlideIndex)}
-            className="carousel_image carousel_image--fade-out"
-            alt={getTitleImage(prevSlideIndex)}
-          />
-        )}
+        {prevSlideIndex !== null && (() => {
+          const prevSlide = slideItems[prevSlideIndex]
+          if (!prevSlide) return null
 
-        {slideImages.length > 0 ? (
-          <img
-            src={getUrlImage()}
-            className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
-            alt={getTitleImage()}
-          />
-        ) : (
+          return prevSlide.type === 'video' ? (
+            <video
+              src={prevSlide.filename}
+              className="carousel_image carousel_image--fade-out"
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-label={getTitleForSlide(prevSlideIndex)}
+            />
+          ) : (
+            <img
+              src={getUrlForSlide(prevSlideIndex)}
+              className="carousel_image carousel_image--fade-out"
+              alt={getTitleForSlide(prevSlideIndex)}
+            />
+          )
+        })()}
+
+        {slideItems.length > 0 ? (() => {
+          const activeSlide = slideItems[slideIndex]
+          if (!activeSlide) return null
+
+          return activeSlide.type === 'video' ? (
+            <video
+              src={activeSlide.filename}
+              className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-label={getTitleForSlide()}
+            />
+          ) : (
+            <img
+              src={getUrlForSlide()}
+              className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
+              alt={getTitleForSlide()}
+            />
+          )
+        })() : (
           <Spinner />
         )}
       </div>
@@ -175,7 +218,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
 
     {numSlides > 1 && (
       <div className="carousel_dots">
-        {slideImages.map((ele: CarouselImage, i: number) => {
+        {slideItems.map((ele: CarouselSlide, i: number) => {
           return (
             <button
               key={ele._id}

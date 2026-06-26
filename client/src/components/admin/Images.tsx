@@ -9,7 +9,6 @@ import TableActions from '@/components/common/TableActions'
 
 const Images = () => {
   const [images, setImages] = useState([])
-  const [selectedFilename, setSelectedFilename] = useState(null)
   const [featured, setFeatured] = useState(null)
 
   const [sortColumn, setSortColumn] = useState<string | null>('title')
@@ -21,10 +20,11 @@ const Images = () => {
 
   // table columns
   const columns = [
-    { key: 'featured', label: 'Featured', sortable: true, width: 'w15', align: 'center' },
+    { key: 'featured', label: 'Featured', sortable: true, width: 'w10', align: 'center' },
     { key: 'image', label: 'Image', sortable: false, width: 'w25' },
+    { key: 'dimensions', label: 'Dimensions', sortable: false, width: 'w15' },
     { key: 'title', label: 'Title', sortable: true, width: 'w25' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w15', align: 'right' }
+    { key: 'actions', label: 'Action', sortable: false, width: 'w10', align: 'right' }
   ]
 
   useEffect(() => {
@@ -158,6 +158,9 @@ const Images = () => {
             />
           </div>
           <div className="tCol">
+            <span>{item.width && item.height ? `${item.width}x${item.height}` : '-'}</span>
+          </div>
+          <div className="tCol">
             <span>{item.title || '-'}</span>
           </div>
           <div className="tCol">
@@ -168,7 +171,7 @@ const Images = () => {
           <div className="tRow sup">
             <div className="tCol"></div>
             <div className="tCol">
-              <ImageUpload setSelectedFilename={setSelectedFilename} isImageWithTitle={false} />
+              <ImageUpload isImageWithTitle={false} />
             </div>
             <div className="tCol"></div>
             <div className="tCol"></div>
@@ -182,7 +185,7 @@ const Images = () => {
     <div className="content_top">
       <h2 className="content_top_title">Images</h2>
 
-      <ImageUpload setSelectedFilename={setSelectedFilename} fetch_images={fetch_images} isImageWithTitle={true} />
+      <ImageUpload fetch_images={fetch_images} isImageWithTitle={true} />
     </div>
 
     <Table

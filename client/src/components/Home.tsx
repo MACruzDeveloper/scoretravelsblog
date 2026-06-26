@@ -18,7 +18,7 @@ const Home = () => {
 
   return <div className="page home">
     <Suspense fallback={<Spinner />}>
-      <Carousel />
+      <Carousel hasVideo />
     </Suspense>
 
     <div className="block">

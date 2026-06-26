@@ -103,7 +103,8 @@ const ImageUpload = ({
     } catch (err) {
       console.log(err)
       setLoadingFile(false)
-      //setMessage({ body: `upload fail`, classname: 'msg_error' })
+      setLoaded(0)
+      setMessage({ body: `${err instanceof Error ? err.message : 'Upload failed'}`, classname: 'msg_error' })
     }
   }
 

@@ -17,7 +17,7 @@ export const validateEmail = (email) => {
 // validation for size files
 export const checkFileSize = (file) => {
   const maxAllowedSize = 5 * 1024 * 1024
-  return file.size < maxAllowedSize
+  return file.size <= maxAllowedSize
 }
 
 const parseResponse = async (response) => {

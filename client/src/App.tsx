@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { postData } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { Helmet, HelmetProvider } from 'react-helmet-async'
 import { URL } from './config'
 import AdminLayout from './layouts/AdminLayout'
 import Header from '@/components/common/Header'
+import homeVideo from './assets/videos/home.mp4'
 import Breadcrumbs from '@/components/common/Breadcrumbs'
 import Footer from '@/components/common/Footer'
 import Home from '@/components/Home'
@@ -108,66 +110,72 @@ function App() {
 
   return (
     <MyGlobalContext.Provider value={contextValues}>
-      <ScrollToTop />
-      <Header isLoggedIn={isLoggedIn} logout={logout} />
+      <HelmetProvider>
+        <Helmet>
+          <link rel="preload" href={homeVideo} as="video" type="video/mp4" />
+        </Helmet>
 
-      { showBreadcrumb &&
-      <Breadcrumbs page={page} />
-      }
+        <ScrollToTop />
+        <Header isLoggedIn={isLoggedIn} logout={logout} />
 
-      <main>
-        <Routes>
-          <Route index element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/experiences" element={<AllExperiences />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path='/login' element={<Login login={login} />} />
-          <Route path='/register' element={<Register login={login} logout={logout} />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/search-by-continent/:search" element={<SearchPageContinent />} />
-          <Route path="/experience/:exp" element={<Experience user={user} />} />
+        { showBreadcrumb &&
+        <Breadcrumbs page={page} />
+        }
 
-          <Route path='/admin' element={
-            <AdminLayout>
-              <Experiences />
-            </AdminLayout>
-          } />
-          <Route path='/admin/experiences' element={
-            <AdminLayout>
-              <Experiences />
-            </AdminLayout>
-          } />
-          <Route path='/admin/categories' element={
-            <AdminLayout>
-              <Categories />
-            </AdminLayout>
-          } />
-          <Route path='/admin/comments' element={
-            <AdminLayout>
-              <Comments />
-            </AdminLayout>
-          } />
-          <Route path='/admin/scores' element={
-            <AdminLayout>
-              <Scores />
-            </AdminLayout>
-          } />
-          <Route path='/admin/users' element={
-            <AdminLayout>
-              <Users />
-            </AdminLayout>
-          } />
-          <Route path='/admin/images' element={
-            <AdminLayout>
-              <Images />
-            </AdminLayout>
-          } />
-          <Route path="*" element={<p>There's nothing here: 404!</p>} />
-        </Routes>
-      </main>
+        <main>
+          <Routes>
+            <Route index element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/experiences" element={<AllExperiences />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path='/login' element={<Login login={login} />} />
+            <Route path='/register' element={<Register login={login} logout={logout} />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/search-by-continent/:search" element={<SearchPageContinent />} />
+            <Route path="/experience/:exp" element={<Experience user={user} />} />
 
-      <Footer />
+            <Route path='/admin' element={
+              <AdminLayout>
+                <Experiences />
+              </AdminLayout>
+            } />
+            <Route path='/admin/experiences' element={
+              <AdminLayout>
+                <Experiences />
+              </AdminLayout>
+            } />
+            <Route path='/admin/categories' element={
+              <AdminLayout>
+                <Categories />
+              </AdminLayout>
+            } />
+            <Route path='/admin/comments' element={
+              <AdminLayout>
+                <Comments />
+              </AdminLayout>
+            } />
+            <Route path='/admin/scores' element={
+              <AdminLayout>
+                <Scores />
+              </AdminLayout>
+            } />
+            <Route path='/admin/users' element={
+              <AdminLayout>
+                <Users />
+              </AdminLayout>
+            } />
+            <Route path='/admin/images' element={
+              <AdminLayout>
+                <Images />
+              </AdminLayout>
+            } />
+            <Route path="*" element={<p>There's nothing here: 404!</p>} />
+          </Routes>
+        </main>
+
+        <Footer />
+      </HelmetProvider>
     </MyGlobalContext.Provider>
   )
 }

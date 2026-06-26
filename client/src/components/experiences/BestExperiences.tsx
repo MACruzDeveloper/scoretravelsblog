@@ -22,6 +22,7 @@ const BestExperiences = () => {
             score={ele.score}
             image={ele.image}
             images={ele.images}
+            lazy={true}
           />
         })
       }

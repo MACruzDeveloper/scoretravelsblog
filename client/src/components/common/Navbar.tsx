@@ -79,7 +79,7 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
       <SearchForm />
 
       <div ref={refNavAdmin} className="navbar_login">
-        <button className={`btn_icon btn_login ${isLoggedIn && 'flex'}`} onClick={openNavAdmin}>
+        <button className={`btn_icon btn_login ${isLoggedIn && 'flex'}`} onClick={openNavAdmin} aria-label="login">
           {
             !isLoggedIn && !isMobile && 'Sign In'
           }
@@ -113,7 +113,7 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
       </div>
 
       <div ref={refNav}>
-        <button className="btn_icon btn_menu" onClick={openNavMain}>
+        <button className="btn_icon btn_menu" onClick={openNavMain} aria-label="menu">
           <MdMenu />
         </button>
       </div>

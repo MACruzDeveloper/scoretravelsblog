@@ -13,7 +13,9 @@ const imagesSchema = new mongoose.Schema({
   filename: {
     type: String,
     required: true
-  }
+  },
+  width: Number,
+  height: Number
 });
 
 module.exports = mongoose.model("images", imagesSchema);
