@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { postData } from './utils/utils'
+import { postData, getToken } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Helmet, HelmetProvider } from 'react-helmet-async'
 import { URL } from './config'
@@ -30,7 +30,7 @@ import { MyGlobalContext } from './components/context/useGlobalContext'
 import './assets/sass/main.scss'
 
 function App() {
-  const token = JSON.parse(localStorage.getItem('token'))
+  const token = getToken()
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
   const [user, setUser] = useState('')
   const [username, setUsername] = useState('')
@@ -47,17 +47,22 @@ function App() {
   const verify_token = async () => {
     try {
       const response = await postData(`${URL}/users/verify_token`, {}, {
-        headers: { Authorization: token || '' }
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
       })
       if (response.data.succ) {
         setRole(response.data.succ.role)
         setUser(response.data.succ.email)
         setUsername(response.data.succ.username || response.data.succ.email)
+        setIsLoggedIn(true)
+      } else {
+        // Stale or invalid token: clear it so the app redirects to /login
+        localStorage.removeItem('token')
+        setIsLoggedIn(false)
       }
-      return response.data.ok ? setIsLoggedIn(true) : setIsLoggedIn(false)
     }
     catch (error) {
       console.log(error)
+      setIsLoggedIn(false)
     }
   }
 

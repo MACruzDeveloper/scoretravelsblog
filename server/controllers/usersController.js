@@ -14,7 +14,6 @@ const register = async (req, res) => {
     const user = await User.findOne({ email })
     if (user) return res.json({ ok: false, message: 'Email already in use' })
     const hash = await argon2.hash(password)
-    console.log('hash ==>', hash)
     const newUser = {
       username,
       email,
@@ -30,7 +29,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body
-  if (!email || !password) res.json({ ok: false, message: 'All field are required' })
+  if (!email || !password) return res.json({ ok: false, message: 'All field are required' })
   if (!validator.isEmail(email)) return res.json({ ok: false, message: 'Please provide a valid email' })
 
   try {
@@ -38,7 +37,11 @@ const login = async (req, res) => {
     if (!user) return res.json({ ok: false, message: 'Please provide a valid email' })
     const match = await argon2.verify(user.password, password)
     if (match) {
-      const token = jwt.sign(user.toJSON(), jwt_secret, { expiresIn: 100080 }) // 365d
+      const token = jwt.sign(
+        { _id: user._id, username: user.username, email: user.email, role: user.role },
+        jwt_secret,
+        { expiresIn: '30d' }
+      )
       const role = user.role
       res.json({ ok: true, message: `Hi ${user.username}!`, token, username: user.username, email, role })
     } else return res.json({ ok: false, message: 'Invalid password' })
@@ -48,11 +51,15 @@ const login = async (req, res) => {
 }
 
 const verify_token = (req, res) => {
-  console.log(req.headers.authorization)
-  const token = req.headers.authorization
-  jwt.verify(token, jwt_secret, (err, succ) => {
-    err ? res.json({ ok: false, message: 'Something went wrong' }) : res.json({ ok: true, succ })
-  })
+  const header = req.headers.authorization || ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : header
+  if (!token) return res.json({ ok: false, message: 'No token provided' })
+  try {
+    const succ = jwt.verify(token, jwt_secret)
+    return res.json({ ok: true, succ })
+  } catch (error) {
+    return res.json({ ok: false, message: 'Invalid or expired token' })
+  }
 }
 
 const findAllUsers = async (req, res) => {
@@ -68,13 +75,22 @@ const findAllUsers = async (req, res) => {
 const addNewUser = async (req, res) => {
   let params = req.body
   try {
+    if (!params.username || !params.email || !params.password) {
+      return res.status(400).json({ ok: false, message: 'username, email and password are required' })
+    }
+    if (!validator.isEmail(params.email)) {
+      return res.status(400).json({ ok: false, message: 'Please provide a valid email' })
+    }
+    const existing = await User.findOne({ email: params.email })
+    if (existing) return res.status(400).json({ ok: false, message: 'Email already in use' })
+    const hash = await argon2.hash(params.password)
     const done = await User.create({ 
       username: params.username,
       email: params.email, 
-      password: params.password, 
-      role: params.role 
+      password: hash,
+      role: params.role === 'admin' ? 'admin' : 'author'
     })
-    res.send(done)
+    res.send({ ok: true, user: { _id: done._id, username: done.username, email: done.email, role: done.role } })
   }
   catch (error) {
     res.send({ error })

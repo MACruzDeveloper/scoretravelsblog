@@ -1,5 +1,5 @@
 import { useState, useRef, ChangeEvent, FormEvent } from 'react'
-import { checkFileSize } from '@utils/utils'
+import { checkFileSize, getToken } from '@utils/utils'
 import { URL } from '../../config'
 import Msgbox, { ParamsMsgBox } from '@common/Msgbox'
 
@@ -74,8 +74,10 @@ const ImageUpload = ({
     setLoadingFile(true)
 
     try {
+      const token = getToken()
       const response = await fetch(`${URL}/images/upload`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: data,
       })
       if (!response.ok) {

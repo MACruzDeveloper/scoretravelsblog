@@ -9,47 +9,39 @@ type PropsScore = {
 }
 
 const Score = ({ scores, exp }: PropsScore) => {
-  const [score, setScore] = useState(null)
   const [hasScore, setHasScore] = useState(false)
 
-  const getScore = () => {
-    let tempSc = []
-    for (let ele of scores) {
-      if (exp === ele.experience) {
-        if (ele.score) {
-          tempSc.push(ele.score)
-          setHasScore(true)
-        }
-      }
-    }
-    let result = 0
-    tempSc.forEach(i => {
-      result += i
-    })
-    result = (result / tempSc.length)
-    result = Math.round(result * 10) / 10
-    uploadScore(result)
-    setScore(result)
-  }
-
-  const uploadScore = async (scoreNum: number) => {
-    try {
-      let url = `${URL}/admin/experiences/update_score`
-      await postData(url, {
-        _id: exp,
-        score: scoreNum 
-      })
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  const expScores = scores.filter(ele => exp === ele.experience && typeof ele.score === 'number' && ele.score > 0)
 
   useEffect(() => {
-    getScore()
-  }, [score])
+    if (expScores.length === 0) {
+      setHasScore(false)
+      return
+    }
+
+    const avg = expScores.reduce((acc, ele) => acc + ele.score, 0) / expScores.length
+    const rounded = Math.round(avg * 10) / 10
+    setHasScore(true)
+
+    ;(async () => {
+      try {
+        await postData(`${URL}/admin/experiences/update_score`, {
+          _id: exp,
+          score: rounded
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    })()
+  }, [scores, exp])
+
+  if (!hasScore || expScores.length === 0) return null
+
+  const avg = expScores.reduce((acc, ele) => acc + ele.score, 0) / expScores.length
+  const display = Math.round(avg * 10) / 10
 
   return <p className="score">
-    {hasScore && <>{score}<span>/5</span></>}
+    {display}<span>/5</span>
   </p>
 }
 

@@ -20,6 +20,25 @@ export const checkFileSize = (file) => {
   return file.size <= maxAllowedSize
 }
 
+export const getToken = () => {
+  const raw = localStorage.getItem('token')
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch (error) {
+    return null
+  }
+}
+
+// Attach the auth token to every request. Server ignores it on public routes.
+const withAuthHeaders = (options = {}) => {
+  const token = getToken()
+  if (!token) return options
+  const headers = { ...(options.headers || {}) }
+  if (!headers.Authorization) headers.Authorization = `Bearer ${token}`
+  return { ...options, headers }
+}
+
 const parseResponse = async (response) => {
   if (!response.ok) {
     const contentType = response.headers.get('content-type') || ''
@@ -31,7 +50,7 @@ const parseResponse = async (response) => {
 }
 
 export const fetchData = async (url, options = {}) => {
-  const response = await fetch(url, options)
+  const response = await fetch(url, withAuthHeaders(options))
   return parseResponse(response)
 }
 
@@ -42,12 +61,12 @@ export const getData = async (url, options = {}) => {
 export const postData = async (url, body, options = {}) => {
   return fetchData(url, {
     method: 'POST',
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers || {})
     },
-    body: JSON.stringify(body),
-    ...options
+    body: JSON.stringify(body)
   })
 }
 
