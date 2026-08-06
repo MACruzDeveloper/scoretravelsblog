@@ -56,8 +56,20 @@ const Register = ({ login, logout }: PropsRegister) => {
         password: values.password,
         password2: values.password2
       })
-      loginRegister()
-      setMessage({ body: response.data.message, classname: 'msg_ok' })
+
+      if (response.data.ok) {
+        setMessage({
+          body: response.data.message,
+          classname: 'msg_ok'
+        })
+
+        await loginRegister()
+      } else {
+        setMessage({
+          body: response.data.message,
+          classname: 'msg_error'
+        })
+      }
     }
     catch (error) {
       console.log(error)
