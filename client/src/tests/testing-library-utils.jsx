@@ -1,12 +1,11 @@
 // @ts-nocheck
-import { render } from "@testing-library/react"
-import { checkFileSize } from "@utils/utils"
+import { render as rtlRender } from "@testing-library/react"
+import { BrowserRouter } from "react-router-dom"
 
-const renderWithContext = (ui, options) =>
-  render(ui, { wrapper: checkFileSize, ...options })
+const renderWithProviders = (ui, options = {}) => {
+  const Wrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>
+  return rtlRender(ui, { wrapper: Wrapper, ...options })
+}
 
-// re-export everything
 export * from "@testing-library/react"
-
-// override render method
-export { renderWithContext as render }
+export { renderWithProviders as render }
