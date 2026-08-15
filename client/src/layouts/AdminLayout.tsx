@@ -37,7 +37,6 @@ const AdminLayout = ({ children }: ParamsAdminLayout) => {
       <div className="container">
         <div className="top">
           <h2 className="title">Admin Panel</h2>
-          {isLoggedInValue.isLoggedIn}
           <NavAdmin />
         </div>
 
