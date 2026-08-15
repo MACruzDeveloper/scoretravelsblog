@@ -10,20 +10,23 @@ import Home from '../components/Home.tsx'
 import AllExperiences from '../components/experiences/AllExperiences.tsx'
 import { URL } from '../config.js'
 
-// test if there are h1 and h2
-test("App contains correct headings", () => {
+// test if there is an accessible heading
+test("App contains a main heading", () => {
   const logoutMock = vi.fn()
+
   render(
     <BrowserRouter>
       <Header isLoggedIn={false} logout={logoutMock} />
-      <Home />
     </BrowserRouter>
   )
-  
-  const headingElement = screen.getByRole('heading', {level: 1})
+
+  const headingElement = screen.getByRole('heading', {
+    name: /scoretravelsblog/i,
+    level: 2,
+  })
+
   expect(headingElement).toBeInTheDocument()
-  const subHeadingElements = screen.getAllByRole('heading', {level: 2})
-  expect(subHeadingElements[0]).toBeInTheDocument()
+  expect(screen.getByRole('banner')).toBeInTheDocument()
 })
 
 
