@@ -22,7 +22,7 @@ test("App contains a main heading", () => {
 
   const headingElement = screen.getByRole('heading', {
     name: /scoretravelsblog/i,
-    level: 2,
+    level: 1,
   })
 
   expect(headingElement).toBeInTheDocument()
