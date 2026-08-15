@@ -14,12 +14,14 @@ const Score = ({ scores, exp }: PropsScore) => {
   const expScores = scores.filter(ele => exp === ele.experience && typeof ele.score === 'number' && ele.score > 0)
 
   useEffect(() => {
-    if (expScores.length === 0) {
+    const matching = scores.filter(ele => exp === ele.experience && typeof ele.score === 'number' && ele.score > 0)
+
+    if (matching.length === 0) {
       setHasScore(false)
       return
     }
 
-    const avg = expScores.reduce((acc, ele) => acc + ele.score, 0) / expScores.length
+    const avg = matching.reduce((acc, ele) => acc + ele.score, 0) / matching.length
     const rounded = Math.round(avg * 10) / 10
     setHasScore(true)
 
