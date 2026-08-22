@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ChangeEvent } from 'react'
+import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useOutsideClick from '@/hooks/useOutsideClick'
 import { MdSearch, MdClose } from 'react-icons/md'
@@ -27,8 +27,12 @@ const SearchForm = () => {
     setValue('')
   }
 
-  const handleSubmit = () => {
-    navigate(`/search`)
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const term = value.trim()
+    if (term) {
+      navigate(`/search?search=${encodeURIComponent(term)}`)
+    }
   }
   
   const watchInput = () => {

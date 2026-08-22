@@ -16,7 +16,7 @@ interface CommentsState {
   loading: boolean
   error: string | undefined
   hasFetched: boolean
-  fetchComments: () => Promise<void>
+  fetchComments: (force?: boolean) => Promise<void>
 }
 
 export const useCommentsStore = create<CommentsState>((set, get) => ({
@@ -24,9 +24,9 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
   loading: false,
   error: undefined,
   hasFetched: false,
-  fetchComments: async () => {
+  fetchComments: async (force = false) => {
     const { hasFetched } = get()
-    if (hasFetched) return
+    if (hasFetched && !force) return
 
     set({ loading: true })
     try {

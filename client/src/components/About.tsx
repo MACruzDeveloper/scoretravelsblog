@@ -86,6 +86,12 @@ const About = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!sectionRef.current) return
+
+      const rect = sectionRef.current.getBoundingClientRect()
+      const isInView = rect.top < window.innerHeight && rect.bottom > 0
+      if (!isInView) return
+
       if (event.code === 'ArrowRight' || event.code === 'ArrowDown' || event.code === 'KeyD') {
         event.preventDefault()
         setCurrentIndex((prev) => Math.min(milestones.length - 1, prev + 1))

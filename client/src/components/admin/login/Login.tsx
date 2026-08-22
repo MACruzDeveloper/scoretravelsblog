@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from 'react'
+import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@utils/utils'
 import { useNavigate } from 'react-router-dom'
 import { URL } from '../../../config'
@@ -11,11 +11,15 @@ type PropsLogin = {
 const Login = ({ login }: PropsLogin) => {
   const navigate = useNavigate()
   const [message, setMessage] = useState({ body: '', classname: '' })
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const timerRef = useRef<number>()
 
   const [values, setValues] = useState({
     email: '',
     password: ''
   })
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), [])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.currentTarget
@@ -24,23 +28,29 @@ const Login = ({ login }: PropsLogin) => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (isLoggingIn) return
+    setIsLoggingIn(true)
     try {
       const response = await postData(`${URL}/users/login`, {
         email: values.email,
         password: values.password
       })
-      setMessage({ body: response.data.message, classname: 'msg_ok' })
 
       if (response.data.ok) {
-        setTimeout(() => {
+        setMessage({ body: response.data.message, classname: 'msg_ok' })
+        timerRef.current = window.setTimeout(() => {
           login(response.data.token, response.data.role, response.data.username, response.data.email)
           navigate('/admin/')
         }, 2000)
+      } else {
+        setMessage({ body: response.data.message || 'Login failed', classname: 'msg_error' })
       }
-
     }
     catch (error) {
       console.log(error)
+      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
+    } finally {
+      setIsLoggingIn(false)
     }
   }
 

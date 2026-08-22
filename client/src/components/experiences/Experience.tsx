@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
+import DOMPurify from 'dompurify'
 import { getData, postData } from '@utils/utils'
 import { useScoresStore } from '../../store/scoresStore'
 import { URL } from '../../config'
@@ -31,6 +32,7 @@ type SingleExperience = {
 const Experience = ({ user }: PropsExperience) => {
   const { exp } = useParams()
   const [experience, setExperience] = useState<SingleExperience>()
+  const [expLoading, setExpLoading] = useState(true)
   const [comments, setComments] = useState([])
   const [comment, setComment] = useState('')
   const [message, setMessage] = useState({ body: '', classname: '' })
@@ -38,19 +40,23 @@ const Experience = ({ user }: PropsExperience) => {
   // get experience from id param
   useEffect(() => {
     const fetchExperience = async () => {
+      setExpLoading(true)
       try {
         const res = await getData(`${URL}/admin/experiences/${exp}`)
         setExperience(res.data)
       } catch (err) {
         console.log(err)
+        setExperience(undefined)
+      } finally {
+        setExpLoading(false)
       }
     }
     fetchExperience()
-  }, [])
+  }, [exp])
 
   // To read html code from data api
   const getDataParsed = (data: string) => {
-    const theObj = { __html: data }
+    const theObj = { __html: DOMPurify.sanitize(data) }
     return <span dangerouslySetInnerHTML={theObj} />
   }
 
@@ -64,7 +70,7 @@ const Experience = ({ user }: PropsExperience) => {
   }, [experience])
 
   // fetch scores
-  const { scores, loading, error, fetchScores } = useScoresStore()
+  const { scores, error, fetchScores } = useScoresStore()
 
   useEffect(() => {
     fetchScores()
@@ -81,7 +87,7 @@ const Experience = ({ user }: PropsExperience) => {
   // comments
   useEffect(() => {
     getCommentsByExp()
-  }, [])
+  }, [exp])
 
   const getCommentsByExp = async () => {
     let url = `${URL}/admin/comments`
@@ -125,34 +131,35 @@ const Experience = ({ user }: PropsExperience) => {
     <div className="container">
       <div className="wrapper flex">
         <div className="content_page">
-          {!loading && experience ?
-            <>
-              <div className="content_top">
-                <h3 className="content_title">{experience.title}</h3>
-                <Score exp={exp} scores={scores} />
-              </div>
+          {expLoading ? <Spinner />
+            : experience ?
+              <>
+                <div className="content_top">
+                  <h3 className="content_title">{experience.title}</h3>
+                  <Score exp={exp} scores={scores} />
+                </div>
 
-              {experienceImages.length > 0 &&
-                <Carousel
-                  images={experienceImages}
-                  showTitle={false}
-                  title={experience.title}
-                  subtitle={experience.category || ''}
-                  autoplay={false}
-                  interval={4000}
-                />
-              }
+                {experienceImages.length > 0 &&
+                  <Carousel
+                    images={experienceImages}
+                    showTitle={false}
+                    title={experience.title}
+                    subtitle={experience.category || ''}
+                    autoplay={false}
+                    interval={4000}
+                  />
+                }
 
-              <p className="content_info">
-                <span className="cat">{experience.category}</span>
-                <span className="date">
-                  <Moment format="YYYY/MM/DD">{experience.date}</Moment>
-                </span>
-              </p>
+                <p className="content_info">
+                  <span className="cat">{experience.category}</span>
+                  <span className="date">
+                    <Moment format="YYYY/MM/DD">{experience.date}</Moment>
+                  </span>
+                </p>
 
-              <p className="content_desc">{getDataParsed(experience.content)}</p>
-            </>
-            : <Spinner />
+                <p className="content_desc">{getDataParsed(experience.content)}</p>
+              </>
+              : <p className="msg error">Experience not found</p>
           }
           {error}
         </div>

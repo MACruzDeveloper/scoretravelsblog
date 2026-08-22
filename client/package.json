@@ -14,6 +14,7 @@
   "dependencies": {
     "@types/lodash": "^4.14.200",
     "concurrently": "^8.2.1",
+    "dompurify": "^3.4.13",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",

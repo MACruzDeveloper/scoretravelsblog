@@ -54,6 +54,8 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
       setMessage({ body: 'New Experience added!', classname: 'msg_ok' })
       handleFetchExperiences()
       setIsFormAddVisible(false)
+      setValues(undefined)
+      setSelectedCity(null)
       setSelectedFilenames([])
     } catch (error) {
       console.log(error)

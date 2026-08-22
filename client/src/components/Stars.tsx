@@ -3,6 +3,7 @@ import { postData } from '@utils/utils'
 import { MdStar, MdStarBorder } from 'react-icons/md'
 import { URL } from '../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
+import { useScoresStore } from '@/store/scoresStore'
 import Msgbox from './common/Msgbox'
 
 type PropsStars = {
@@ -11,8 +12,10 @@ type PropsStars = {
 
 const Stars = ({ exp }: PropsStars) => {
   const { user } = useContext(MyGlobalContext)
+  const { fetchScores } = useScoresStore()
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [starHover, setStarHover] = useState(-1)
+  const [isSending, setIsSending] = useState(false)
   const stars = []
   const numStars = 5
 
@@ -25,13 +28,24 @@ const Stars = ({ exp }: PropsStars) => {
   }
 
   const onClickScore = async (i: number) => {
+    if (isSending) return
+
+    if (!user) {
+      setMessage({ body: 'You must be logged in to score', classname: 'msg_error' })
+      return
+    }
+
+    setIsSending(true)
     try {
       let url = `${URL}/admin/scores/add`
       await postData(url, { experience: exp, user: user, score: i+1 })
-      window.location.reload() // To calculate the Score with the new value
+      await fetchScores(true)
       setMessage({ body: `Score added!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
+      setMessage({ body: 'Could not add your score', classname: 'msg_error' })
+    } finally {
+      setIsSending(false)
     }
   }
 

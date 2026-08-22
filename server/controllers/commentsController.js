@@ -1,4 +1,5 @@
 const comments = require('../models/commentsModel');
+const { isValidId } = require('../utils/validators');
 
 class commentsController {
   async findAllComments(req, res) {
@@ -24,6 +25,7 @@ class commentsController {
 
   async deleteComment(req, res) {
     let { _id } = req.body;
+    if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' });
     try {
       const removed = await comments.deleteOne({ _id: _id });
       res.send({ removed });
@@ -35,7 +37,7 @@ class commentsController {
 
   async updateComment(req, res) {
     let params = req.body;  
-    
+    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' });
     try {
       const updated = await comments.updateOne(
         { _id: params._id }, { user: params.user, experience: params.experience, content: params.content }

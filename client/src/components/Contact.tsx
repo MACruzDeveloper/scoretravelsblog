@@ -5,6 +5,7 @@ import { validateEmail, postData } from '@utils/utils'
 
 const Contact = () => {
   const [isChecked, setIsChecked] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const [message, setMessage] = useState({ body: '', classname: '' })
   
   const handleSubmit = (event: any) => {
@@ -22,18 +23,19 @@ const Contact = () => {
     }
 
     if (validateEmail(data.email)) {
+      setIsSending(true)
       postData(`${URL}/emails/send_email`, data)
-        .then((res) => {
-          console.log(res)
+        .then(() => {
           nameInput.value = ""
           emailInput.value = ""
           messageInput.value = ""
           setMessage({ body: 'Your message has been sent, thanks!', classname: 'msg_ok' })
         })
-        .catch(function (error) {
+        .catch((error) => {
           console.log(error)
+          setMessage({ body: 'Could not send your message, please try again later', classname: 'msg_error' })
         })
-      console.log("SeNd!")
+        .finally(() => setIsSending(false))
     } else {
       setMessage({ body: 'The email format is not correct', classname: 'msg_error' })
     }
@@ -65,7 +67,7 @@ const Contact = () => {
             <label htmlFor="cb_contact">Accept terms and conditions</label>
           </div>
     
-          <button className="btn" disabled={!isChecked}>Send</button>
+          <button className="btn" disabled={!isChecked || isSending}>Send</button>
         </form>
       </div>
 

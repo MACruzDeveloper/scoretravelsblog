@@ -37,10 +37,8 @@ app.use('/admin/scores', require('./routes/scoresRoute'));
 app.use('/images', require('./routes/imagesRoute'));
 app.use('/emails', require('./routes/emailsRoutes.js'))
 
-app.use('/static', express.static('../client/public'));
-//app.use('/static', express.static(path.join(__dirname + '../client/public')))
+app.use('/static', express.static(path.join(__dirname, '../client/public')));
 
-app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
 app.get('/*', function (req, res) {

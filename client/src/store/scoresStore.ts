@@ -15,7 +15,7 @@ interface ScoresState {
   loading: boolean
   error: string | undefined
   hasFetched: boolean
-  fetchScores: () => Promise<void>
+  fetchScores: (force?: boolean) => Promise<void>
 }
 
 export const useScoresStore = create<ScoresState>((set, get) => ({
@@ -23,9 +23,9 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
   loading: false,
   error: undefined,
   hasFetched: false,
-  fetchScores: async () => {
+  fetchScores: async (force = false) => {
     const { hasFetched } = get()
-    if (hasFetched) return
+    if (hasFetched && !force) return
 
     set({ loading: true })
     try {

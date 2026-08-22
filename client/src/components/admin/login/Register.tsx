@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from 'react'
+import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@/utils/utils'
 import { useNavigate } from 'react-router-dom'
 import { URL } from '../../../config'
@@ -6,10 +6,9 @@ import Msgbox from '@/components/common/Msgbox'
 
 type PropsRegister = {
   login: (token: string, role: string, username: string, email: string) => void
-  logout: () => void
 }
 
-const Register = ({ login, logout }: PropsRegister) => {
+const Register = ({ login }: PropsRegister) => {
   const navigate = useNavigate()
   const [values, setValues] = useState({ 
     username: '',
@@ -18,6 +17,10 @@ const Register = ({ login, logout }: PropsRegister) => {
     password2: '' 
   })
   const [message, setMessage] = useState({ body: '', classname: '' })
+  const [isRegistering, setIsRegistering] = useState(false)
+  const timerRef = useRef<number>()
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), [])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.currentTarget
@@ -31,24 +34,26 @@ const Register = ({ login, logout }: PropsRegister) => {
         email: values.email,
         password: values.password
       })
-      setMessage({ body: response.data.message, classname: 'msg_ok' })
 
       if (response.data.ok) {
-        setTimeout(() => {
+        timerRef.current = window.setTimeout(() => {
           login(response.data.token, response.data.role, response.data.username, response.data.email)
           navigate('/admin/')
         }, 2000)
+      } else {
+        setMessage({ body: response.data.message || 'Login failed', classname: 'msg_error' })
       }
-
     }
     catch (error) {
       console.log(error)
+      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
     }
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    logout()
+    if (isRegistering) return
+    setIsRegistering(true)
     try {
       const response = await postData(`${URL}/users/register`, {
         username: values.username,
@@ -73,8 +78,10 @@ const Register = ({ login, logout }: PropsRegister) => {
     }
     catch (error) {
       console.log(error)
+      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
+    } finally {
+      setIsRegistering(false)
     }
-
   }
   return <div className="page login">
     <h2 className="title">Register</h2>

@@ -7,25 +7,23 @@ export type PropsSelectContinent = {
 }
 
 interface Continent {
-  continents: string
+  continents: string[]
 }
 
 const SelectContinent = ({ handleChange, selected }: PropsSelectContinent) => {
-  const [continents, setContinents] = useState<Array<Continent>>([])
+  const [continents, setContinents] = useState<string[]>([])
 
   // Get continents from public api
   // new Set to store unique values
   const getContinents = async () => {
-    getData(`https://restcountries.com/v3.1/all?fields=continents`)
-      .then((res) => {
-        const data = res.data
-        const jsonObject = data.map(JSON.stringify)
-        const uniqueSet = new Set(jsonObject)
-        const uniqueArray = Array.from(uniqueSet).map(JSON.parse)
-        setContinents(uniqueArray)
-        return uniqueArray
-      })
-      .catch((err) => console.log(err))
+    try {
+      const res = await getData(`https://restcountries.com/v3.1/all?fields=continents`)
+      const data = res.data as Continent[]
+      const uniqueContinents = [...new Set(data.map((entry) => entry.continents).flat())].sort()
+      setContinents(uniqueContinents)
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   useEffect(() => {
@@ -35,9 +33,9 @@ const SelectContinent = ({ handleChange, selected }: PropsSelectContinent) => {
   return <select name="continent" className="form_control" onChange={handleChange} defaultValue={selected}>
       <option>Continent</option>
       {
-        continents.map((ele) => {
-          return <option key={ele.continents} value={ele.continents}>
-            {ele.continents}
+        continents.map((continent) => {
+          return <option key={continent} value={continent}>
+            {continent}
           </option>
         })
       }

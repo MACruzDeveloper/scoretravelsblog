@@ -15,7 +15,7 @@ const Users = () => {
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [updateActive, setUpdateActive] = useState(null)
 
-  const { setRole } = useContext(MyGlobalContext)
+  const { setRole, user: contextUser } = useContext(MyGlobalContext)
 
   const typesUser = [
     { type: 'admin' },
@@ -47,8 +47,9 @@ const Users = () => {
   }
 
   const onClickShowUpdate = async (idx: string) => {
-    setUpdateActive(idx)
     let idUser = users.findIndex(e => e._id === idx)
+    if (idUser === -1) return
+    setUpdateActive(idx)
     setNewRole(users[idUser].role)
     setNewUsername(users[idUser].username || '')
   }
@@ -63,7 +64,8 @@ const Users = () => {
       if (newRole !== '' && newUsername !== '') {
         await postData(url, { _id: idx, role: newRole, username: newUsername })
         setUpdateActive(null)
-        setRole(newRole)
+        const edited = users.find(e => e._id === idx)
+        if (edited && edited.email === contextUser) setRole(newRole)
         getUsers()
         setMessage({ body: `User updated!`, classname: 'msg_ok' })
       } else {
@@ -111,10 +113,9 @@ const Users = () => {
 
   const columns = [
     { key: 'username', label: 'Username', sortable: true, width: 'w20' },
-    { key: 'email', label: 'Email', sortable: true, width: 'w25' },
-    { key: 'password', label: 'Password', sortable: false, width: 'w25', align: 'scroll' },
-    { key: 'role', label: 'Role', sortable: true, width: 'w15', align: 'center' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w15', align: 'right' }
+    { key: 'email', label: 'Email', sortable: true, width: 'w30' },
+    { key: 'role', label: 'Role', sortable: true, width: 'w20', align: 'center' },
+    { key: 'actions', label: 'Action', sortable: false, width: 'w30', align: 'right' }
   ]
 
   const renderRow = (ele: any) => {
@@ -164,9 +165,6 @@ const Users = () => {
           </div>
           <div className="tCol">
             <span>{ele.email}</span>
-          </div>
-          <div className="tCol scroll">
-            <span>{ele.password}</span>
           </div>
           <div className="tCol center">
             {updateActive !== ele._id ? (

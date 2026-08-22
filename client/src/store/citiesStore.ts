@@ -39,8 +39,8 @@ export const useCitiesStore = create<CitiesState>((set, get) => ({
       const cities = response.data
 
       // Extract unique continents and countries
-      const continents = [...new Set(cities.map((city: City) => city.continent))].sort()
-      const countries = [...new Set(cities.map((city: City) => city.country))].sort()
+      const continents = [...new Set(cities.map((city: City) => city.continent))].sort() as string[]
+      const countries = [...new Set(cities.map((city: City) => city.country))].sort() as string[]
 
       // Group cities by continent
       const citiesByContinent = cities.reduce((acc: Record<string, City[]>, city: City) => {

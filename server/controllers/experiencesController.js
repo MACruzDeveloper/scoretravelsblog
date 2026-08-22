@@ -1,4 +1,5 @@
 const experiences = require('../models/experiencesModel');
+const { isValidId } = require('../utils/validators');
 
 const normalizeExperienceImages = (params) => {
   const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
@@ -71,6 +72,7 @@ class experiencesController {
 
   async deleteExperience(req, res) {
     let { _id } = req.body
+    if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' })
     try {
       const removed = await experiences.deleteOne({ _id })
       res.send({ removed })
@@ -81,6 +83,7 @@ class experiencesController {
 
   async updateExperience(req, res) {
     let params = req.body
+    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' })
     const currentExp = await experiences.findById(params._id)
     if (!currentExp) {
       return res.status(404).send({ error: 'Experience not found' })
@@ -135,6 +138,7 @@ class experiencesController {
 
   async updateScoreExperience(req, res) {
     let params = req.body
+    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' })
     try {
       const updated = await experiences.updateOne(
         { _id: params._id },

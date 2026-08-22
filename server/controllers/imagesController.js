@@ -2,6 +2,7 @@ const path = require("path");
 const sharp = require("sharp");
 const Images = require("../models/imagesModel");
 const fs = require("fs");
+const { isValidId } = require("../utils/validators");
 
 const upload_image = async (req, res) => {
   try {
@@ -49,22 +50,26 @@ const fetch_images = async (req, res) => {
 
 const delete_image = async (req, res) => {
   const { _id, filename } = req.params;
+  if (!isValidId(_id)) return res.status(400).json({ error: 'Invalid id' });
+  const safeName = path.basename(filename);
+  if (!/^[\w-]+\.avif$/.test(safeName)) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+  const filePath = path.join(__dirname, '..', '..', 'client', 'public', 'images', safeName);
   try {
+    await fs.promises.unlink(filePath);
     const deleted = await Images.deleteOne({ _id });
-    fs.unlink(`../client/public/images/${filename}`, err => {
-      if (err) throw err;
-      console.log(`${filename} was deleted`);
-      //return res.status(200).json({ message: `${filename} was deleted` });
-    });
     res.send({ deleted });
   } catch (error) {
     console.log("error =====>", error);
+    res.status(500).json({ error: error.message || 'Delete failed' });
   }
 };
 
 const update_image = async (req, res) => {
-  let params = req.body;  
-    
+  let params = req.body;
+  if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' });
+
     try {
       const updated = await Images.updateOne(
         { _id: params._id }, {featured: params.featured}

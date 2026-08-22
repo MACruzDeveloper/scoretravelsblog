@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { postData, getToken } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Helmet, HelmetProvider } from 'react-helmet-async'
@@ -44,7 +44,7 @@ function App() {
     [isLoggedIn]
   )
 
-  const verify_token = async () => {
+  const verify_token = useCallback(async () => {
     try {
       const response = await postData(`${URL}/users/verify_token`, {}, {
         headers: { Authorization: token ? `Bearer ${token}` : '' }
@@ -64,7 +64,7 @@ function App() {
       console.log(error)
       setIsLoggedIn(false)
     }
-  }
+  }, [token])
 
   const login = (token: string, role: string, username?: string, email?: string) => {
     setRole(role)
@@ -85,7 +85,7 @@ function App() {
 
   useEffect(() => {
     verify_token()
-  }, [])
+  }, [verify_token])
 
   const location = useLocation()
   const [page, setPage] = useState('')
@@ -135,7 +135,7 @@ function App() {
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/contact" element={<Contact />} />
             <Route path='/login' element={<Login login={login} />} />
-            <Route path='/register' element={<Register login={login} logout={logout} />} />
+            <Route path='/register' element={<Register login={login} />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/search-by-continent/:search" element={<SearchPageContinent />} />
             <Route path="/experience/:exp" element={<Experience user={user} />} />

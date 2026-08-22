@@ -21,7 +21,7 @@ const Experiences = () => {
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
   const [message, setMessage] = useState({ body: '', classname: '' })
-  const [updateActive, setUpdateActive] = useState(null)
+  const [updateActive, setUpdateActive] = useState<string | null>(null)
 
   // fetch Experiences
   const { experiences, loading, error, fetchExperiences } = useExperienceStore()
@@ -69,7 +69,8 @@ const Experiences = () => {
 
   const onClickShowUpdate = (idx: string) => {
     setUpdateActive(idx)
-    let idExp = experiences.findIndex(e => e._id === idx)
+    const idExp = experiences.findIndex(e => e._id === idx)
+    if (idExp === -1) return
     const experience = experiences[idExp]
 
     const existingImages = Array.isArray(experience.images)
@@ -335,7 +336,7 @@ const Experiences = () => {
       setIsFormAddVisible={setIsFormAddVisible}
     />
 
-    <form className="form">
+    <div>
       {loading && <div>Loading...</div>}
       {error && <div>Error: {error}</div>}
       <Table
@@ -350,7 +351,7 @@ const Experiences = () => {
       />
 
       <Msgbox body={message.body} classname={message.classname} />
-    </form>
+    </div>
   </div>
 }
 

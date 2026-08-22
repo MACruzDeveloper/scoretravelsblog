@@ -1,4 +1,4 @@
-import { Filters as FiltersType, useExperienceFilters } from '@hooks/useExperienceFilters'
+import { Filters as FiltersType } from '@hooks/useExperienceFilters'
 
 type Props = {
   filters: FiltersType
@@ -38,17 +38,15 @@ const Filters = ({
       </div>
 
       {/* Score */}
-      {categories.length > 0 && (
-        <div className="filter_group">
-          <label>Min. score</label>
-          <select className="form_control" value={filters.score} onChange={e => setFilter('score', e.target.value)}>
-            <option value="">All</option>
-            {[1, 2, 3, 4, 5].map(n => (
-              <option key={n} value={n}>{n}+</option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="filter_group">
+        <label>Min. score</label>
+        <select className="form_control" value={filters.score} onChange={e => setFilter('score', e.target.value)}>
+          <option value="">All</option>
+          {[1, 2, 3, 4, 5].map(n => (
+            <option key={n} value={n}>{n}+</option>
+          ))}
+        </select>
+      </div>
 
       {/* Category */}
       {categories.length > 0 && (

@@ -17,10 +17,10 @@ const Gallery = () => {
   // Use filters hook
   const { filters, setFilter, resetFilters, hasActiveFilters, filtered } = useExperienceFilters(experiences)
 
-  // Extract unique cities from filtered experiences
+  // Extract unique cities from all experiences (options shouldn't disappear when filtering)
   const cities = useMemo(() => {
     const cityMap = new Map()
-    filtered.forEach(exp => {
+    experiences.forEach(exp => {
       if (exp.city && typeof exp.city === 'object') {
         if (!cityMap.has(exp.city._id)) {
           cityMap.set(exp.city._id, { _id: exp.city._id, name: exp.city.name })
@@ -28,11 +28,13 @@ const Gallery = () => {
       }
     })
     return Array.from(cityMap.values())
-  }, [filtered])
+  }, [experiences])
 
-  // Filter and Group experiences in chunks of 3
+  // Filter and Group experiences in chunks of 3 (deterministic order: newest first)
   const experiencesByGroup = useMemo(() => {
-    const expsWithImage = filtered.filter((exp) => exp.image).sort(() => Math.random() - 0.5)
+    const expsWithImage = filtered
+      .filter((exp) => exp.image)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     return chunk(expsWithImage, 3)
   }, [filtered])
 
@@ -46,6 +48,11 @@ const Gallery = () => {
   const handleMoreChunks = () => {
     setNext(next + chunksPerRow)
   }
+
+  // Reset "Show more" when the filtered results change
+  useEffect(() => {
+    setNext(chunksPerRow)
+  }, [filtered, chunksPerRow])
 
   return <div className="page gallery">
     <div className="container">

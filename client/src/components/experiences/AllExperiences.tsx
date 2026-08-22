@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { sortBy } from "lodash"
-import { useExperienceStore } from '@store/experienceStore'
+import { useExperienceStore, City } from '@store/experienceStore'
 import Card, { PropsCard } from '@common/Card'
 import Pagination from '@common/Pagination'
 import Filters from '@common/Filters'
@@ -25,12 +25,12 @@ const AllExperiences = () => {
     const seen = new Set()
     return experiences
       .map(e => typeof e.city === 'object' ? e.city : null)
-      .filter((c): c is { _id: string; name: string } => !!c && !seen.has(c._id) && !!seen.add(c._id))
+      .filter((c): c is City => !!c && !seen.has(c._id) && !!seen.add(c._id))
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [experiences])
 
   const availableYears = useMemo(() =>
-    [...new Set(experiences.map(e => new Date(e.date).getFullYear().toString()))].sort().reverse()
+    [...new Set(experiences.map(e => e.date ? new Date(e.date).getFullYear().toString() : ''))].filter(Boolean).sort().reverse()
   , [experiences])
 
   // Paginación sobre el array ya filtrado

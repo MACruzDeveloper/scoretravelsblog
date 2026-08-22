@@ -17,9 +17,9 @@ const SearchByContinent = () => {
         </li>
         <li>
           <img src={northamerica} loading="lazy" alt="north american map" className="na" />
-          <NavLink to={`${urlSearchPage}/northamerica`} className="link na">North America</NavLink>
+          <NavLink to={`${urlSearchPage}/north-america`} className="link na">North America</NavLink>
           <img src={southamerica} loading="lazy" alt="south american map" className="sa" />
-          <NavLink to={`${urlSearchPage}/southamerica`} className="link sa">South America</NavLink>
+          <NavLink to={`${urlSearchPage}/south-america`} className="link sa">South America</NavLink>
         </li>
         <li>
           <img src={asia} loading="lazy" alt="asian map" />

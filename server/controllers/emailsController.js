@@ -14,13 +14,21 @@ const transport = nodemailer.createTransport({
 	}
 })
 
+const sanitizeCrlf = (value) =>
+  typeof value === 'string' ? value.replace(/[\r\n]+/g, ' ') : ''
+
+const escapeHtml = (value) =>
+  typeof value === 'string'
+    ? value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    : ''
+
 const send_email = async (req, res) => {
 	const { name, email, subject, message } = req.body
 	const default_subject = 'This is a default subject'
 	const mailOptions = {
 		to: process.env.NODEMAILER_EMAIL,
-		subject: "New message from " + name,
-		html: '<p>' + (subject || default_subject) + '</p><p><pre>' + message + '</pre></p>'
+		subject: "New message from " + sanitizeCrlf(name),
+		html: '<p>' + escapeHtml(subject || default_subject) + '</p><p><pre>' + escapeHtml(message) + '</pre></p>'
 	}
 	try {
 		const response = await transport.sendMail(mailOptions)

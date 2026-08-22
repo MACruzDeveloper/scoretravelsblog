@@ -9,7 +9,7 @@ import TableActions from '@/components/common/TableActions'
 
 const Images = () => {
   const [images, setImages] = useState([])
-  const [featured, setFeatured] = useState(null)
+  const [featuredValues, setFeaturedValues] = useState<Record<string, boolean>>({})
 
   const [sortColumn, setSortColumn] = useState<string | null>('title')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -50,17 +50,22 @@ const Images = () => {
   }
 
   const handleChangeSwitch = (e: FormEvent<HTMLInputElement>, idx: string) => {
-    !updateActive && setUpdateActive(idx)
+    setUpdateActive(idx)
     const target = e.currentTarget
-    let featured = target.checked
-    setFeatured(featured)
+    setFeaturedValues(prev => ({ ...prev, [idx]: target.checked }))
   }
 
   const onClickUpdate = async (idx: string) => {
     try {
       let url = `${URL}/images/update_image`
-      await postData(url, { _id: idx, featured: featured })
-      fetch_images()
+      await postData(url, { _id: idx, featured: featuredValues[idx] ?? false })
+      setUpdateActive(null)
+      setFeaturedValues(prev => {
+        const next = { ...prev }
+        delete next[idx]
+        return next
+      })
+      await fetch_images()
       setMessage({ body: `Image updated!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
@@ -144,7 +149,7 @@ const Images = () => {
                 type="checkbox"
                 id={`switch-${item._id}`}
                 className="switch_checkbox"
-                defaultChecked={item.featured}
+                checked={featuredValues[item._id] ?? item.featured}
                 onChange={(e) => handleChangeSwitch(e, item._id)}
               />
               <label htmlFor={`switch-${item._id}`} className="switch_label"></label>
@@ -171,7 +176,7 @@ const Images = () => {
           <div className="tRow sup">
             <div className="tCol"></div>
             <div className="tCol">
-              <ImageUpload isImageWithTitle={false} />
+              <ImageUpload fetch_images={fetch_images} isImageWithTitle={false} />
             </div>
             <div className="tCol"></div>
             <div className="tCol"></div>

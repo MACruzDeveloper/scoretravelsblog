@@ -2,6 +2,7 @@ const User = require('../models/usersModels')
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
 const validator = require('validator')
+const { isValidId } = require('../utils/validators')
 const jwt_secret = process.env.JWT_SECRET
 
 const register = async (req, res) => {
@@ -99,6 +100,7 @@ const addNewUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   let { _id } = req.body
+  if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' })
   try {
     const removed = await User.deleteOne({ _id: _id })
     res.send({ removed })
@@ -110,6 +112,7 @@ const deleteUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   let params = req.body
+  if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' })
 
   try {
     const updateData = {}

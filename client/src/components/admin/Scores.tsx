@@ -21,7 +21,7 @@ const Scores = () => {
     try {
       let url = `${URL}/admin/scores/delete`
       await postData(url, { _id: id })
-      fetchScores()
+      fetchScores(true)
       setMessage({ body: `Score deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)

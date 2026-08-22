@@ -123,7 +123,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
   useEffect(() => {
     const interval = window.setInterval(() => {
       if (slideStop && options.autoplay && numSlides > 0) {
-        const nextIndex = slideIndex === numSlides - 1 ? slideIndex : slideIndex + 1
+        const nextIndex = (slideIndex + 1) % numSlides
         changeSlide(nextIndex)
       }
     }, options.time)

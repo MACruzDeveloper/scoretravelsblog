@@ -46,7 +46,7 @@ const Categories = () => {
   const [valuesInputUpdate, setValuesInputUpdate] = useState<Partial<Cat>>({ name: '', description: '' })
   const [message, setMessage] = useState<ParamsMsgBox>({body: '', classname: ''})
   const [updateActive, setUpdateActive] = useState<string | null>(null)
-  const reg = /^[A-Za-z\s]+$/
+  const reg = /^[\p{L}\p{N}\s]+$/u
 
   const handleChangeInputAdd = (e: FormEvent<HTMLInputElement>) => {
     const target = e.currentTarget
@@ -63,10 +63,10 @@ const Categories = () => {
 
     try {
       let url = `${URL}/admin/categories/add`
-      let result = cats.findIndex(item => item.name === valuesInputAdd.name)
+      const name = valuesInputAdd.name?.trim() ?? ''
+      const description = valuesInputAdd.description?.trim() ?? ''
+      let result = cats.findIndex(item => item.name.toLowerCase() === name.toLowerCase())
       if (result === -1) {
-        const name = valuesInputAdd.name?.trim() ?? ''
-        const description = valuesInputAdd.description?.trim() ?? ''
         if (reg.exec(name)) {
           await postData(url, { name, description })
           await fetchCats(true)
@@ -96,8 +96,9 @@ const Categories = () => {
   }
 
   const onClickShowUpdate = async (idx: string) => {
-    setUpdateActive(idx)
     let idCat = cats.findIndex(e => e._id === idx)
+    if (idCat === -1) return
+    setUpdateActive(idx)
     setValuesInputUpdate({ 
       _id: idx,
       name: cats[idCat].name,

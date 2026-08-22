@@ -7,8 +7,8 @@ interface PropsSelectCity {
   selectedCity?: City
 }
 
-const SelectCity = ({ handleCityChange, selectedCity }: PropsSelectCity) => {
-  const { continents, cities, loading, fetchCities, getCountriesByContinent, getCitiesByCountry } = useCitiesStore()
+const SelectCity = ({ handleCityChange }: PropsSelectCity) => {
+  const { continents, loading, fetchCities, getCountriesByContinent, getCitiesByCountry } = useCitiesStore()
   
   const [selectedContinent, setSelectedContinent] = useState<string>('')
   const [selectedCountry, setSelectedCountry] = useState<string>('')
