@@ -8,7 +8,7 @@ class commentsController {
       res.send(comms);
     }
     catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error fetching comments' })
     }
   }
 
@@ -19,25 +19,25 @@ class commentsController {
       res.send(done);
     }
     catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error creating comment' })
     }
   }
 
   async deleteComment(req, res) {
     let { _id } = req.body;
-    if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' });
+    if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' });
     try {
       const removed = await comments.deleteOne({ _id: _id });
       res.send({ removed });
     }
     catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error deleting comment' })
     }
   }
 
   async updateComment(req, res) {
-    let params = req.body;  
-    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' });
+    let params = req.body;
+    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' });
     try {
       const updated = await comments.updateOne(
         { _id: params._id }, { user: params.user, experience: params.experience, content: params.content }
@@ -45,7 +45,7 @@ class commentsController {
       res.send({ updated });
     }
     catch (error) {
-      res.send({ error });
+      res.status(500).json({ ok: false, message: 'Error updating comment' })
     }
   }
 }

@@ -32,7 +32,7 @@ class experiencesController {
       const exps = await experiences.find().populate('city')
       res.send(exps)
     } catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error fetching experiences' })
     }
   }
 
@@ -42,7 +42,7 @@ class experiencesController {
       const exp = await experiences.findById(expId).populate('city')
       res.send(exp)
     } catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error fetching experience' })
     }
   }
 
@@ -57,36 +57,35 @@ class experiencesController {
         image,
         images,
         category: params.category,
-        city: params.city,       // llega el ObjectId desde el frontend
+        city: params.city,
         content: params.content,
         score: params.score,
         date: params.date || Date.now()
       })
-      // populate para devolver el objeto city completo al frontend
       const populated = await done.populate('city')
       res.send(populated)
     } catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error creating experience' })
     }
   }
 
   async deleteExperience(req, res) {
     let { _id } = req.body
-    if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' })
+    if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
     try {
       const removed = await experiences.deleteOne({ _id })
       res.send({ removed })
     } catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error deleting experience' })
     }
   }
 
   async updateExperience(req, res) {
     let params = req.body
-    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' })
+    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
     const currentExp = await experiences.findById(params._id)
     if (!currentExp) {
-      return res.status(404).send({ error: 'Experience not found' })
+      return res.status(404).json({ ok: false, message: 'Experience not found' })
     }
 
     const {
@@ -123,22 +122,21 @@ class experiencesController {
           images,
           title: params.title,
           category: params.category,
-          city: params.city,     // ObjectId
+          city: params.city,
           content: params.content,
           score: params.score,
         }
       )
-      // findById para devolver el doc actualizado con city populado
       const updated = await experiences.findById(params._id).populate('city')
       res.send({ updated })
     } catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error updating experience' })
     }
   }
 
   async updateScoreExperience(req, res) {
     let params = req.body
-    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' })
+    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
     try {
       const updated = await experiences.updateOne(
         { _id: params._id },
@@ -146,7 +144,7 @@ class experiencesController {
       )
       res.send({ updated })
     } catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error updating score' })
     }
   }
 }

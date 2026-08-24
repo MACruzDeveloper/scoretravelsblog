@@ -24,7 +24,7 @@ const register = async (req, res) => {
     await User.create(newUser)
     res.json({ ok: true, message: 'Successful register' })
   } catch (error) {
-    res.json({ ok: false, error })
+    res.json({ ok: false, message: 'Registration failed' })
   }
 }
 
@@ -47,7 +47,7 @@ const login = async (req, res) => {
       res.json({ ok: true, message: `Hi ${user.username}!`, token, username: user.username, email, role })
     } else return res.json({ ok: false, message: 'Invalid password' })
   } catch (error) {
-    res.json({ ok: false, error })
+    res.json({ ok: false, message: 'Login failed' })
   }
 }
 
@@ -69,7 +69,7 @@ const findAllUsers = async (req, res) => {
     res.send(us)
   }
   catch (error) {
-    res.send({ error })
+    res.status(500).json({ ok: false, message: 'Error fetching users' })
   }
 }
 
@@ -94,25 +94,25 @@ const addNewUser = async (req, res) => {
     res.send({ ok: true, user: { _id: done._id, username: done.username, email: done.email, role: done.role } })
   }
   catch (error) {
-    res.send({ error })
+    res.status(500).json({ ok: false, message: 'Error creating user' })
   }
 }
 
 const deleteUser = async (req, res) => {
   let { _id } = req.body
-  if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' })
+  if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
   try {
     const removed = await User.deleteOne({ _id: _id })
     res.send({ removed })
   }
   catch (error) {
-    res.send({ error })
+    res.status(500).json({ ok: false, message: 'Error deleting user' })
   }
 }
 
 const updateUser = async (req, res) => {
   let params = req.body
-  if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' })
+  if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
 
   try {
     const updateData = {}
@@ -124,7 +124,7 @@ const updateUser = async (req, res) => {
     res.send({ updated })
   }
   catch (error) {
-    res.send({ error })
+    res.status(500).json({ ok: false, message: 'Error updating user' })
   }
 }
 

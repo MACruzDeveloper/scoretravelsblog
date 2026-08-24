@@ -4,10 +4,23 @@ const port = process.env.port || 3040;
 require('dotenv').config();
 const path = require('path');
 
+// =============== SECURITY HEADERS =====================
+const helmet = require('helmet');
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+}));
+
+// =============== LOGGING =====================
+const morgan = require('morgan');
+app.use(morgan('dev'));
+
 // =============== BODY PARSER SETTINGS =====================
 const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }));
 
 // =============== DATABASE CONNECTION =====================
 const mongoose = require('mongoose');
@@ -37,12 +50,30 @@ app.use('/admin/scores', require('./routes/scoresRoute'));
 app.use('/images', require('./routes/imagesRoute'));
 app.use('/emails', require('./routes/emailsRoutes.js'))
 
-app.use('/static', express.static(path.join(__dirname, '../client/public')));
+app.use('/static', express.static(path.join(__dirname, '../client/public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.avif')) {
+      res.setHeader('Content-Type', 'image/avif');
+    }
+  }
+}));
 
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../client/dist'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.avif')) {
+      res.setHeader('Content-Type', 'image/avif');
+    }
+  }
+}));
 
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+});
+
+// =============== GLOBAL ERROR HANDLER =====================
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  res.status(500).json({ ok: false, message: 'Internal server error' });
 });
 
 // =============== START SERVER =====================

@@ -10,8 +10,6 @@ const upload_image = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' })
     }
 
-    console.log(`req.body =======>`, req.body)
-
     const outputDir = path.join(__dirname, '..', '..', 'client', 'public', 'images')
     fs.mkdirSync(outputDir, { recursive: true })
     const originalName = path.parse(req.file.originalname).name
@@ -34,8 +32,7 @@ const upload_image = async (req, res) => {
 
     return res.status(200).json({ filename, title: req.body.title || '' })
   } catch (error) {
-    console.log("error =====>", error)
-    return res.status(500).json({ error: error.message || 'Upload failed' })
+    return res.status(500).json({ ok: false, message: 'Upload failed' })
   }
 };
 
@@ -44,7 +41,7 @@ const fetch_images = async (req, res) => {
     const images = await Images.find({});
     res.status(200).json({ images });
   } catch (error) {
-    console.log("error =====>", error);
+    res.status(500).json({ ok: false, message: 'Error fetching images' })
   }
 };
 
@@ -61,8 +58,7 @@ const delete_image = async (req, res) => {
     const deleted = await Images.deleteOne({ _id });
     res.send({ deleted });
   } catch (error) {
-    console.log("error =====>", error);
-    res.status(500).json({ error: error.message || 'Delete failed' });
+    res.status(500).json({ ok: false, message: 'Delete failed' });
   }
 };
 
@@ -77,7 +73,7 @@ const update_image = async (req, res) => {
       res.send({ updated });
     }
     catch (error) {
-      res.send({ error });
+      res.status(500).send({ ok: false, message: 'Error updating image' });
     };
 }
 

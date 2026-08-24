@@ -1,16 +1,13 @@
 const nodemailer = require('nodemailer')
 
-// selecting mail service and authorazing with our credentials
+// SMTP transport (Brevo). Credentials come from .env
 const transport = nodemailer.createTransport({
-	// you need to enable the less secure option on your gmail account
-	service: 'Hotmail',
+	host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+	port: Number(process.env.SMTP_PORT) || 587,
+	secure: false,
 	auth: {
-		//type: 'OAuth2',
-		user: process.env.NODEMAILER_EMAIL,
-		pass: process.env.NODEMAILER_PASSWORD,
-		//clientId: process.env.OAUTH_CLIENTID,
-		//clientSecret: process.env.OAUTH_CLIENT_SECRET,
-		//refreshToken: process.env.OAUTH_REFRESH_TOKEN
+		user: process.env.SMTP_USER,
+		pass: process.env.SMTP_PASS
 	}
 })
 
@@ -26,18 +23,20 @@ const send_email = async (req, res) => {
 	const { name, email, subject, message } = req.body
 	const default_subject = 'This is a default subject'
 	const mailOptions = {
-		to: process.env.NODEMAILER_EMAIL,
+		from: process.env.SMTP_USER,
+		replyTo: sanitizeCrlf(email),
+		to: process.env.SMTP_TO || process.env.SMTP_USER,
 		subject: "New message from " + sanitizeCrlf(name),
+		text: `${name} <${email}> wrote:\n\n${message}`,
 		html: '<p>' + escapeHtml(subject || default_subject) + '</p><p><pre>' + escapeHtml(message) + '</pre></p>'
 	}
 	try {
 		const response = await transport.sendMail(mailOptions)
-		console.log(response)
-		console.log('Email sent!')
-		return res.json({ on: true, message: 'email sent' })
+		return res.json({ ok: true, message: 'email sent' })
 	}
 	catch (err) {
-		return res.json({ ok: false, message: err })
+		console.error('Email send failed:', err.code || err.message)
+		return res.status(500).json({ ok: false, message: 'Error sending email' })
 	}
 }
 

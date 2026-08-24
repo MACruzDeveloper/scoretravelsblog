@@ -9,7 +9,7 @@ class citiesController {
       const cities = await City.find().sort({ name: 1 })
       res.send(cities)
     } catch (error) {
-      res.send({ error })
+      res.status(500).send({ ok: false, message: 'Error fetching cities' })
     }
   }
 
@@ -20,7 +20,7 @@ class citiesController {
       }).sort({ country: 1, name: 1 })
       res.send(cities)
     } catch (error) {
-      res.send({ error })
+      res.status(500).send({ ok: false, message: 'Error fetching cities' })
     }
   }
 
@@ -31,30 +31,27 @@ class citiesController {
       }).sort({ name: 1 })
       res.send(cities)
     } catch (error) {
-      res.send({ error })
+      res.status(500).send({ ok: false, message: 'Error fetching cities' })
     }
   }
 
   async addNewCity(req, res) {
     const { name, country, countryCode, continent, lat, lng } = req.body
-    console.log('addNewCity body:', req.body)  // ← añade esto
     try {
       const city = await City.findOneAndUpdate(
         { name, countryCode },
         { name, country, countryCode, continent, lat, lng },
         { upsert: true, new: true, runValidators: true }
       )
-      console.log('city result:', city)        // ← y esto
       res.send({ city })
     } catch (error) {
-      console.log('addNewCity error:', error)  // ← y esto
-      res.send({ error })
+      res.status(500).send({ ok: false, message: 'Error adding city' })
     }
   }
 
   async updateCity(req, res) {
     const { _id, name, country, countryCode, continent, lat, lng } = req.body
-    if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' })
+    if (!isValidId(_id)) return res.status(400).send({ ok: false, message: 'Invalid id' })
     try {
       const updated = await City.findByIdAndUpdate(
         _id,
@@ -63,24 +60,23 @@ class citiesController {
       )
       res.send({ updated })
     } catch (error) {
-      res.send({ error })
+      res.status(500).send({ ok: false, message: 'Error updating city' })
     }
   }
 
   async deleteCity(req, res) {
-    if (!isValidId(req.params.id)) return res.status(400).send({ error: 'Invalid id' })
+    if (!isValidId(req.params.id)) return res.status(400).send({ ok: false, message: 'Invalid id' })
     try {
-      // Comprueba que no haya experiencias usando esta ciudad antes de borrar
       const inUse = await Experience.findOne({ city: req.params.id })
       if (inUse) {
         return res.status(400).send({ 
-          error: 'City cannot be deleted because it has associated experiences' 
+          ok: false, message: 'City cannot be deleted because it has associated experiences' 
         })
       }
       const removed = await City.deleteOne({ _id: req.params.id })
       res.send({ removed })
     } catch (error) {
-      res.send({ error })
+      res.status(500).send({ ok: false, message: 'Error deleting city' })
     }
   }
 }

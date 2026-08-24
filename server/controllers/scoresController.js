@@ -8,7 +8,7 @@ class scoresController {
       res.send(sc);
     }
     catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error fetching scores' })
     }
   }
 
@@ -19,26 +19,26 @@ class scoresController {
       res.send(done);
     }
     catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error creating score' })
     }
   }
 
   async deleteScore(req, res) {
     let { _id } = req.body;
-    if (!isValidId(_id)) return res.status(400).send({ error: 'Invalid id' });
+    if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' });
     try {
       const removed = await scores.deleteOne({ _id: _id });
       res.send({ removed });
     }
     catch (error) {
-      res.send({ error })
+      res.status(500).json({ ok: false, message: 'Error deleting score' })
     }
   }
 
   async updateScore(req, res) {
-    let params = req.body;  
-    if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' });
-    
+    let params = req.body;
+    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' });
+
     try {
       const updated = await scores.updateOne(
         { _id: params._id }, {experience: params.experience, user: params.user, score: params.score}
@@ -46,7 +46,7 @@ class scoresController {
       res.send({ updated });
     }
     catch (error) {
-      res.send({ error });
+      res.status(500).json({ ok: false, message: 'Error updating score' })
     }
   }
 }
