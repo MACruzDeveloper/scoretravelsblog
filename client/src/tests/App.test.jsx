@@ -6,7 +6,6 @@ import { HttpResponse, http } from 'msw'
 import { vi } from 'vitest'
 import { server } from "../mocks/server.js"
 import Header from '@common/Header.tsx'
-import Home from '../components/Home.tsx'
 import AllExperiences from '../components/experiences/AllExperiences.tsx'
 import { URL } from '../config.js'
 
