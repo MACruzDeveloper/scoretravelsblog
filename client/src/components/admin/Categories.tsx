@@ -7,6 +7,8 @@ import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
 
+const reg = /^[\p{L}\p{N}\s]+$/u
+
 const Categories = () => {
   // fetch Categories
   const { cats, loading, error, fetchCats } = useCategoriesStore()
@@ -46,7 +48,6 @@ const Categories = () => {
   const [valuesInputUpdate, setValuesInputUpdate] = useState<Partial<Cat>>({ name: '', description: '' })
   const [message, setMessage] = useState<ParamsMsgBox>({body: '', classname: ''})
   const [updateActive, setUpdateActive] = useState<string | null>(null)
-  const reg = /^[\p{L}\p{N}\s]+$/u
 
   const handleChangeInputAdd = (e: FormEvent<HTMLInputElement>) => {
     const target = e.currentTarget

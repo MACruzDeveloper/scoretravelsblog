@@ -45,7 +45,7 @@ const SearchForm = () => {
 
   useEffect(() => {
     watchInput()
-  })
+  }, [value])
 
   useOutsideClick(ref, () => {
     isSearchFormOpen && setIsSearchFormOpen(false)

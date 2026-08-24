@@ -25,7 +25,8 @@ const Contact = () => {
     if (validateEmail(data.email)) {
       setIsSending(true)
       postData(`${URL}/emails/send_email`, data)
-        .then(() => {
+        .then((res) => {
+          if (!res?.data?.ok) throw new Error(res?.data?.message || 'Send failed')
           nameInput.value = ""
           emailInput.value = ""
           messageInput.value = ""

@@ -22,7 +22,7 @@ const Comments = () => {
     try {
       let url = `${URL}/admin/comments/delete`
       await postData(url, { _id: id })
-      fetchComments(true)
+      await fetchComments(true)
       setMessage({ body: `Comment deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)

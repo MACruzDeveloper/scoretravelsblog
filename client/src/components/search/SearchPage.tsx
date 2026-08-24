@@ -15,11 +15,17 @@ const SearchPage = () => {
   const location = useLocation()
   const param = new URLSearchParams(location.search).get('search') || ''
 
-  // get results filtered by title or category
-  const searchResults = experiences.filter(item =>
-    item.title?.toLowerCase().includes(param.toLowerCase()) ||
-    item.category?.toLowerCase().includes(param.toLowerCase())
-  )
+  // get results filtered by title, category, city name or content
+  const searchResults = experiences.filter(item => {
+    const term = param.toLowerCase()
+    const cityName = item.city && typeof item.city === 'object' ? item.city.name?.toLowerCase() : ''
+    return (
+      item.title?.toLowerCase().includes(term) ||
+      item.category?.toLowerCase().includes(term) ||
+      cityName.includes(term) ||
+      item.content?.toLowerCase().includes(term)
+    )
+  })
 
   return <div className="page search">
     <div className="container">

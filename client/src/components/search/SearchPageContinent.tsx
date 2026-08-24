@@ -15,9 +15,9 @@ const SearchPageContinent = () => {
   const param = location.pathname.split('/')[2]?.toLowerCase() || ''
 
   const expsFiltered = useMemo(() => {
+    if (!param) return []
     return experiences.filter(exp => {
       if (typeof exp.city !== 'object' || !exp.city?.continent) return false
-      // Normaliza por si hay espacios o mayúsculas
       return exp.city.continent.toLowerCase().replace(/\s+/g, '-') === param
     })
   }, [experiences, param])

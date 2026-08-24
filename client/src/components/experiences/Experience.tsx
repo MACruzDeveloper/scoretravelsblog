@@ -67,7 +67,7 @@ const Experience = ({ user }: PropsExperience) => {
     if (experience?.title) {
       setTitleExperience(experience.title)
     }
-  }, [experience])
+  }, [experience?.title, setTitleExperience])
 
   // fetch scores
   const { scores, error, fetchScores } = useScoresStore()
@@ -86,25 +86,24 @@ const Experience = ({ user }: PropsExperience) => {
 
   // comments
   useEffect(() => {
+    const getCommentsByExp = async () => {
+      let url = `${URL}/admin/comments`
+      try {
+        const res = await getData(url)
+        let data = res.data
+        let tempComm = []
+        for (let ele of data) {
+          if (exp === ele.experience) {
+            tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
+          }
+        }
+        setComments(tempComm)
+      } catch (error) {
+        console.log(error)
+      }
+    }
     getCommentsByExp()
   }, [exp])
-
-  const getCommentsByExp = async () => {
-    let url = `${URL}/admin/comments`
-    try {
-      const res = await getData(url)
-      let data = res.data
-      let tempComm = []
-      for (let ele of data) {
-        if (exp === ele.experience) {
-          tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
-        }
-      }
-      setComments(tempComm)
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
   const handleChangeComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.currentTarget
@@ -117,7 +116,16 @@ const Experience = ({ user }: PropsExperience) => {
       let url = `${URL}/admin/comments/add`
       if (comment) {
         await postData(url, { user: user, experience: exp, content: comment })
-        getCommentsByExp()
+        // Re-fetch comments after adding
+        const res = await getData(`${URL}/admin/comments`)
+        let tempComm = []
+        for (let ele of res.data) {
+          if (exp === ele.experience) {
+            tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
+          }
+        }
+        setComments(tempComm)
+        setComment('')
         setMessage({ body: `Comment added!`, classname: 'msg_ok' })
       } else {
         setMessage({ body: 'Write a comment', classname: 'msg_error' })

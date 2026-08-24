@@ -8,12 +8,19 @@ import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
 
+type User = {
+  _id: string
+  username?: string
+  email: string
+  role: string
+}
+
 const Users = () => {
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState<User[]>([])
   const [newRole, setNewRole] = useState('')
   const [newUsername, setNewUsername] = useState('')
   const [message, setMessage] = useState({ body: '', classname: '' })
-  const [updateActive, setUpdateActive] = useState(null)
+  const [updateActive, setUpdateActive] = useState<string | null>(null)
 
   const { setRole, user: contextUser } = useContext(MyGlobalContext)
 
@@ -173,7 +180,7 @@ const Users = () => {
               <select
                 name="role"
                 className="form_control"
-                defaultValue={ele.role}
+                value={newRole}
                 onChange={handleChangeNew}
               >
                 {typesUser.map(item => (
