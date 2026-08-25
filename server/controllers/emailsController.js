@@ -23,9 +23,9 @@ const send_email = async (req, res) => {
 	const { name, email, subject, message } = req.body
 	const default_subject = 'This is a default subject'
 	const mailOptions = {
-		from: process.env.SMTP_USER,
+		from: process.env.SMTP_FROM || process.env.SMTP_USER,
 		replyTo: sanitizeCrlf(email),
-		to: process.env.SMTP_TO || process.env.SMTP_USER,
+		to: process.env.SMTP_TO || process.env.SMTP_FROM || process.env.SMTP_USER,
 		subject: "New message from " + sanitizeCrlf(name),
 		text: `${name} <${email}> wrote:\n\n${message}`,
 		html: '<p>' + escapeHtml(subject || default_subject) + '</p><p><pre>' + escapeHtml(message) + '</pre></p>'
