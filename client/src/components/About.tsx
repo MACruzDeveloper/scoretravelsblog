@@ -37,35 +37,35 @@ const milestones: Milestone[] = [
 const About = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [interpolatedYear, setInterpolatedYear] = useState(milestones[0].year)
+  const [isScrolling, setIsScrolling] = useState(false)
   const roadRef = useRef<HTMLDivElement | null>(null)
   const sectionRef = useRef<HTMLDivElement | null>(null)
+  const scrollLockRef = useRef(false)
   const activeMilestone = milestones[currentIndex]
-  const pointOffset = 2.5
+
+  const pointOffset = 3
   const step = milestones.length > 1 ? 100 / (milestones.length - 1) : 0
-  const getPointLeft = (index: number) => `${Math.min(index * step + pointOffset, 97.5)}%`
-  const getTooltipLeft = (index: number) => `${Math.min(Math.max(index * step + pointOffset, 7), 93)}%`
-  const getRoadPercent = (p: number) => Math.round(p * (100 - pointOffset * 2) + pointOffset)
+  const getPointLeft = (index: number) => `${Math.min(index * step + pointOffset, 97)}%`
 
   const minYear = Math.min(...milestones.map(m => m.year))
   const maxYear = Math.max(...milestones.map(m => m.year))
 
   const updateRoadPosition = (progress: number) => {
     const p = Math.min(Math.max(progress, 0), 1)
-    const percent = getRoadPercent(p)
+    const percent = Math.round(p * (100 - pointOffset * 2) + pointOffset)
 
-    if (roadRef.current) {
-      roadRef.current.style.setProperty('--trig', `${percent}%`)
-      roadRef.current.style.setProperty('--scroll', `${p}`)
-    }
+    roadRef.current?.style.setProperty('--trig', `${percent}%`)
+    roadRef.current?.style.setProperty('--progress', `${percent}%`)
+    roadRef.current?.style.setProperty('--p', `${p}`)
 
     const nextIndex = Math.round(p * (milestones.length - 1))
-    setCurrentIndex((prev) => (prev !== nextIndex ? nextIndex : prev))
+    setCurrentIndex(prev => (prev !== nextIndex ? nextIndex : prev))
     setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
   }
 
   useEffect(() => {
     const handleScroll = () => {
-      if (!sectionRef.current) return
+      if (!sectionRef.current || scrollLockRef.current) return
       const scrollY = window.scrollY || window.pageYOffset
       const sectionTop = sectionRef.current.offsetTop
       const sectionHeight = sectionRef.current.offsetHeight
@@ -82,103 +82,152 @@ const About = () => {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const goTo = (index: number) => {
+    const target = Math.min(Math.max(index, 0), milestones.length - 1)
+    const p = target / (milestones.length - 1)
+    scrollLockRef.current = true
+    setIsScrolling(true)
+
+    const sectionTop = sectionRef.current!.offsetTop
+    const sectionHeight = sectionRef.current!.offsetHeight
+    const targetScroll = sectionTop + p * (sectionHeight - window.innerHeight)
+
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' })
+
+    // Animate the road immediately so the UI responds without waiting for smoothing
+    updateRoadPosition(p)
+    setCurrentIndex(target)
+
+    setTimeout(() => {
+      scrollLockRef.current = false
+      setIsScrolling(false)
+    }, 650)
+  }
+
+  const handlePointClick = (index: number) => {
+    if (index === currentIndex) return
+    goTo(index)
+  }
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!sectionRef.current) return
-
       const rect = sectionRef.current.getBoundingClientRect()
       const isInView = rect.top < window.innerHeight && rect.bottom > 0
       if (!isInView) return
 
-      if (event.code === 'ArrowRight' || event.code === 'ArrowDown' || event.code === 'KeyD') {
+      if (['ArrowRight', 'ArrowDown', 'KeyD'].includes(event.code)) {
         event.preventDefault()
-        setCurrentIndex((prev) => Math.min(milestones.length - 1, prev + 1))
+        goTo(currentIndex + 1)
       }
-
-      if (event.code === 'ArrowLeft' || event.code === 'ArrowUp' || event.code === 'KeyA') {
+      if (['ArrowLeft', 'ArrowUp', 'KeyA'].includes(event.code)) {
         event.preventDefault()
-        setCurrentIndex((prev) => Math.max(0, prev - 1))
+        goTo(currentIndex - 1)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex])
 
   useEffect(() => {
-    const p = milestones.length > 1 ? currentIndex / (milestones.length - 1) : 0
-    const percent = getRoadPercent(p)
-    if (roadRef.current) {
-      roadRef.current.style.setProperty('--trig', `${percent}%`)
-      roadRef.current.style.setProperty('--scroll', `${p}`)
-    }
-    setInterpolatedYear(Math.round(minYear + p * (maxYear - minYear)))
-  }, [currentIndex])
+    updateRoadPosition(currentIndex / (milestones.length - 1))
+    setInterpolatedYear(milestones[currentIndex].year)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="page about">
-      <section className="about_slide intro_slide">
-        <div className="slide_inner">
-          <div className="top">
-            <h2 className="title">About me</h2>
-          </div>
-          <div className="content">
-            <div className="about_intro">
-              <p>
-                Mi historia se puede leer como un viaje en carretera: cada etapa tiene su punto de partida,
-                su recorrido y un destino que aporta un nuevo aprendizaje. Aquí te muestro ese camino con un pequeño
-                coche y cinco hitos importantes.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section ref={sectionRef} className="about_slide road_slide">
         <div className="road_panel">
           <div
             ref={roadRef}
             className="about_road road"
-            aria-label="Carretera interactiva con hitos"
+            aria-label="Carretera interactiva con hitos de mi carrera"
           >
-            <div className="road_background" />
-            <div className="road_line" />
+            <div className="road_sky_glow" />
+            <div className="road_ground" />
+
+            <div className="road_track">
+              <div className="road_line" />
+              <div className="road_progress" />
+              <div className="road_grid" />
+            </div>
 
             {milestones.map((milestone, index) => {
               const left = getPointLeft(index)
+              const passed = index <= currentIndex
               return (
-                <div
+                <button
                   key={milestone.year}
-                  className={`road_point ${currentIndex === index ? 'active' : ''}`}
+                  className={`road_point ${currentIndex === index ? 'active' : ''} ${passed ? 'passed' : ''}`}
                   style={{ left }}
+                  onClick={() => handlePointClick(index)}
+                  aria-label={`Ir al hito de ${milestone.year}: ${milestone.title}`}
                 >
+                  <span className="road_point_dot" />
                   <span className="road_point_label">{milestone.year}</span>
-                </div>
+                </button>
               )
             })}
 
-            <div className="carBox">
-              <div className="carContainer">
-                <div className="car">
-                  <div className="car_window" />
-                  <div className="wheel front" />
-                  <div className="wheel back" />
+            <div className="road_vehicle">
+              <div className="carBox" data-driving={isScrolling ? 'true' : 'false'}>
+                <div className="carContainer">
+                  <div className="car">
+                    <div className="car_window" />
+                    <div className="wheel front" />
+                    <div className="wheel back" />
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="road_year_overlay">
-              <span>{interpolatedYear}</span>
+            <div className="road_meta">
+              <span className="road_meta_year">{interpolatedYear}</span>
+              <span className="road_meta_count">
+                {currentIndex + 1} / {milestones.length}
+              </span>
             </div>
 
-            <div className="road_tooltip" style={{ left: getTooltipLeft(currentIndex) }}>
+            <div className="road_tooltip">
               <div className="tooltip_card">
                 <span className="tooltip_tag">{activeMilestone.year}</span>
                 <h3>{activeMilestone.title}</h3>
                 <p>{activeMilestone.description}</p>
               </div>
+            </div>
+
+            <div className="road_controls">
+              <button
+                className="road_control prev"
+                onClick={() => handlePointClick(currentIndex - 1)}
+                disabled={currentIndex === 0}
+                aria-label="Hito anterior"
+              >
+                ‹
+              </button>
+              <div className="road_dots">
+                {milestones.map((m, i) => (
+                  <button
+                    key={m.year}
+                    className={`road_dot ${currentIndex === i ? 'active' : ''}`}
+                    onClick={() => handlePointClick(i)}
+                    aria-label={`Ir al año ${m.year}`}
+                  />
+                ))}
+              </div>
+              <button
+                className="road_control next"
+                onClick={() => handlePointClick(currentIndex + 1)}
+                disabled={currentIndex === milestones.length - 1}
+                aria-label="Hito siguiente"
+              >
+                ›
+              </button>
             </div>
           </div>
         </div>
