@@ -2,8 +2,8 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { useExperienceStore } from '@/store/experienceStore'
 import Spinner from './common/Spinner'
+import Carousel from '@/components/Carousel'
 
-const Carousel = lazy(() => import('@/components/Carousel.js'))
 const LastExperiences = lazy(() => import('@/components/experiences/LastExperiences.js'))
 const Timeline = lazy(() => import('@/components/Timeline.js'))
 const BestExperiences = lazy(() => import('@/components/experiences/BestExperiences.js'))
@@ -17,9 +17,7 @@ const Home = () => {
   }, [fetchExperiences])
 
   return <div className="page home">
-    <Suspense fallback={<Spinner />}>
-      <Carousel hasVideo />
-    </Suspense>
+    <Carousel hasVideo />
 
     <div className="block">
       <div className="container">
