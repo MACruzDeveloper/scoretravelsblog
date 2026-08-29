@@ -1,24 +1,22 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { useBestExperiences } from '../hooks/useExperienceHooks'
 import { getIconForContinent, MAP_TILE_LAYER } from '@utils/mapThemes'
+import { Experience } from '@/store/experienceStore'
 
 const MapExperiences = () => {
   const { bestExperiences } = useBestExperiences()
 
   // Helper to check if experience has valid geolocation
-  const hasValidCoordinates = (exp: any): boolean => {
-    if (exp.city && typeof exp.city === 'object' && exp.city.lat && exp.city.lng) {
-      return true
+  const hasValidCoordinates = (exp: Experience): boolean => {
+    if (exp.city && typeof exp.city === 'object' && 'lat' in exp.city && 'lng' in exp.city) {
+      return !!exp.city.lat && !!exp.city.lng
     }
-    if (exp.lat && exp.lng) {
-      return true
-    }
-    return false
+    return !!(exp.lat && exp.lng)
   }
 
   // Get coordinates from experience
-  const getCoordinates = (exp: any): [number, number] | null => {
-    if (exp.city && typeof exp.city === 'object' && exp.city.lat && exp.city.lng) {
+  const getCoordinates = (exp: Experience): [number, number] | null => {
+    if (exp.city && typeof exp.city === 'object' && 'lat' in exp.city && 'lng' in exp.city) {
       return [exp.city.lat, exp.city.lng]
     }
     if (exp.lat && exp.lng) {
@@ -28,10 +26,11 @@ const MapExperiences = () => {
   }
 
   // Get continent from experience for icon customization
-  const getContinent = (exp: any): string => {
-    return (exp.city && typeof exp.city === 'object' && exp.city.continent) 
-      ? exp.city.continent 
-      : 'unknown'
+  const getContinent = (exp: Experience): string => {
+    if (exp.city && typeof exp.city === 'object' && 'continent' in exp.city) {
+      return exp.city.continent
+    }
+    return 'unknown'
   }
 
   return (
@@ -51,6 +50,7 @@ const MapExperiences = () => {
           url={MAP_TILE_LAYER.url}
           subdomains={MAP_TILE_LAYER.subdomains}
           maxZoom={MAP_TILE_LAYER.maxZoom}
+          errorTileUrl="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {bestExperiences
           .filter(exp => hasValidCoordinates(exp))
