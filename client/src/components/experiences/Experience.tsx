@@ -27,6 +27,14 @@ type SingleExperience = {
   images?: string[]
   content?: string
   score?: number
+  city?: {
+    name: string
+    country: string
+    countryCode: string
+    continent: string
+    lat: number
+    lng: number
+  }
 }
 
 const Experience = ({ user }: PropsExperience) => {
@@ -61,7 +69,7 @@ const Experience = ({ user }: PropsExperience) => {
   }
 
   // save experience title for Breadcrumbs
-  const { setTitleExperience }: any = useContext(MyGlobalContext)
+  const { setTitleExperience } = useContext(MyGlobalContext) as { setTitleExperience: (title: string) => void }
 
   useEffect(() => {
     if (experience?.title) {
@@ -87,12 +95,12 @@ const Experience = ({ user }: PropsExperience) => {
   // comments
   useEffect(() => {
     const getCommentsByExp = async () => {
-      let url = `${URL}/admin/comments`
+      const url = `${URL}/admin/comments`
       try {
         const res = await getData(url)
-        let data = res.data
-        let tempComm = []
-        for (let ele of data) {
+        const data = res.data
+        const tempComm = []
+        for (const ele of data) {
           if (exp === ele.experience) {
             tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
           }
@@ -113,13 +121,13 @@ const Experience = ({ user }: PropsExperience) => {
   const handleSubmitComment = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      let url = `${URL}/admin/comments/add`
+      const url = `${URL}/admin/comments/add`
       if (comment) {
         await postData(url, { user: user, experience: exp, content: comment })
         // Re-fetch comments after adding
         const res = await getData(`${URL}/admin/comments`)
-        let tempComm = []
-        for (let ele of res.data) {
+        const tempComm = []
+        for (const ele of res.data) {
           if (exp === ele.experience) {
             tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
           }
@@ -159,7 +167,12 @@ const Experience = ({ user }: PropsExperience) => {
                 }
 
                 <p className="content_info">
-                  <span className="cat">{experience.category}</span>
+                  <span>
+                    <span className="cat">{experience.city && typeof experience.city === 'object' ? experience.city.name : ''} </span>
+                    <span className="cat">({experience.city && typeof experience.city === 'object' ? experience.city.country : ''})</span>
+                    <span> · </span>
+                    {/* <span className="cat">{experience.category}</span> */}
+                  </span>
                   <span className="date">
                     <Moment format="YYYY/MM/DD">{experience.date}</Moment>
                   </span>
