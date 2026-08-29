@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ScoreTravelsBlog - Score people's trips</title>
     <meta name="description" content="Another blog about travel experiences, where users can score their trips. Help others discover the best destinations!" />
+    
+    <!-- Preload critical fonts for better LCP -->
+    <link rel="preload" href="/src/assets/fonts/Catamaran-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/src/assets/fonts/Catamaran-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
+    
+    <!-- Preload Google Fonts with high priority -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&text=0123456789&display=swap" as="style" />
   </head>
   <body>
     <div id="root"></div>
