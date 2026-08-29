@@ -41,7 +41,7 @@ const login = async (req, res) => {
       const token = jwt.sign(
         { _id: user._id, username: user.username, email: user.email, role: user.role },
         jwt_secret,
-        { expiresIn: '30d' }
+        { expiresIn: '1d' }
       )
       const role = user.role
       res.json({ ok: true, message: `Hi ${user.username}!`, token, username: user.username, email, role })
