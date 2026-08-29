@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest'
 import About from '@/components/About'
 
 describe('About', () => {
-  it('renders the introduction and interactive road', () => {
+  it('renders the interactive road with milestones', () => {
     render(<About />)
 
-    expect(screen.getByRole('heading', { name: 'About me' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Carretera interactiva con hitos')).toBeInTheDocument()
+    expect(screen.getByLabelText('Carretera interactiva con hitos de mi carrera')).toBeInTheDocument()
     expect(screen.getByText('Primer proyecto profesional')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir al hito de 2013: Primer proyecto profesional' })).toBeInTheDocument()
   })
 })
