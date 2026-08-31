@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import Navbar from './Navbar'
 
 type PropsHeader = {
@@ -7,7 +8,24 @@ type PropsHeader = {
 }
 
 const Header = ({ isLoggedIn, logout }: PropsHeader) => {
-  return <header className="header">
+  const [scrolled, setScrolled] = useState(false)
+  const location = useLocation()
+  const isHome = location.pathname === '/'
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const headerClass = [
+    'header',
+    isHome ? 'is-home' : '',
+    scrolled && isHome ? 'scrolled' : ''
+  ].filter(Boolean).join(' ')
+
+  return <header className={headerClass}>
     <div className="container">
       <div className="header_flex">
         <div className="header_left">

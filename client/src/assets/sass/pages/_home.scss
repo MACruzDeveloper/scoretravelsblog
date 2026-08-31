@@ -1,4 +1,9 @@
 // Home styles
+.page.home {
+  // Pull the carousel up so it sits behind the sticky header (hero effect)
+  margin-top: calc(-1 * #{map-get($header-size, 'small')});
+}
+
 .intro {
   padding: 8rem;
   text-align: center;

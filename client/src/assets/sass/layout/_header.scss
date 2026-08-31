@@ -11,6 +11,19 @@
   color: $colorWhite;
   padding: 1rem 0;
 
+  // Translucent + sticky fade effect only on the Home page
+  &.is-home {
+    background-color: rgba($color3, 0.8);
+    transition: background-color 0.35s ease, box-shadow 0.35s ease, padding 0.35s ease, height 0.35s ease;
+
+    &.scrolled {
+      background-color: $color3;
+      box-shadow: 0 0.6rem 2rem rgba($color1, 0.28);
+      height: calc(#{map-get($header-size, 'small')} - 0.5rem);
+    }
+  }
+
+
   &_flex {
     display: flex;
     align-items: center;
