@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
+import { useModerationStore } from '@/store/moderationStore'
 
 const NavbarAdmin = () => {
   const { role } = useContext(MyGlobalContext)
@@ -8,6 +9,12 @@ const NavbarAdmin = () => {
   const placeholderRef = useRef<HTMLDivElement | null>(null)
   const navTopRef = useRef<number>(0)
   const [isSticky, setIsSticky] = useState(false)
+
+  // Experiences waiting for review, shown next to "Moderation"
+  const { pendingCount, refreshPendingCount } = useModerationStore()
+  useEffect(() => {
+    if (role === 'admin') refreshPendingCount()
+  }, [role, refreshPendingCount])
 
   useEffect(() => {
     const nav = navRef.current
@@ -45,9 +52,14 @@ const NavbarAdmin = () => {
       className={`admin_nav ${isSticky ? 'sticky' : ''}`}
     >
       <ul>
-        <li><NavLink to={'/admin/experiences'}>Experiences</NavLink></li>
+        <li><NavLink to={'/admin/experiences'}>{role === 'admin' ? 'Experiences' : 'My experiences'}</NavLink></li>
         { role === 'admin' &&
         <>
+          <li>
+            <NavLink to={'/admin/moderation'}>
+              Moderation{pendingCount > 0 && <span className="badge" aria-label={`${pendingCount} pending`}>{pendingCount}</span>}
+            </NavLink>
+          </li>
           <li><NavLink to={'/admin/categories'}>Categories</NavLink></li>
           <li><NavLink to={'/admin/comments'}>Comments</NavLink></li>
           <li><NavLink to={'/admin/scores'}>Scores</NavLink></li>

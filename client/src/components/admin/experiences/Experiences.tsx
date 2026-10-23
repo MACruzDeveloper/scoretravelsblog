@@ -16,8 +16,10 @@ import TableActions from '@/components/common/TableActions'
 import ImageUpload from '../ImageUpload'
 import thumb from '@images/thumb.png'
 
+const STATUS_LABELS = { pending: 'Pending review', published: 'Published', rejected: 'Rejected' }
+
 const Experiences = () => {
-  const { user, role } = useContext(MyGlobalContext)
+  const { role } = useContext(MyGlobalContext)
   const [newValues, setNewValues] = useState<Experience>()
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
@@ -28,9 +30,11 @@ const Experiences = () => {
   const { experiences, loading, error, fetchExperiences } = useExperienceStore()
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
+  // Users manage their own experiences; the admin sees all of them
+  const scope = role === 'admin' ? 'all' : 'mine'
   useEffect(() => {
-    fetchExperiences(true)
-  }, [fetchExperiences, refreshTrigger])
+    fetchExperiences(true, scope)
+  }, [fetchExperiences, refreshTrigger, scope])
 
   // Show Add experience form
   const [isFormAddVisible, setIsFormAddVisible] = useState(false)
@@ -144,7 +148,7 @@ const Experiences = () => {
 
       const validFilenames = selectedFilenames.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
 
-      await patchData(`${API}/experiences/${id}`, {
+      const response = await patchData(`${API}/experiences/${id}`, {
         title: newValues.title,
         category: newValues.category,
         city: cityId,
@@ -157,7 +161,10 @@ const Experiences = () => {
       setUpdateActive(null)
       setSelectedCity(null)
       setSelectedFilenames([])
-      setMessage({ body: 'Experience updated!', classname: 'msg_ok' })
+      setMessage({
+        body: response.data.updated?.status === 'pending' ? 'Changes saved and sent for review' : 'Experience updated!',
+        classname: 'msg_ok'
+      })
     } catch (error) {
       console.log(error)
       setMessage({ body: getErrorMessage(error, 'Could not update the experience'), classname: 'msg_error' })
@@ -179,15 +186,14 @@ const Experiences = () => {
 
   const sortedExps = useMemo(() => {
     if (!sortColumn) return sortBy(experiences, 'date').reverse()
-    const list = role === 'admin' ? experiences : experiences.filter(exp => exp.user === user)
-    return [...list].sort((a, b) => {
+    return [...experiences].sort((a, b) => {
       const aVal = (a as any)[sortColumn]
       const bVal = (b as any)[sortColumn]
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
-  }, [experiences, user, role, sortColumn, sortDirection])
+  }, [experiences, sortColumn, sortDirection])
 
   const columns = [
     { key: 'date', label: 'Date', sortable: true, width: 'w7_5' },
@@ -196,7 +202,8 @@ const Experiences = () => {
     { key: 'city', label: 'City', sortable: true, width: 'w10' },
     { key: 'category', label: 'Category', sortable: true, width: 'w10' },
     { key: 'title', label: 'Title', sortable: true, width: 'w15' },
-    { key: 'content', label: 'Content', sortable: false, width: 'w27_5' },
+    { key: 'content', label: 'Content', sortable: false, width: 'w20' },
+    { key: 'status', label: 'Status', sortable: true, width: 'w7_5', align: 'center' },
     { key: 'score', label: 'Score', sortable: true, width: 'w7_5', align: 'center' },
     { key: 'actions', label: 'Action', sortable: false, width: 'w10', align: 'center' }
   ]
@@ -280,6 +287,10 @@ const Experiences = () => {
             )}
           </div>
           <div className="tCol center">
+            {ele.status && <span className={`status status_${ele.status}`}>{STATUS_LABELS[ele.status]}</span>}
+            {ele.status === 'rejected' && ele.rejectionReason && <span className="status_reason">{ele.rejectionReason}</span>}
+          </div>
+          <div className="tCol center">
             {/* Read only: average of the votes, computed by the server */}
             <span>{ele.score ?? '-'}</span>
           </div>
@@ -325,7 +336,6 @@ const Experiences = () => {
     </div>
 
     <AddExperience
-      user={user}
       handleFetchExperiences={handleRefreshExperiences}
       isFormAddVisible={isFormAddVisible}
       setIsFormAddVisible={setIsFormAddVisible}

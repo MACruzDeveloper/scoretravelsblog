@@ -15,7 +15,7 @@ type PropsNavbar = {
 const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
   const refNav = useRef()
   const refNavAdmin = useRef()
-  const { username } = useContext(MyGlobalContext)
+  const { username, role } = useContext(MyGlobalContext)
   const [isOpenNav, setIsOpenNav] = useState(false)
   const [isOpenNavAdmin, setIsOpenNavAdmin] = useState(false)
   const [message, setMessage] = useState({ body: '', classname: '' })
@@ -70,7 +70,7 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
         <li><NavLink to="/gallery">Gallery</NavLink></li>
         <li><NavLink to="/contact">Contact</NavLink></li>
         {
-          isLoggedIn && <li><NavLink to="/admin/experiences">Admin</NavLink></li>
+          isLoggedIn && <li><NavLink to="/admin">{role === 'admin' ? 'Admin' : 'My experiences'}</NavLink></li>
         }
       </ul>
     </div>

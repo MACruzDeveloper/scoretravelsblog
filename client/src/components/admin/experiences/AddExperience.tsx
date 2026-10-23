@@ -9,13 +9,12 @@ import ImageUpload from '../ImageUpload'
 import { CitySearch, City as SearchCity } from './CitySearch'
 
 type PropsAddExperience = {
-  user: string
   handleFetchExperiences: () => void
   isFormAddVisible: boolean
   setIsFormAddVisible: (c: boolean) => void
 }
 
-const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFormAddVisible }: PropsAddExperience) => {
+const AddExperience = ({ handleFetchExperiences, isFormAddVisible, setIsFormAddVisible }: PropsAddExperience) => {
   const [values, setValues] = useState<Experience>()
   const [selectedCity, setSelectedCity] = useState<SearchCity | null>(null)
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
@@ -43,8 +42,7 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
       }
 
       const validFilenames = selectedFilenames.filter((name) => !!name)
-      await postData(`${API}/experiences`, {
-        user,
+      const response = await postData(`${API}/experiences`, {
         title: values.title,
         category: values.category,
         city: cityId,                    // guardamos el ObjectId
@@ -52,7 +50,11 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
         images: validFilenames,
         content: values.content,
       })
-      setMessage({ body: 'New Experience added!', classname: 'msg_ok' })
+      // Users' experiences wait for an admin; the admin's are published at once
+      setMessage({
+        body: response.data.status === 'pending' ? 'Experience sent for review. It will be published once an admin approves it' : 'New Experience added!',
+        classname: 'msg_ok'
+      })
       handleFetchExperiences()
       setIsFormAddVisible(false)
       setValues(undefined)

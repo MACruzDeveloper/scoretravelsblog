@@ -3,12 +3,19 @@ import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import Header from '@common/Header'
+import { MyGlobalContext, GlobalContent } from '@/components/context/useGlobalContext'
 
-const renderHeader = (isLoggedIn = false, logout = vi.fn()) => {
+const renderHeader = (isLoggedIn = false, logout = vi.fn(), role = '') => {
+  const context: GlobalContent = {
+    isLoggedIn, authChecked: true, user: '', username: 'ana', role,
+    setRole: vi.fn(), titleExperience: '', setTitleExperience: vi.fn(),
+  }
   return render(
-    <BrowserRouter>
-      <Header isLoggedIn={isLoggedIn} logout={logout} />
-    </BrowserRouter>
+    <MyGlobalContext.Provider value={context}>
+      <BrowserRouter>
+        <Header isLoggedIn={isLoggedIn} logout={logout} />
+      </BrowserRouter>
+    </MyGlobalContext.Provider>
   )
 }
 
@@ -24,16 +31,22 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact')
   })
 
-  it('shows the admin option and calls logout for an authenticated user', async () => {
+  it('shows the admin option to admins and calls logout', async () => {
     const user = userEvent.setup()
     const logout = vi.fn()
-    renderHeader(true, logout)
+    renderHeader(true, logout, 'admin')
 
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin/experiences')
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin')
 
     await user.click(screen.getByRole('button', { name: 'login' }))
     await user.click(screen.getByRole('button', { name: 'logout' }))
 
     expect(logout).toHaveBeenCalledOnce()
+  })
+
+  it('hides the admin option from regular users', () => {
+    renderHeader(true, vi.fn(), 'user')
+
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument()
   })
 })

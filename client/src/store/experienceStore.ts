@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { listAllExperiences } from '@/api/experiences'
+import { listAllExperiences, ExperienceScope } from '@/api/experiences'
 
 export interface City {
   _id: string
@@ -25,6 +25,8 @@ export interface Experience {
   content?: string,
   score?: number | null,
   votes?: number,
+  status?: 'pending' | 'published' | 'rejected',
+  rejectionReason?: string,
   lat?: number,
   lng?: number
 }
@@ -34,7 +36,8 @@ interface ExperienceState {
   loading: boolean
   error: string | undefined
   hasFetched: boolean
-  fetchExperiences: (force?: boolean) => Promise<void>
+  // 'mine' for a user's own experiences, 'all' for the admin
+  fetchExperiences: (force?: boolean, scope?: ExperienceScope) => Promise<void>
 }
 
 export const useExperienceStore = create<ExperienceState>((set, get) => ({
@@ -42,14 +45,14 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   loading: false,
   error: undefined,
   hasFetched: false,
-  fetchExperiences: async (force = false) => {
+  fetchExperiences: async (force = false, scope: ExperienceScope = 'all') => {
     const { hasFetched } = get()
     if (hasFetched && !force) return // Avoid duplicate fetches unless forced
 
     set({ loading: true })
     try {
       // Used by the admin table, which sorts and paginates on the client
-      const experiences = await listAllExperiences()
+      const experiences = await listAllExperiences({ scope })
       set({ experiences, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false })

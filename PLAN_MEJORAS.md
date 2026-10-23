@@ -251,15 +251,33 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 ### Fase 4 — Frontend: bugs, refactor y formularios (4-6 días) 🟡
 
-- [ ] Bugs: B-1 (limitar teclado de About al foco del componente e ignorar si el target es input), B-5, B-6, B-7, B-8, B-9 (comprobar rol, esperar a `verify_token`), B-10, B-11, B-13.
-- [ ] Rutas anidadas con `<Outlet/>` para admin + `React.lazy` para admin y mapa. (A-8)
+- [x] Bugs B-5, B-6 y B-8 (resueltos en fases anteriores), B-9 (el admin espera a verificar la sesión y solo lo ven los admins; el enlace "Admin" del menú también), B-10 (el registro devuelve la sesión; sin esperas artificiales de 2 s; tras el login, admin → `/admin`, resto → `/`), B-11 (fuera las precargas de fuentes a `/src`), B-13 (`setTimeout` del admin con limpieza; variable del carrusel renombrada).
+- [ ] B-7 (peticiones duplicadas en los stores): con la factoría de stores.
+- [ ] B-1 (teclado del About): **al final, junto con el resto de la página About**.
+- [x] Rutas del admin anidadas con `<Outlet/>`; todas las páginas salvo la Home se cargan bajo demanda (`React.lazy`): el JS inicial de la app pasa de 104 KB a 46 KB. (A-8)
 - [ ] Cliente API tipado (`api/experiences.ts`…) con `VITE_API_URL`; migrar `utils.js`/`config.js` a TS; activar `strictNullChecks`; arreglar los 82 problemas de ESLint. (A-8, A-10)
 - [ ] Factoría de stores y hook `useCrudTable`. (A-9)
 - [ ] Formularios con `react-hook-form` + zod; labels, `autocomplete`, mensajes de error visibles (§2.5).
 - [ ] Manejo de errores unificado (toast/Msgbox) en vez de `console.log`. (A-11)
-- [ ] Eliminar código muerto: `PrivateRoute.tsx`, `_Image.tsx`, comentarios de axios.
+- [x] Código muerto eliminado: `PrivateRoute.tsx`, `_Image.tsx`, `admin/Admin.tsx` (los comentarios de axios ya se quitaron en la Fase 1).
 - [x] Página de Experience: imagen por defecto (`thumb.png`, la misma que `Card`) cuando la experiencia no tiene imágenes, con test.
 - [x] Biblioteca de imágenes: más recientes primero por defecto y sin columna de dimensiones.
+
+### Funcionalidad — Experiencias de usuarios con moderación ✅
+
+Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para el admin): cualquier usuario registrado publica sus experiencias, y el admin las revisa.
+
+- [x] Estado de cada experiencia: `pending`, `published` o `rejected` (con motivo opcional que ve el autor). Lo que crea un usuario entra pendiente; lo del admin se publica directamente.
+- [x] Editar una experiencia publicada siendo usuario la devuelve a revisión (deja de verse hasta aprobarla).
+- [x] Solo lo publicado aparece en las páginas públicas (listados, Home, mapa, timeline, filtros); una pendiente o rechazada solo la ven su autor y el admin. Votar y comentar solo sobre publicadas.
+- [x] Propiedad por `userId`: cada usuario edita y borra solo las suyas (`403` si no); el admin, todas.
+- [x] API: `GET /api/experiences?scope=mine` (las tuyas) y `?scope=all&status=pending` (admin), `PATCH /api/experiences/:id/review` (admin). Los usuarios pueden subir imágenes y dar de alta ciudades; la biblioteca de imágenes sigue siendo del admin.
+- [x] Email al admin (`SMTP_TO`) cada vez que una experiencia queda pendiente (`services/mailer.js`; si falla el envío, la petición no falla).
+- [x] Panel: el usuario ve "My experiences"; el admin, además, "Moderation" con el número de pendientes, y el resto de secciones (protegidas también por ruta con `RequireAdmin`). Columna de estado en la tabla y aviso en la página de una experiencia no publicada.
+- [x] Comentarios sin moderación previa (el admin puede borrarlos).
+- [x] Migración aplicada en Atlas: las experiencias existentes quedan publicadas.
+- [ ] Más adelante: avisar por email al autor cuando se aprueba o rechaza su experiencia.
+- [x] Registro: reglas de usuario y contraseña visibles bajo el formulario; botón para mostrar u ocultar la contraseña (`PasswordInput`, también en el login).
 
 ### Fase 5 — Tests y CI/CD (3-4 días) 🟡
 

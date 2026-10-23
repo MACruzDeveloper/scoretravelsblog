@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
+import { useState, ChangeEvent, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
 import { postData } from '@/utils/utils'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { API } from '../../../config'
 import Msgbox from '@/components/common/Msgbox'
+import PasswordInput from '@/components/common/PasswordInput'
+import type { LoginSession } from '@/App'
 
 type PropsRegister = {
-  login: (token: string, role: string, username: string, email: string) => void
+  login: (session: LoginSession) => void
 }
 
 const Register = ({ login }: PropsRegister) => {
@@ -19,36 +21,9 @@ const Register = ({ login }: PropsRegister) => {
   })
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [isRegistering, setIsRegistering] = useState(false)
-  const timerRef = useRef<number>()
-
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
-
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.currentTarget
     if (target) setValues({ ...values, [target.name]: target.value })
-  }
-
-  const loginRegister = async () => {
-    try {
-      const response = await postData(`${API}/auth/login`, {
-        username: values.username,
-        email: values.email,
-        password: values.password
-      })
-
-      if (response.data.ok) {
-        timerRef.current = window.setTimeout(() => {
-          login(response.data.token, response.data.role, response.data.username, response.data.email)
-          navigate('/admin/')
-        }, 2000)
-      } else {
-        setMessage({ body: response.data.message || 'Login failed', classname: 'msg_error' })
-      }
-    }
-    catch (error) {
-      console.log(error)
-      setMessage({ body: getErrorMessage(error, 'Connection error, please try again'), classname: 'msg_error' })
-    }
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -63,19 +38,9 @@ const Register = ({ login }: PropsRegister) => {
         password2: values.password2
       })
 
-      if (response.data.ok) {
-        setMessage({
-          body: response.data.message,
-          classname: 'msg_ok'
-        })
-
-        await loginRegister()
-      } else {
-        setMessage({
-          body: response.data.message,
-          classname: 'msg_error'
-        })
-      }
+      // The server signs the new user in and returns the session
+      login(response.data)
+      navigate('/')
     }
     catch (error) {
       console.log(error)
@@ -91,12 +56,18 @@ const Register = ({ login }: PropsRegister) => {
       onSubmit={handleSubmit}
       className='form'
     >
-      <input type="text" name="username" className="form_control" placeholder="Write your username" autoComplete="username" minLength={3} maxLength={30} pattern="[\p{L}\p{N}_.\-]+" title="3-30 letters, numbers, _ . -" required onChange={handleChange} />
+      <input type="text" name="username" className="form_control" placeholder="Write your username" autoComplete="username" minLength={3} maxLength={30} pattern="[\p{L}\p{N}_.\-]+" title="3-30 letters, numbers, _ . -" aria-describedby="register-hint" required onChange={handleChange} />
       <input type="email" name="email" className="form_control" placeholder="Write your email" autoComplete="email" maxLength={254} required onChange={handleChange} />
-      <input type="password" name="password" className="form_control" placeholder="Write your password (min. 8 characters)" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
-      <input type="password" name="password2" className="form_control" placeholder="Confirm your password" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
-      <p className="form_legal">By registering you accept the <NavLink to="/privacy">privacy policy</NavLink>.</p>
+      <PasswordInput name="password" placeholder="Write your password" autoComplete="new-password" minLength={8} maxLength={128} aria-describedby="register-hint" required onChange={handleChange} />
+      <PasswordInput name="password2" placeholder="Confirm your password" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
+      {/* Same rules the server checks */}
+      <ul id="register-hint" className="form_hint">
+        <li>Username: 3 to 30 characters, only letters, numbers and <code>_ . -</code></li>
+        <li>Password: at least 8 characters</li>
+        <li>Both passwords must match</li>
+      </ul>
       <button className="btn">Register</button>
+      <p className="form_legal">By registering you accept the <NavLink to="/privacy">privacy policy</NavLink>.</p>
     </form>
 
     <Msgbox body={message.body} classname={message.classname} />

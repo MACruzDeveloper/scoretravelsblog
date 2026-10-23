@@ -29,7 +29,8 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
   const [slideItems, setSlideItems] = useState<Array<CarouselSlide>>(hasVideo ? [videoSlide] : [])
   const [slideIndex, setSlideIndex] = useState<number>(0)
   const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
-  const [slideStop, setSlideStop] = useState<boolean>(true)
+  // Autoplay keeps running after manual navigation
+  const [isAutoplayOn, setIsAutoplayOn] = useState<boolean>(true)
   const [transitioning, setTransitioning] = useState<boolean>(false)
   const [entering, setEntering] = useState<boolean>(false)
   const numSlides = slideItems.length
@@ -117,19 +118,19 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
       setTransitioning(true)
       setEntering(true)
     }
-    setSlideStop(true)
+    setIsAutoplayOn(true)
   }
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      if (slideStop && options.autoplay && numSlides > 0) {
+      if (isAutoplayOn && options.autoplay && numSlides > 0) {
         const nextIndex = (slideIndex + 1) % numSlides
         changeSlide(nextIndex)
       }
     }, options.time)
 
     return () => window.clearInterval(interval)
-  }, [slideIndex, slideStop, numSlides, options.autoplay, options.time])
+  }, [slideIndex, isAutoplayOn, numSlides, options.autoplay, options.time])
 
   const handleClickPrev = () => {
     if (isPrevDisabled) return

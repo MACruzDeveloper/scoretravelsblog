@@ -384,3 +384,140 @@
     }
   }
 }
+
+// Pending count next to "Moderation"
+.admin_nav .badge {
+  display: inline-block;
+  min-width: 2rem;
+  margin-left: .6rem;
+  padding: .1rem .6rem;
+  border-radius: 1rem;
+  background-color: $colorRed;
+  color: $colorWhite;
+  font-size: 1.2rem;
+  line-height: 1.6rem;
+  text-align: center;
+}
+
+.btn.btn_danger {
+  background-color: $colorRed;
+}
+
+// Moderation queue
+.moderation {
+  &_list {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  &_item {
+    display: flex;
+    gap: 2rem;
+    padding: 1.5rem;
+    border: .1rem solid $colorTableHeader;
+    border-radius: .4rem;
+    background-color: $colorWhite;
+  }
+
+  &_image {
+    flex: 0 0 18rem;
+    width: 18rem;
+    height: 12rem;
+    object-fit: cover;
+    border-radius: .4rem;
+  }
+
+  &_body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &_title {
+    font-size: 1.8rem;
+    margin-bottom: .5rem;
+  }
+
+  &_meta {
+    font-size: 1.3rem;
+    color: $color4;
+    margin-bottom: 1rem;
+  }
+
+  &_excerpt {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+
+  &_actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    .btn {
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+    }
+  }
+
+  &_reject label {
+    display: block;
+    font-size: 1.3rem;
+    margin-bottom: .5rem;
+  }
+
+  @media (max-width: $screenSm) {
+    &_item {
+      flex-direction: column;
+    }
+
+    &_image {
+      width: 100%;
+      flex-basis: auto;
+    }
+  }
+}
+
+// Moderation status of an experience
+.status {
+  display: inline-block;
+  padding: .2rem .8rem;
+  border-radius: 1rem;
+  font-size: 1.2rem;
+  white-space: nowrap;
+
+  &.status_published {
+    background-color: rgba($colorGreen, .15);
+    color: darken($colorGreen, 10%);
+  }
+
+  &.status_pending {
+    background-color: rgba($color2, .15);
+    color: darken($color2, 10%);
+  }
+
+  &.status_rejected {
+    background-color: rgba($colorRed, .12);
+    color: $colorRed;
+  }
+}
+
+.status_reason {
+  display: block;
+  margin-top: .4rem;
+  font-size: 1.2rem;
+  color: $color4;
+}
+
+// Notice on the page of an unpublished experience
+.status.status_banner {
+  display: block;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: .4rem;
+  font-size: 1.4rem;
+  white-space: normal;
+}

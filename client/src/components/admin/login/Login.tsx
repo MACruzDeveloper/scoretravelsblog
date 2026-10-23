@@ -1,26 +1,25 @@
-import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
+import { useState, ChangeEvent, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
 import { postData } from '@utils/utils'
 import { useNavigate } from 'react-router-dom'
 import { API } from '../../../config'
 import Msgbox from '@common/Msgbox'
+import PasswordInput from '@common/PasswordInput'
+import type { LoginSession } from '@/App'
 
 type PropsLogin = {
-  login: (token: string, role: string, username?: string, email?: string) => void
+  login: (session: LoginSession) => void
 }
 
 const Login = ({ login }: PropsLogin) => {
   const navigate = useNavigate()
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [isLoggingIn, setIsLoggingIn] = useState(false)
-  const timerRef = useRef<number>()
 
   const [values, setValues] = useState({
     email: '',
     password: ''
   })
-
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const target = e.currentTarget
@@ -37,15 +36,9 @@ const Login = ({ login }: PropsLogin) => {
         password: values.password
       })
 
-      if (response.data.ok) {
-        setMessage({ body: response.data.message, classname: 'msg_ok' })
-        timerRef.current = window.setTimeout(() => {
-          login(response.data.token, response.data.role, response.data.username, response.data.email)
-          navigate('/admin/')
-        }, 2000)
-      } else {
-        setMessage({ body: response.data.message || 'Login failed', classname: 'msg_error' })
-      }
+      login(response.data)
+      // Only admins have something to do in the admin panel
+      navigate(response.data.role === 'admin' ? '/admin' : '/')
     }
     catch (error) {
       console.log(error)
@@ -63,7 +56,7 @@ const Login = ({ login }: PropsLogin) => {
       className="form"
     >
       <input type="email" name="email" className="form_control" placeholder="Write your email" autoComplete="email" maxLength={254} required onChange={handleChange} />
-      <input type="password" name="password" className="form_control" placeholder="Write your password" autoComplete="current-password" maxLength={128} required onChange={handleChange} />
+      <PasswordInput name="password" placeholder="Write your password" autoComplete="current-password" maxLength={128} required onChange={handleChange} />
       <button className="btn" disabled={!values.email || !values.password}>login</button>
     </form>
 

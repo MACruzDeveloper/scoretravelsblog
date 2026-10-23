@@ -121,6 +121,14 @@ const Experience = ({ user }: PropsExperience) => {
           {expLoading ? <Spinner />
             : experience ?
               <>
+                {/* Only the author and admins can open an unpublished experience */}
+                {experience.status && experience.status !== 'published' &&
+                  <p className={`status status_${experience.status} status_banner`}>
+                    {experience.status === 'pending'
+                      ? 'Pending review: only you and the administrators can see it'
+                      : `Rejected${experience.rejectionReason ? `: ${experience.rejectionReason}` : ''}. Edit it to send it for review again`}
+                  </p>
+                }
                 <div className="content_top">
                   <h3 className="content_title">{experience.title}</h3>
                   <Score score={experience.score} votes={experience.votes} />
@@ -157,7 +165,8 @@ const Experience = ({ user }: PropsExperience) => {
           }
         </div>
 
-        <div className="sidebar">
+        {/* Comments and votes are only possible once the experience is published */}
+        {(!experience?.status || experience.status === 'published') && <div className="sidebar">
           <div className="sidebar_comments">
             <h3 className="sidebar_title">Write a comment</h3>
 
@@ -174,7 +183,7 @@ const Experience = ({ user }: PropsExperience) => {
           </div>
 
           <Msgbox body={message.body} classname={message.classname} />
-        </div>
+        </div>}
       </div>
 
       <CommentsByExp comments={comments} />
