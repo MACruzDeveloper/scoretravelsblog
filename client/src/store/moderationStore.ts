@@ -14,7 +14,7 @@ export const useModerationStore = create<ModerationState>((set) => ({
       const { total } = await listExperiences({ scope: 'all', status: 'pending', limit: 1 })
       set({ pendingCount: total })
     } catch (error) {
-      console.log(error)
+      console.error(error)
     }
   },
 }))

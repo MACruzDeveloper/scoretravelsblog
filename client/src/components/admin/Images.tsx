@@ -1,204 +1,102 @@
-import { useState, useEffect, useMemo, FormEvent } from 'react'
-import { getErrorMessage } from '@/utils/errors'
+import { useState, useEffect, useCallback } from 'react'
+import { MdDelete } from 'react-icons/md'
 import { listImages, setImageFeatured, deleteImage } from '@/api/images'
 import type { Image } from '@/api/types'
-import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { URL } from '../../config'
+import { useSortedData } from '@/hooks/useSortedData'
+import { useMessage } from '@/hooks/useMessage'
 import ImageUpload from './ImageUpload'
 import Msgbox from '@common/Msgbox'
-import Table from '@/components/common/Table'
+import Table, { Column } from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
+
+const COLUMNS: Column[] = [
+  { key: 'featured', label: 'Featured', sortable: true, width: 'w10', align: 'center' },
+  { key: 'image', label: 'Image', sortable: false, width: 'w30' },
+  { key: 'title', label: 'Title', sortable: true, width: 'w40' },
+  { key: 'actions', label: 'Action', sortable: false, width: 'w20', align: 'right' },
+]
 
 const Images = () => {
   const [images, setImages] = useState<Image[]>([])
-  const [featuredValues, setFeaturedValues] = useState<Record<string, boolean>>({})
-
+  const { message, showOk, showError } = useMessage()
   // No column by default: newest images first, as returned by the server
-  const [sortColumn, setSortColumn] = useState<string | null>(null)
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-  const itemsPerPage = 10
+  const sort = useSortedData(images)
 
-  const [updateActive, setUpdateActive] = useState<string | null>(null)
-  const [message, setMessage] = useState({ body: '', classname: '' })
-
-  // table columns
-  const columns = [
-    { key: 'featured', label: 'Featured', sortable: true, width: 'w10', align: 'center' },
-    { key: 'image', label: 'Image', sortable: false, width: 'w30' },
-    { key: 'title', label: 'Title', sortable: true, width: 'w40' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w20', align: 'right' }
-  ]
-
-  useEffect(() => {
-    fetch_images()
-  }, [])
-
-  const fetch_images = async () => {
+  const loadImages = useCallback(async () => {
     try {
       setImages(await listImages())
     } catch (error) {
-      console.log("error ==>", error)
+      showError(error, 'Could not load images')
     }
-  }
+  }, [showError])
 
-  const onClickShowUpdate = async (idx: string) => {
-    setUpdateActive(idx)
-  }
+  useEffect(() => {
+    loadImages()
+  }, [loadImages])
 
-  const onClickCloseUpdate = async () => {
-    setUpdateActive(null)
-  }
-
-  const handleChangeSwitch = (e: FormEvent<HTMLInputElement>, idx: string) => {
-    setUpdateActive(idx)
-    const target = e.currentTarget
-    setFeaturedValues(prev => ({ ...prev, [idx]: target.checked }))
-  }
-
-  const onClickUpdate = async (idx: string) => {
+  // Featured images appear in the home carousel; the switch saves at once
+  const onToggleFeatured = async (image: Image) => {
     try {
-      await setImageFeatured(idx, featuredValues[idx] ?? false)
-      setUpdateActive(null)
-      setFeaturedValues(prev => {
-        const next = { ...prev }
-        delete next[idx]
-        return next
-      })
-      await fetch_images()
-      setMessage({ body: `Image updated!`, classname: 'msg_ok' })
+      await setImageFeatured(image._id, !image.featured)
+      setImages((list) => list.map((item) => (item._id === image._id ? { ...item, featured: !image.featured } : item)))
+      showOk(image.featured ? 'Image removed from the carousel' : 'Image added to the carousel')
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not update the image')
     }
   }
 
-  const onClickDelete = async (idx: string) => {
+  // The server refuses (409) while an experience uses the image
+  const onClickDelete = async (image: Image) => {
     try {
-      await deleteImage(idx)
-      fetch_images()
-      setMessage({ body: `Image removed!`, classname: 'msg_ok' })
+      await deleteImage(image._id)
+      await loadImages()
+      showOk('Image removed!')
     } catch (error) {
-      console.log("error ==>", error)
-      setMessage({ body: getErrorMessage(error, 'Could not remove the image'), classname: 'msg_error' })
+      showError(error, 'Could not remove the image')
     }
   }
 
-  const handleSort = (key: string) => {
-    if (sortColumn === key) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortColumn(key)
-      setSortDirection('asc')
-    }
-  }
-
-  const sortedImages = useMemo(() => {
-    if (!sortColumn) return images
-    return [...images].sort((a, b) => {
-      const aVal = (a as any)[sortColumn]
-      const bVal = (b as any)[sortColumn]
-
-      if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
-        return sortDirection === 'asc' ? Number(aVal) - Number(bVal) : Number(bVal) - Number(aVal)
-      }
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [images, sortColumn, sortDirection])
-
-  const renderRow = (item: any) => {
-    const actions = [
-      {
-        key: 'edit',
-        icon: <MdEdit />,
-        title: 'Edit',
-        onClick: () => onClickShowUpdate(item._id),
-        show: () => updateActive !== item._id,
-      },
-      {
-        key: 'save',
-        icon: <MdCheckCircleOutline />,
-        title: 'Save',
-        onClick: () => onClickUpdate(item._id),
-        show: () => updateActive === item._id,
-        className: 'btn_action green',
-      },
-      {
-        key: 'close',
-        icon: <MdClose />,
-        title: 'Close',
-        onClick: onClickCloseUpdate,
-        show: () => updateActive === item._id,
-      },
-      {
-        key: 'delete',
-        icon: <MdDelete />,
-        title: 'Remove',
-        onClick: () => onClickDelete(item._id),
-      },
-    ]
-
-    return (
-      <div className="tGroup" key={item._id}>
-        <div className="tRow">
-          <div className="tCol center">
-            <div className="switch">
-              <input
-                type="checkbox"
-                id={`switch-${item._id}`}
-                className="switch_checkbox"
-                checked={featuredValues[item._id] ?? item.featured}
-                onChange={(e) => handleChangeSwitch(e, item._id)}
-              />
-              <label htmlFor={`switch-${item._id}`} className="switch_label"></label>
-            </div>
-          </div>
-          <div className="tCol">
-            <img
-              className="image"
-              src={`${URL}/static/images/${item.filename}`}
-              alt={item.title}
+  const renderRow = (image: Image) => (
+    <div className="tGroup" role="rowgroup" key={image._id}>
+      <div className="tRow" role="row">
+        <div className="tCol center" role="cell">
+          <div className="switch">
+            <input
+              type="checkbox"
+              id={`switch-${image._id}`}
+              className="switch_checkbox"
+              checked={image.featured}
+              onChange={() => onToggleFeatured(image)}
+              aria-label={`Show ${image.title || 'image'} in the home carousel`}
             />
-          </div>
-          <div className="tCol">
-            <span>{item.title || '-'}</span>
-          </div>
-          <div className="tCol">
-            <TableActions actions={actions} item={item} />
+            <label htmlFor={`switch-${image._id}`} className="switch_label"></label>
           </div>
         </div>
-        {updateActive === item._id ? (
-          <div className="tRow sup">
-            <div className="tCol"></div>
-            <div className="tCol">
-              <ImageUpload fetch_images={fetch_images} isImageWithTitle={false} />
-            </div>
-            <div className="tCol"></div>
-            <div className="tCol"></div>
-          </div>
-        ) : null}
+        <div className="tCol" role="cell">
+          <img className="image" src={`${URL}/static/images/${image.filename}`} alt={image.title || ''} />
+        </div>
+        <div className="tCol" role="cell">
+          <span>{image.title || '-'}</span>
+        </div>
+        <div className="tCol" role="cell">
+          <TableActions
+            item={image}
+            actions={[{ key: 'delete', icon: <MdDelete />, title: 'Remove', onClick: onClickDelete }]}
+          />
+        </div>
       </div>
-    )
-  }
+    </div>
+  )
 
   return <div className="content images">
     <div className="content_top">
       <h2 className="content_top_title">Images</h2>
 
-      <ImageUpload fetch_images={fetch_images} isImageWithTitle={true} />
+      <ImageUpload fetch_images={loadImages} isImageWithTitle={true} />
     </div>
 
-    <Table
-      columns={columns}
-      data={sortedImages}
-      renderRow={renderRow}
-      onSort={handleSort}
-      sortColumn={sortColumn}
-      sortDirection={sortDirection}
-      hasPagination={true}
-      itemsPerPage={itemsPerPage}
-    />
+    <Table label="Images" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={10} />
 
     <Msgbox body={message.body} classname={message.classname} />
   </div>

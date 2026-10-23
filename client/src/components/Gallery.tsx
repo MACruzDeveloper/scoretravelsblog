@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { chunk } from '@/utils/collections'
 import { MdArrowUpward } from 'react-icons/md'
-import type { Experience } from "@/store/experienceStore"
+import type { Experience } from "@/api/types"
 import { useExperienceFilters } from "@/hooks/useExperienceFilters"
 import { useApiQuery } from '@/hooks/useApiQuery'
 import { listExperiences, getExperienceFacets, toQueryString } from '@/api/experiences'

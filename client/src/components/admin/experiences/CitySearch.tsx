@@ -1,15 +1,10 @@
 // components/CitySearch.tsx
 import { useState, useEffect, useRef, ChangeEvent } from 'react'
 import { COUNTRY_TO_CONTINENT } from '@utils/constants'
+import type { NewCity } from '@/api/types'
 
-export type City = {
-  name: string
-  country: string
-  countryCode: string
-  continent: string
-  lat: number
-  lng: number
-}
+// A city picked from the search, not saved yet
+export type City = NewCity
 
 // Subset of the OpenStreetMap Nominatim search result used here
 type NominatimPlace = {
@@ -77,7 +72,7 @@ export const CitySearch = ({ onSelect, value }: Props) => {
       setResults(cities)
       setIsOpen(true)
     } catch (error) {
-      console.log('City search error:', error)
+      console.error('City search error:', error)
     } finally {
       setLoading(false)
     }

@@ -1,4 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import MapScrollGuard from './MapScrollGuard'
 import { useBestExperiences } from '../hooks/useExperienceHooks'
 import { getIconForContinent, MAP_TILE_LAYER } from '@utils/mapThemes'
 import type { Experience } from '@/api/types'
@@ -25,7 +26,8 @@ const MapExperiences = () => {
         zoom={2}
         minZoom={2}
         maxZoom={9}
-        scrollWheelZoom={true}
+        // Wheel zoom only with Ctrl/⌘ held (MapScrollGuard)
+        scrollWheelZoom={false}
         maxBounds={[[-89, -180], [89, 180]]}
         maxBoundsViscosity={0.9}
         worldCopyJump={true}
@@ -37,6 +39,7 @@ const MapExperiences = () => {
           maxZoom={MAP_TILE_LAYER.maxZoom}
           errorTileUrl="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapScrollGuard />
         {bestExperiences
           .filter(exp => hasValidCoordinates(exp))
           .map(exp => {

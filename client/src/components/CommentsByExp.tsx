@@ -1,5 +1,5 @@
 import FormattedDate from '@/components/common/FormattedDate'
-import type { Comment } from '@/store/commentsStore'
+import type { Comment } from '@/api/types'
 
 type PropsComments = {
   comments: Array<Comment>

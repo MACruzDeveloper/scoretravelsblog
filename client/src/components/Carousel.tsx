@@ -66,7 +66,8 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
           })) || []
         setSlideItems([...(hasVideo ? [videoSlideFor(title)] : []), ...imagesFeatured])
       } catch (error) {
-        console.log('error =>', error)
+        // The carousel just shows the video if the images cannot be loaded
+        console.error(error)
       }
     }
 

@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react'
-import { getErrorMessage } from '@/utils/errors'
+import { useMessage } from '@/hooks/useMessage'
 import { vote } from '@/api/scores'
 import { MdStar, MdStarBorder } from 'react-icons/md'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
@@ -13,7 +13,7 @@ type PropsStars = {
 
 const Stars = ({ exp, onScored }: PropsStars) => {
   const { user } = useContext(MyGlobalContext)
-  const [message, setMessage] = useState({ body: '', classname: '' })
+  const { message, showOk, showError, showWarning } = useMessage()
   const [starHover, setStarHover] = useState(-1)
   const [isSending, setIsSending] = useState(false)
   const stars = []
@@ -31,7 +31,7 @@ const Stars = ({ exp, onScored }: PropsStars) => {
     if (isSending) return
 
     if (!user) {
-      setMessage({ body: 'You must be logged in to score', classname: 'msg_error' })
+      showWarning('You must be logged in to score')
       return
     }
 
@@ -39,10 +39,9 @@ const Stars = ({ exp, onScored }: PropsStars) => {
     try {
       const result = await vote(exp, i + 1)
       onScored?.(result.experienceScore, result.votes)
-      setMessage({ body: `Score added!`, classname: 'msg_ok' })
+      showOk('Score added!')
     } catch (error) {
-      console.log(error)
-      setMessage({ body: getErrorMessage(error, 'Could not add your score'), classname: 'msg_error' })
+      showError(error, 'Could not add your score')
     } finally {
       setIsSending(false)
     }

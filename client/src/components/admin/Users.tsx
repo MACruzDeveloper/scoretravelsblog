@@ -1,186 +1,119 @@
-import { useState, useEffect, useContext, useMemo, ChangeEvent } from 'react'
+import { useState, useEffect, useContext, useCallback } from 'react'
+import { NavLink } from 'react-router-dom'
+import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
 import { listUsers, updateUser, deleteUser } from '@/api/users'
 import type { Role, User } from '@/api/types'
-import { NavLink } from 'react-router-dom'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
-import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
+import { useSortedData } from '@/hooks/useSortedData'
+import { useInlineEdit } from '@/hooks/useInlineEdit'
+import { useMessage } from '@/hooks/useMessage'
+import { firstIssue, username as usernameSchema } from '@/schemas'
 import Msgbox from '@common/Msgbox'
-import Table from '@/components/common/Table'
+import Table, { Column } from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
 
+const ROLES: Role[] = ['admin', 'user']
+
+const COLUMNS: Column[] = [
+  { key: 'username', label: 'Username', sortable: true, width: 'w20' },
+  { key: 'email', label: 'Email', sortable: true, width: 'w30' },
+  { key: 'role', label: 'Role', sortable: true, width: 'w20', align: 'center' },
+  { key: 'actions', label: 'Action', sortable: false, width: 'w30', align: 'right' },
+]
+
+type UserDraft = { username: string; role: Role }
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([])
-  const [newRole, setNewRole] = useState<Role>('user')
-  const [newUsername, setNewUsername] = useState('')
-  const [message, setMessage] = useState({ body: '', classname: '' })
-  const [updateActive, setUpdateActive] = useState<string | null>(null)
+  const { setRole, user: currentEmail } = useContext(MyGlobalContext)
+  const { message, showOk, showError, showWarning } = useMessage()
+  const edit = useInlineEdit<UserDraft>()
+  const sort = useSortedData(users, { initialKey: 'email' })
 
-  const { setRole, user: contextUser } = useContext(MyGlobalContext)
-
-  const typesUser = [
-    { type: 'admin' },
-    { type: 'user' }
-  ]
-
-  const getUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setUsers(await listUsers())
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not load users')
     }
-  }
-  
+  }, [showError])
+
   useEffect(() => {
-    getUsers()
-  }, [])
+    loadUsers()
+  }, [loadUsers])
 
-  const handleChangeNew = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const target = e.currentTarget
-    if (target) setNewRole(target.value as Role)
-  }
-
-  const handleChangeUsername = (e: ChangeEvent<HTMLInputElement>) => {
-    const target = e.currentTarget
-    if (target) setNewUsername(target.value)
-  }
-
-  const onClickShowUpdate = async (idx: string) => {
-    const idUser = users.findIndex(e => e._id === idx)
-    if (idUser === -1) return
-    setUpdateActive(idx)
-    setNewRole(users[idUser].role)
-    setNewUsername(users[idUser].username || '')
-  }
-
-  const onClickClose = async () => {
-    setUpdateActive(null)
-  }
-
-  const onClickUpdate = async (idx: string) => {
+  const onClickUpdate = async (user: User) => {
+    if (!edit.values) return
+    const problem = firstIssue(usernameSchema.safeParse(edit.values.username))
+    if (problem) return showWarning(problem)
     try {
-      if (newUsername !== '') {
-        await updateUser(idx, { role: newRole, username: newUsername })
-        setUpdateActive(null)
-        const edited = users.find(e => e._id === idx)
-        if (edited && edited.email === contextUser) setRole(newRole)
-        getUsers()
-        setMessage({ body: `User updated!`, classname: 'msg_ok' })
-      } else {
-        setMessage({ body: 'Write a username and role', classname: 'msg_error' })
-      }
+      await updateUser(user._id, { username: edit.values.username.trim(), role: edit.values.role })
+      // Changing my own role updates the session in the client too
+      if (user.email === currentEmail) setRole(edit.values.role)
+      edit.cancel()
+      await loadUsers()
+      showOk('User updated!')
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not update the user')
     }
   }
 
-  const onClickDelete = async (idx: string) => {
+  const onClickDelete = async (user: User) => {
     try {
-      await deleteUser(idx)
-      getUsers()
-      setMessage({ body: `User deleted!`, classname: 'msg_ok' })
+      await deleteUser(user._id)
+      await loadUsers()
+      showOk('User deleted!')
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not delete the user')
     }
   }
 
-  const [sortColumn, setSortColumn] = useState<string | null>('email')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-  const itemsPerPage = 10
-
-  const handleSort = (key: string) => {
-    if (sortColumn === key) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortColumn(key)
-      setSortDirection('asc')
-    }
-  }
-
-  const sortedUsers = useMemo(() => {
-    if (!sortColumn) return users
-    return [...users].sort((a, b) => {
-      const aVal = (a as any)[sortColumn]
-      const bVal = (b as any)[sortColumn]
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [users, sortColumn, sortDirection])
-
-  const columns = [
-    { key: 'username', label: 'Username', sortable: true, width: 'w20' },
-    { key: 'email', label: 'Email', sortable: true, width: 'w30' },
-    { key: 'role', label: 'Role', sortable: true, width: 'w20', align: 'center' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w30', align: 'right' }
-  ]
-
-  const renderRow = (ele: any) => {
-    const actions = updateActive !== ele._id ? [
-      {
-        key: 'edit',
-        icon: <MdEdit />,
-        title: 'Edit',
-        onClick: () => onClickShowUpdate(ele._id),
-      },
-      {
-        key: 'delete',
-        icon: <MdDelete />,
-        title: 'Delete',
-        onClick: () => onClickDelete(ele._id),
-      },
-    ] : [
-      {
-        key: 'save',
-        icon: <MdCheckCircle />,
-        title: 'Save',
-        onClick: () => onClickUpdate(ele._id),
-        className: 'btn_action green',
-      },
-      {
-        key: 'close',
-        icon: <MdClose />,
-        title: 'Close',
-        onClick: onClickClose,
-      },
-    ]
+  const renderRow = (user: User) => {
+    const editing = edit.isEditing(user._id)
+    const actions = editing
+      ? [
+        { key: 'save', icon: <MdCheckCircle />, title: 'Save', onClick: onClickUpdate, className: 'btn_action green' },
+        { key: 'close', icon: <MdClose />, title: 'Close', onClick: edit.cancel },
+      ]
+      : [
+        { key: 'edit', icon: <MdEdit />, title: 'Edit', onClick: () => edit.startEdit(user._id, { username: user.username ?? '', role: user.role }) },
+        { key: 'delete', icon: <MdDelete />, title: 'Delete', onClick: onClickDelete },
+      ]
 
     return (
-      <div className="tGroup" key={ele._id}>
-        <div className="tRow">
-          <div className="tCol">
-            {updateActive !== ele._id ? (
-              <span>{ele.username}</span>
-            ) : (
+      <div className="tGroup" role="rowgroup" key={user._id}>
+        <div className="tRow" role="row">
+          <div className="tCol" role="cell">
+            {editing && edit.values ? (
               <input
                 type="text"
                 className="form_control"
-                value={newUsername}
-                onChange={handleChangeUsername}
+                aria-label="Username"
+                value={edit.values.username}
+                maxLength={30}
+                onChange={(e) => edit.setField('username', e.target.value)}
               />
-            )}
-          </div>
-          <div className="tCol">
-            <span>{ele.email}</span>
-          </div>
-          <div className="tCol center">
-            {updateActive !== ele._id ? (
-              <span>{ele.role}</span>
             ) : (
-              <select
-                name="role"
-                className="form_control"
-                value={newRole}
-                onChange={handleChangeNew}
-              >
-                {typesUser.map(item => (
-                  <option key={item.type} value={item.type}>{item.type}</option>
-                ))}
-              </select>
+              <span>{user.username}</span>
             )}
           </div>
-          <div className="tCol right">
-            <TableActions actions={actions} item={ele} />
+          <div className="tCol" role="cell"><span>{user.email}</span></div>
+          <div className="tCol center" role="cell">
+            {editing && edit.values ? (
+              <select
+                className="form_control"
+                aria-label="Role"
+                value={edit.values.role}
+                onChange={(e) => edit.setField('role', e.target.value as Role)}
+              >
+                {ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
+              </select>
+            ) : (
+              <span>{user.role}</span>
+            )}
+          </div>
+          <div className="tCol right" role="cell">
+            <TableActions actions={actions} item={user} />
           </div>
         </div>
       </div>
@@ -193,16 +126,7 @@ const Users = () => {
       <p className="content_top_subtitle">*To create a new user go to <NavLink to={"/register"}>Register</NavLink> page</p>
     </div>
 
-    <Table
-      columns={columns}
-      data={sortedUsers}
-      renderRow={renderRow}
-      onSort={handleSort}
-      sortColumn={sortColumn}
-      sortDirection={sortDirection}
-      hasPagination={true}
-      itemsPerPage={itemsPerPage}
-    />
+    <Table label="Users" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={10} />
 
     <Msgbox body={message.body} classname={message.classname} />
   </div>

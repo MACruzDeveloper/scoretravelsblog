@@ -1,11 +1,14 @@
-import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
-import { getErrorMessage } from '@/utils/errors'
+import { useState, useEffect, useContext } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMessage } from '@/hooks/useMessage'
+import { commentSchema, CommentForm } from '@/schemas'
+import FieldError from '@/components/common/FieldError'
 import DOMPurify from 'dompurify'
 import { getExperience, getExperienceComments } from '@/api/experiences'
 import { addComment } from '@/api/comments'
 import { cityOf } from '@/utils/experience'
-import type { Comment } from '@/store/commentsStore'
-import type { Experience as ExperienceType } from '@/store/experienceStore'
+import type { Comment, Experience as ExperienceType } from '@/api/types'
 import { useParams } from 'react-router-dom'
 import FormattedDate from '@/components/common/FormattedDate'
 import CommentsByExp from '../CommentsByExp'
@@ -27,8 +30,11 @@ const Experience = ({ user }: PropsExperience) => {
   const [experience, setExperience] = useState<ExperienceType>()
   const [expLoading, setExpLoading] = useState(true)
   const [comments, setComments] = useState<Comment[]>([])
-  const [comment, setComment] = useState('')
-  const [message, setMessage] = useState({ body: '', classname: '' })
+  const { message, showOk, showError, showWarning } = useMessage()
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<CommentForm>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { content: '' },
+  })
 
   // get experience from id param
   useEffect(() => {
@@ -37,7 +43,7 @@ const Experience = ({ user }: PropsExperience) => {
       try {
         setExperience(await getExperience(exp))
       } catch (err) {
-        console.log(err)
+        console.error(err)
         setExperience(undefined)
       } finally {
         setExpLoading(false)
@@ -71,7 +77,7 @@ const Experience = ({ user }: PropsExperience) => {
     try {
       setComments(await getExperienceComments(exp))
     } catch (error) {
-      console.log(error)
+      console.error(error)
     }
   }
 
@@ -85,29 +91,15 @@ const Experience = ({ user }: PropsExperience) => {
     setExperience((prev) => prev && { ...prev, score, votes })
   }
 
-  const handleChangeComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    const target = e.currentTarget
-    if (target) setComment(e.target.value)
-  }
-
-  const handleSubmitComment = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!user) {
-      setMessage({ body: 'You must be logged in to comment', classname: 'msg_error' })
-      return
-    }
+  const onSubmitComment = async ({ content }: CommentForm) => {
+    if (!user) return showWarning('You must be logged in to comment')
     try {
-      if (comment.trim()) {
-        await addComment(exp, comment.trim())
-        await loadComments()
-        setComment('')
-        setMessage({ body: `Comment added!`, classname: 'msg_ok' })
-      } else {
-        setMessage({ body: 'Write a comment', classname: 'msg_error' })
-      }
+      await addComment(exp, content)
+      await loadComments()
+      reset({ content: '' })
+      showOk('Comment added!')
     } catch (error) {
-      console.log(error)
-      setMessage({ body: getErrorMessage(error, 'Could not add your comment'), classname: 'msg_error' })
+      showError(error, 'Could not add your comment')
     }
   }
 
@@ -167,9 +159,11 @@ const Experience = ({ user }: PropsExperience) => {
           <div className="sidebar_comments">
             <h3 className="sidebar_title">Write a comment</h3>
 
-            <form className="form form_comments" onSubmit={handleSubmitComment}>
-              <textarea className="form_control" placeholder="Write your comment" value={comment} maxLength={1000} onChange={handleChangeComment} />
-              <button className="btn">Add comment</button>
+            <form className="form form_comments" onSubmit={handleSubmit(onSubmitComment)} noValidate>
+              <textarea className="form_control" placeholder="Write your comment" aria-label="Comment" maxLength={1000}
+                aria-invalid={Boolean(errors.content)} {...register('content')} />
+              <FieldError error={errors.content} />
+              <button className="btn" disabled={isSubmitting}>Add comment</button>
             </form>
           </div>
 

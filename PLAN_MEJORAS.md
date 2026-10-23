@@ -252,16 +252,21 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 ### Fase 4 — Frontend: bugs, refactor y formularios (4-6 días) 🟡
 
 - [x] Bugs B-5, B-6 y B-8 (resueltos en fases anteriores), B-9 (el admin espera a verificar la sesión y solo lo ven los admins; el enlace "Admin" del menú también), B-10 (el registro devuelve la sesión; sin esperas artificiales de 2 s; tras el login, admin → `/admin`, resto → `/`), B-11 (fuera las precargas de fuentes a `/src`), B-13 (`setTimeout` del admin con limpieza; variable del carrusel renombrada).
-- [ ] B-7 (peticiones duplicadas en los stores): con la factoría de stores.
+- [x] B-7: la factoría de stores comparte la petición en curso y, con recargas solapadas, se queda con la respuesta más reciente.
 - [ ] B-1 (teclado del About): **al final, junto con el resto de la página About**.
 - [x] Rutas del admin anidadas con `<Outlet/>`; todas las páginas salvo la Home se cargan bajo demanda (`React.lazy`): el JS inicial de la app pasa de 104 KB a 46 KB. (A-8)
 - [x] API tipada por recurso (`api/auth`, `categories`, `cities`, `comments`, `contact`, `experiences`, `images`, `scores`, `users`) con los tipos de dominio en `api/types.ts`; ningún componente construye URLs del API. `utils.js` y `config.js` pasados a TypeScript (helpers HTTP genéricos en el tipo de respuesta). (A-8, A-10)
 - [x] `strictNullChecks` activado sin errores. Helpers `cityOf`/`coverOf` en lugar de comprobaciones repetidas. ESLint: de 82 problemas iniciales a 19 avisos, todos en las tablas del admin (se van con el paso 3).
 - [x] Código muerto eliminado: `SelectContinent` (pedía los continentes a un servicio externo), `SelectCity`, `citiesStore`, `groupBy`. Fallback muerto del mapa (coordenadas en la experiencia) eliminado.
 - [x] `ImageUpload` mostraba el JSON de error en crudo; ahora el mensaje del servidor.
-- [ ] Factoría de stores y hook `useCrudTable`. (A-9)
-- [ ] Formularios con `react-hook-form` + zod; labels, `autocomplete`, mensajes de error visibles (§2.5).
-- [ ] Manejo de errores unificado (toast/Msgbox) en vez de `console.log`. (A-11)
+- [x] Factoría de stores (`createListStore`) y piezas comunes para las tablas del admin: `useSortedData` (ordenación correcta por tipo, vacíos al final, columnas derivadas como el nombre de la ciudad), `useInlineEdit` (editar una fila), `Table<T>` genérico. Las seis pantallas del admin reescritas con ellas, sin `any`. (A-9)
+- [x] Imágenes: el interruptor "featured" guarda al pulsarlo; fuera el segundo subidor que creaba imágenes nuevas al "editar".
+- [x] `SelectCategories`: la opción vacía ya no envía el texto "*Category" como categoría; sin categoría duplicada; error fuera del `<select>`.
+- [x] Accesibilidad de las tablas del admin: roles ARIA de tabla en cabecera, filas y celdas, nombre accesible (`label`, obligatorio en `Table`) y `aria-sort` con la ordenación actual.
+- [x] Mapa de la Home: la rueda hace scroll de la página; el zoom necesita Ctrl (⌘ en Mac) y un aviso lo explica al hacer scroll sobre el mapa (`MapScrollGuard`). El pellizco del trackpad sigue funcionando.
+- [ ] Mapa en móvil: arrastrar con un dedo mueve el mapa en lugar de la página; valorar pedir dos dedos para moverlo.
+- [x] Formularios con react-hook-form + zod (`src/schemas`, mismas reglas que el servidor): login, registro, contacto, comentario, alta de experiencia y de categoría. Errores junto a cada campo, `aria-invalid`, etiquetas accesibles, `autocomplete`. La edición en línea del admin valida con los mismos esquemas. (§2.5)
+- [x] Manejo de errores unificado con `useMessage` (éxito, aviso, error con el mensaje del servidor); ningún `console.log` en componentes. ESLint: 0 problemas. (A-11)
 - [x] Código muerto eliminado: `PrivateRoute.tsx`, `_Image.tsx`, `admin/Admin.tsx` (los comentarios de axios ya se quitaron en la Fase 1).
 - [x] Página de Experience: imagen por defecto (`thumb.png`, la misma que `Card`) cuando la experiencia no tiene imágenes, con test.
 - [x] Biblioteca de imágenes: más recientes primero por defecto y sin columna de dimensiones.

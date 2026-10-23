@@ -334,3 +334,15 @@ input[type="range"] {
     color: $color1;
   }
 }
+
+// Validation message under a field
+.form_error {
+  margin: .4rem 0 1rem;
+  font-size: 1.3rem;
+  text-align: left;
+  color: $colorRed;
+}
+
+.form_control[aria-invalid="true"] {
+  border-color: $colorRed;
+}

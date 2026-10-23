@@ -67,9 +67,8 @@ function App() {
         setUser(me.email)
         setUsername(me.username || me.email)
         setIsLoggedIn(true)
-      } catch (error) {
-        // 401: stale or invalid token
-        console.log(error)
+      } catch {
+        // 401: stale or invalid token, expected after it expires
         clearSession()
       }
     }
