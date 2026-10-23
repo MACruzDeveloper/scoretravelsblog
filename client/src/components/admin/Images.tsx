@@ -80,6 +80,7 @@ const Images = () => {
       setMessage({ body: `Image removed!`, classname: 'msg_ok' })
     } catch (error) {
       console.log("error ==>", error)
+      setMessage({ body: error instanceof Error && error.message ? error.message : 'Could not remove the image', classname: 'msg_error' })
     }
   }
 

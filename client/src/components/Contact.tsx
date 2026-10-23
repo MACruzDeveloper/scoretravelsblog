@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import { URL } from '../config'
 import Msgbox from './common/Msgbox'
 import { validateEmail, postData } from '@utils/utils'
@@ -72,8 +73,8 @@ const Contact = () => {
           </div>
 
           <div className="form_group">
-            <input type="checkbox" id="cb_contact" className="cb_custom" defaultChecked={isChecked} onChange={() => setIsChecked(!isChecked)} />
-            <label htmlFor="cb_contact">Accept terms and conditions</label>
+            <input type="checkbox" id="cb_contact" className="cb_custom" defaultChecked={isChecked} onChange={() => setIsChecked(!isChecked)} required />
+            <label htmlFor="cb_contact">I have read and accept the <NavLink to="/privacy" target="_blank">privacy policy</NavLink></label>
           </div>
     
           <button className="btn" disabled={!isChecked || isSending}>Send</button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@/utils/utils'
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { URL } from '../../../config'
 import Msgbox from '@/components/common/Msgbox'
 
@@ -94,6 +94,7 @@ const Register = ({ login }: PropsRegister) => {
       <input type="email" name="email" className="form_control" placeholder="Write your email" autoComplete="email" maxLength={254} required onChange={handleChange} />
       <input type="password" name="password" className="form_control" placeholder="Write your password (min. 8 characters)" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
       <input type="password" name="password2" className="form_control" placeholder="Confirm your password" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
+      <p className="form_legal">By registering you accept the <NavLink to="/privacy">privacy policy</NavLink>.</p>
       <button className="btn">Register</button>
     </form>
 

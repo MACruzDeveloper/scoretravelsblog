@@ -12,6 +12,7 @@ describe('Footer', () => {
     )
 
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-    expect(screen.getByText('© ScoreTravelsBlog')).toBeInTheDocument()
+    expect(screen.getByText(/© ScoreTravelsBlog/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /privacy policy/i })).toHaveAttribute('href', '/privacy')
   })
 })

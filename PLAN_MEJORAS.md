@@ -192,7 +192,8 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Identidad **siempre** desde `req.user` en comentarios, votos y experiencias; se guarda `userId` y se muestra `username`. `userId` no se expone en las respuestas. (S-5, S-11)
 - [x] Migración `scripts/migrate-user-refs.js --apply` ejecutada en Atlas (2026-10-23): emails de comentarios y votos antiguos sustituidos por el nombre de usuario. (S-11)
 - [x] Permisos: imágenes y ciudades → `requireAdmin`; endpoint `update_score` eliminado. (S-4)
-- [ ] Decidir si los usuarios registrados deben llamarse `user` en vez de `author` y si el registro sigue abierto (hoy solo pueden comentar y votar). (S-4)
+- [x] Rol `author` renombrado a `user` (registrados que solo comentan y votan). Script `scripts/migrate-roles.js` para los usuarios existentes. (S-4)
+- [x] `scripts/migrate-roles.js --apply` ejecutado en Atlas. (S-4)
 - [x] Score en servidor: un voto por usuario y experiencia (índice único parcial `{experience, userId}`; votar otra vez actualiza), entero 1-5, media recalculada en `services/scoreService.js`. `Score.tsx` solo muestra. El admin ya no puede fijar el score a mano. (S-6, A-4)
 - [x] `express-rate-limit`: login 10/15 min, registro 5/h, contacto 5/h, comentarios y votos 60/15 min, global 1000/15 min. (S-7)
 - [x] `URL` del cliente desde `VITE_API_URL` (por defecto, el mismo origen); `trust proxy` configurable con `TRUST_PROXY`. (S-8)
@@ -200,14 +201,13 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Mensaje genérico de login, códigos HTTP correctos (400/401/403/404/409) y los formularios de login/registro muestran el error del servidor. (S-10)
 - [x] `select('-password')` en usuarios. Un admin no puede borrarse ni quitarse el rol a sí mismo. (S-11)
 - [x] `jwt.verify` con `algorithms: ['HS256']`; el servidor no arranca sin `JWT_SECRET` o `ATLAS_URL`. (S-12)
-- [ ] Valorar cookie `httpOnly; Secure; SameSite=Strict` en lugar de `localStorage` (requiere protección CSRF; mejor junto a HTTPS). (S-12)
+- [ ] **Pospuesto** hasta tener HTTPS: cookie `httpOnly; Secure; SameSite=Strict` en lugar de `localStorage` (requiere protección CSRF). (S-12)
 - [x] CORS con lista de orígenes (`CORS_ORIGINS`) y CSP activa en Helmet. (S-13)
 - [x] Contact: validación en servidor, longitudes, honeypot (`website`). (S-15)
-- [ ] Contact: texto legal / política de privacidad enlazada en el checkbox. (S-15)
+- [x] Página `/privacy` (en inglés) enlazada desde el checkbox de contacto (ahora obligatorio), el registro y el footer. (S-15)
 - [x] Imágenes: nombre generado, solo se guarda `filename`, carpeta `server/uploads/images` fuera de git (configurable con `UPLOADS_DIR`), errores de multer como 400, borrado tolerante a ficheros ausentes, 404 real para `/static` inexistente. (S-16)
-- [ ] Borrar imágenes huérfanas al borrar una experiencia (comprobar antes que no las use otra experiencia ni la galería). (S-16)
+- [x] Al borrar o editar una experiencia se eliminan las imágenes que ya no usa ninguna otra experiencia y que no están marcadas como *featured* (`services/imageService.js`). Borrar desde la biblioteca una imagen en uso devuelve 409. (S-16)
 - [x] Logging: `morgan('combined')` en producción y `console.error` en los `catch` de los controladores. (S-17)
-- [ ] Auditoría de acciones admin (quién borró/editó qué). (S-17)
 
 ### Fase 2 — Actualización de dependencias (2-3 días) 🟠
 

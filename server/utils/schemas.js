@@ -10,7 +10,8 @@ const email = z.string().trim().email().max(254)
 const password = z.string().min(8, 'Password must be at least 8 characters').max(128)
 const username = z.string().trim().min(3).max(30)
   .regex(/^[\p{L}\p{N}_.-]+$/u, 'Username can only contain letters, numbers, _ . -')
-const role = z.enum(['admin', 'author'])
+// 'user': registered visitor who can comment and score; 'admin': manages the site
+const role = z.enum(['admin', 'user'])
 const score = z.number().int().min(1).max(5)
 const filename = z.string().trim().min(1).max(255)
   .refine((value) => value === path.basename(value) && !value.includes('..'), 'Invalid filename')
@@ -33,7 +34,7 @@ const login = z.object({
   password: z.string().min(1).max(128)
 })
 
-const addUser = z.object({ username, email, password, role: role.default('author') })
+const addUser = z.object({ username, email, password, role: role.default('user') })
 const updateUser = z.object({ _id: objectId, username: username.optional(), role: role.optional() })
 
 // =============== CATEGORIES =====================

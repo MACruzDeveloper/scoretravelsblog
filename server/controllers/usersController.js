@@ -18,7 +18,7 @@ const register = async (req, res) => {
     const existing = await User.findOne({ $or: [{ email }, { username }] })
     if (existing) return res.status(409).json({ ok: false, message: 'Email or username already in use' })
     const hash = await argon2.hash(password)
-    await User.create({ username, email, password: hash, role: 'author' })
+    await User.create({ username, email, password: hash, role: 'user' })
     res.status(201).json({ ok: true, message: 'Successful register' })
   } catch (error) {
     if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'Email or username already in use' })

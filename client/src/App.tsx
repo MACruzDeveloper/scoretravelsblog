@@ -18,6 +18,7 @@ import AllExperiences from '@/components/experiences/AllExperiences'
 import About from '@components/About'
 import Gallery from '@/components/Gallery'
 import Contact from '@/components/Contact'
+import Privacy from '@/components/Privacy'
 import Experiences from './components/admin/experiences/Experiences'
 import Categories from './components/admin/Categories'
 import Comments from './components/admin/Comments'
@@ -136,6 +137,7 @@ function App() {
             <Route path="/experiences" element={<AllExperiences />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path='/login' element={<Login login={login} />} />
             <Route path='/register' element={<Register login={login} />} />
             <Route path="/search" element={<SearchPage />} />

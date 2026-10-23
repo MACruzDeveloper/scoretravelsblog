@@ -1,4 +1,5 @@
 const experiences = require('../models/experiencesModel');
+const { getExperienceImages, removeUnusedImages } = require('../services/imageService');
 
 const normalizeExperienceImages = (params) => {
   const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
@@ -75,9 +76,14 @@ class experiencesController {
   async deleteExperience(req, res) {
     let { _id } = req.body
     try {
+      const existing = await experiences.findById(_id)
+      if (!existing) return res.status(404).json({ ok: false, message: 'Experience not found' })
       const removed = await experiences.deleteOne({ _id })
-      res.send({ removed })
+      // Images no other experience uses and that are not featured go away too
+      const removedImages = await removeUnusedImages(getExperienceImages(existing))
+      res.send({ removed, removedImages })
     } catch (error) {
+      console.error('Delete experience failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error deleting experience' })
     }
   }
@@ -132,8 +138,11 @@ class experiencesController {
           content: params.content,
         }
       )
-      const updated = await experiences.findById(params._id).populate('city')
-      res.send({ updated })
+      const updated = await experiences.findById(params._id).select('-userId').populate('city')
+      // Images dropped in this edit are cleaned up if nothing else uses them
+      const kept = new Set(getExperienceImages({ image, images }))
+      const removedImages = await removeUnusedImages(getExperienceImages(currentExp).filter((name) => !kept.has(name)))
+      res.send({ updated, removedImages })
     } catch (error) {
       console.error('Update experience failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error updating experience' })

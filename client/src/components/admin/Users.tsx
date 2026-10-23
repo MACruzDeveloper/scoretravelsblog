@@ -26,7 +26,7 @@ const Users = () => {
 
   const typesUser = [
     { type: 'admin' },
-    { type: 'author' }
+    { type: 'user' }
   ]
 
   const getUsers = async () => {

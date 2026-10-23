@@ -4,12 +4,7 @@ const sharp = require("sharp");
 const Images = require("../models/imagesModel");
 const fs = require("fs");
 const { UPLOADS_DIR } = require("../utils/paths");
-
-// Resolve a stored filename inside the uploads folder, refusing anything that escapes it
-const resolveUpload = (filename) => {
-  const filePath = path.resolve(UPLOADS_DIR, path.basename(filename));
-  return filePath.startsWith(path.resolve(UPLOADS_DIR) + path.sep) ? filePath : null;
-};
+const { resolveUpload, unlinkUpload, countExperiencesUsing } = require("../services/imageService");
 
 const upload_image = async (req, res) => {
   try {
@@ -63,10 +58,12 @@ const delete_image = async (req, res) => {
     const image = await Images.findOne({ _id, filename });
     if (!image) return res.status(404).json({ ok: false, message: 'Image not found' });
 
-    // A missing file on disk should not block removing the DB record
-    await fs.promises.unlink(filePath).catch((err) => {
-      if (err.code !== 'ENOENT') throw err
-    });
+    const usedBy = await countExperiencesUsing(filename);
+    if (usedBy) {
+      return res.status(409).json({ ok: false, message: `Image is used by ${usedBy} experience(s). Remove it from them first` });
+    }
+
+    await unlinkUpload(filePath);
     const deleted = await Images.deleteOne({ _id });
     res.send({ deleted });
   } catch (error) {
