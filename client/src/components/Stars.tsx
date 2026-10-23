@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react'
 import { postData } from '@utils/utils'
 import { MdStar, MdStarBorder } from 'react-icons/md'
-import { URL } from '../config'
+import { API } from '../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import { useScoresStore } from '@/store/scoresStore'
 import Msgbox from './common/Msgbox'
@@ -37,7 +37,7 @@ const Stars = ({ exp }: PropsStars) => {
 
     setIsSending(true)
     try {
-      const url = `${URL}/admin/scores/add`
+      const url = `${API}/scores`
       await postData(url, { experience: exp, score: i+1 })
       await fetchScores(true)
       setMessage({ body: `Score added!`, classname: 'msg_ok' })

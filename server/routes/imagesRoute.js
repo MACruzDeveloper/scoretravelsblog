@@ -5,9 +5,11 @@ const { requireAdmin } = require("../middleware/auth")
 const { validate } = require("../middleware/validate")
 const schemas = require("../utils/schemas")
 
-router.get("/fetch_images", controller.fetch_images)
-router.post("/update_image", requireAdmin, validate(schemas.updateImage), controller.update_image)
-router.delete("/delete_image/:_id/:filename", requireAdmin, validate(schemas.deleteImageParams, 'params'), controller.delete_image)
+const byId = validate(schemas.idParam, 'params')
+
+router.get("/", controller.fetch_images)
+router.patch("/:id", requireAdmin, byId, validate(schemas.updateImage), controller.update_image)
+router.delete("/:id", requireAdmin, byId, controller.delete_image)
 
 // UPLOAD IMAGES ROUTE AND RELATED FUNCTIONS
 const upload = multer({
@@ -31,6 +33,6 @@ const handleUpload = (req, res, next) => {
   })
 }
 
-router.post("/upload", requireAdmin, handleUpload, validate(schemas.uploadImage), controller.upload_image)
+router.post("/", requireAdmin, handleUpload, validate(schemas.uploadImage), controller.upload_image)
 
 module.exports = router

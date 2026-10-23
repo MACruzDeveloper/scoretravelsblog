@@ -51,19 +51,6 @@ app.use(morgan(isProduction ? 'combined' : 'dev'));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
-// =============== DATABASE CONNECTION =====================
-const mongoose = require('mongoose');
-async function connecting() {
-  try {
-    await mongoose.connect(process.env.ATLAS_URL)
-    console.log('Connected to the DB')
-  } catch (error) {
-    console.log(error);
-    console.log('ERROR: Seems like your DB is not running, please start it up !!!');
-  }
-}
-connecting()
-
 //================ CORS ================================
 const cors = require('cors');
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
@@ -76,17 +63,7 @@ app.use(cors({
 }));
 
 // =============== ROUTES ==============================
-const { apiLimiter } = require('./middleware/rateLimit');
-app.use(['/users', '/admin', '/images', '/emails'], apiLimiter);
-
-app.use('/users', require('./routes/usersRoute'));
-app.use('/admin/categories', require('./routes/categoriesRoute'));
-app.use('/admin/cities', require('./routes/citiesRoute'));
-app.use('/admin/experiences', require('./routes/experiencesRoute'));
-app.use('/admin/comments', require('./routes/commentsRoute'));
-app.use('/admin/scores', require('./routes/scoresRoute'));
-app.use('/images', require('./routes/imagesRoute'));
-app.use('/emails', require('./routes/emailsRoutes.js'))
+app.use('/api', require('./routes'));
 
 const setAvifHeader = (res, filePath) => {
   if (filePath.endsWith('.avif')) {
@@ -125,6 +102,30 @@ process.on('unhandledRejection', (reason) => {
 });
 
 // =============== START SERVER =====================
-app.listen(port, () =>
-  console.log(`server listening on port ${port}`
-));
+// Connect to the database first so no request is served without it
+const mongoose = require('mongoose');
+
+async function start() {
+  try {
+    await mongoose.connect(process.env.ATLAS_URL);
+    console.log('Connected to the DB');
+  } catch (error) {
+    console.error('ERROR: Could not connect to the database:', error.message);
+    process.exit(1);
+  }
+
+  const server = app.listen(port, () => console.log(`server listening on port ${port}`));
+
+  // Graceful shutdown: stop accepting requests, then close the DB connection
+  const shutdown = (signal) => {
+    console.log(`${signal} received, shutting down`);
+    server.close(async () => {
+      await mongoose.disconnect();
+      process.exit(0);
+    });
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
+
+start();

@@ -1,6 +1,5 @@
 const City = require('../models/citiesModel')
 const Experience = require('../models/experiencesModel')
-const { isValidId } = require('../utils/validators')
 
 class citiesController {
 
@@ -50,8 +49,8 @@ class citiesController {
   }
 
   async updateCity(req, res) {
-    const { _id, name, country, countryCode, continent, lat, lng } = req.body
-    if (!isValidId(_id)) return res.status(400).send({ ok: false, message: 'Invalid id' })
+    const _id = req.params.id
+    const { name, country, countryCode, continent, lat, lng } = req.body
     try {
       const updated = await City.findByIdAndUpdate(
         _id,
@@ -65,7 +64,6 @@ class citiesController {
   }
 
   async deleteCity(req, res) {
-    if (!isValidId(req.params.id)) return res.status(400).send({ ok: false, message: 'Invalid id' })
     try {
       const inUse = await Experience.findOne({ city: req.params.id })
       if (inUse) {

@@ -89,7 +89,7 @@ Severidad: 🔴 crítico · 🟠 alto · 🟡 medio · 🟢 bajo/mejora. Entre c
 | B-12 | 🟡 | `nginx-scoretravelsblog.conf`: los `location` de regex para `.js/.css/imágenes/fuentes` **no tienen `proxy_pass`** → nginx los busca en su `root` y devuelve 404; `/admin/api/` no existe; el bloque de Google Fonts no tiene sentido (un `location` no puede casar con otra URL); `proxy_cache_valid` sin `proxy_cache`; `Cache-Control: public` en API. | `_doc/nginx-scoretravelsblog.conf` |
 | B-13 | 🟢 | `AdminLayout` y `About` usan `setTimeout` sin limpiar al desmontar. Carousel: la variable `slideStop` funciona al revés de lo que dice su nombre. | `AdminLayout.tsx:17`, `About.tsx:104`, `Carousel.tsx:124` |
 | B-14 | 🟢 | `robots.txt` con typo (`User=agent`) y fuera de `public/` (no se sirve); `sitemap.txt` vacío. | `client/robots.txt` |
-| B-15 | 🟠 | **Rutas del cliente y de la API colisionan**: `/admin/experiences`, `/admin/categories`, etc. son páginas de React *y* endpoints GET del API. Con el build servido por Express, recargar `/admin/experiences` en el navegador devuelve el JSON del API en lugar de la página. Se resuelve con el prefijo `/api` (A-2, Fase 3). | `server/index.js`, `App.tsx` |
+| B-15 | ✅ ~~🟠~~ | **Rutas del cliente y de la API colisionan**: `/admin/experiences`, `/admin/categories`, etc. son páginas de React *y* endpoints GET del API. Con el build servido por Express, recargar `/admin/experiences` en el navegador devuelve el JSON del API en lugar de la página. Se resuelve con el prefijo `/api` (A-2, Fase 3). | `server/index.js`, `App.tsx` |
 
 ### 2.3 Arquitectura y code smells
 
@@ -229,11 +229,13 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 ### Fase 3 — Arquitectura del backend (4-6 días) 🟡
 
 - [ ] Estructura `routes → validators → controllers → services → models`; `asyncHandler` o Express 5; error handler central con clases de error (`NotFound`, `Validation`…).
-- [ ] API REST bajo `/api` con verbos correctos (A-2); mantener temporalmente las rutas viejas si hace falta.
+- [x] API REST bajo `/api` (`routes/index.js`) con verbos correctos: `GET/POST /api/<recurso>`, `GET/PATCH/DELETE /api/<recurso>/:id`, `/api/auth/{register,login,me}`, `/api/contact`. El id va en la URL y se valida; las imágenes se borran por id (el nombre de fichero sale de la BD). Rutas `/api` desconocidas → 404 JSON. Resuelve B-15. (A-2)
 - [ ] Paginación, búsqueda y filtros en servidor; endpoint de comentarios por experiencia (A-3).
-- [ ] Modelo: `ObjectId` en referencias (categoría, usuario, experiencia), `timestamps`, índices, borrado en cascada o comprobación de uso; añadir ruta `DELETE /api/cities/:id`. Script de migración de datos existentes. (B-4, A-5)
-- [ ] Config centralizada y validada (`config.js` con zod sobre `process.env`), conexión a Mongo antes de `listen`, `/health`, *graceful shutdown*. (A-7)
-- [ ] Corregir B-2, B-3; mover `apiRoutes.ts` al cliente. (A-10)
+- [ ] Modelo: `ObjectId` en referencias (categoría, usuario, experiencia), `timestamps`, índices, borrado en cascada o comprobación de uso. Script de migración de datos existentes. (B-4, A-5)
+- [x] Rutas `PATCH`/`DELETE /api/cities/:id` (el borrado comprueba que ninguna experiencia use la ciudad).
+- [x] Conexión a Mongo antes de `listen` (si falla, el proceso termina con un mensaje claro), `GET /api/health`, *graceful shutdown* con SIGTERM/SIGINT. (A-7)
+- [ ] Config centralizada y validada (`config.js` con zod sobre `process.env`). (A-7)
+- [x] B-2 y B-3 corregidos en la Fase 1; `apiRoutes.ts` eliminado (el cliente usa `API` de `config.js`). (A-10)
 - [ ] ESLint + Prettier en server. (A-6)
 
 ### Fase 4 — Frontend: bugs, refactor y formularios (4-6 días) 🟡

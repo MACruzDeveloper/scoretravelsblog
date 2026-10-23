@@ -18,7 +18,8 @@ const filename = z.string().trim().min(1).max(255)
 
 const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', 'oceania', 'south-america', 'unknown']
 
-const byId = z.object({ _id: objectId })
+// `:id` route parameter
+const idParam = z.object({ id: objectId })
 
 // =============== USERS =====================
 const register = z.object({
@@ -35,14 +36,12 @@ const login = z.object({
 })
 
 const addUser = z.object({ username, email, password, role: role.default('user') })
-const updateUser = z.object({ _id: objectId, username: username.optional(), role: role.optional() })
+const updateUser = z.object({ username: username.optional(), role: role.optional() })
 
 // =============== CATEGORIES =====================
 const categoryName = text(50).regex(/^[\p{L}\p{N}\s]+$/u, 'Category can only contain letters, numbers and spaces')
 const addCategory = z.object({ name: categoryName, description: optionalText(300) })
-const updateCategory = addCategory.extend({ _id: objectId })
-const deleteCategory = z.object({ name: categoryName })
-const categoryParam = z.object({ category: text(50) })
+const updateCategory = addCategory
 
 // =============== CITIES =====================
 const addCity = z.object({
@@ -53,6 +52,7 @@ const addCity = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180)
 })
+const updateCity = addCity.partial()
 const continentParam = z.object({ continent: z.enum(CONTINENTS) })
 const countryParam = z.object({ country: text(100) })
 
@@ -67,20 +67,18 @@ const experienceFields = {
   date: z.coerce.date().optional()
 }
 const addExperience = z.object(experienceFields)
-const updateExperience = z.object({ _id: objectId, ...experienceFields, title: experienceFields.title.optional() })
-const idParam = z.object({ id: objectId })
+const updateExperience = z.object({ ...experienceFields, title: experienceFields.title.optional() })
 
 // =============== COMMENTS =====================
 const addComment = z.object({ experience: objectId, content: text(1000) })
-const updateComment = z.object({ _id: objectId, content: text(1000) })
+const updateComment = z.object({ content: text(1000) })
 
 // =============== SCORES =====================
 const addScore = z.object({ experience: objectId, score })
-const updateScore = z.object({ _id: objectId, score })
+const updateScore = z.object({ score })
 
 // =============== IMAGES =====================
-const updateImage = z.object({ _id: objectId, featured: z.boolean() })
-const deleteImageParams = z.object({ _id: objectId, filename })
+const updateImage = z.object({ featured: z.boolean() })
 const uploadImage = z.object({ title: optionalText(150) })
 
 // =============== EMAILS =====================
@@ -94,13 +92,13 @@ const sendEmail = z.object({
 })
 
 module.exports = {
-  byId,
+  idParam,
   register, login, addUser, updateUser,
-  addCategory, updateCategory, deleteCategory, categoryParam,
-  addCity, continentParam, countryParam,
-  addExperience, updateExperience, idParam,
+  addCategory, updateCategory,
+  addCity, updateCity, continentParam, countryParam,
+  addExperience, updateExperience,
   addComment, updateComment,
   addScore, updateScore,
-  updateImage, deleteImageParams, uploadImage,
+  updateImage, uploadImage,
   sendEmail
 }

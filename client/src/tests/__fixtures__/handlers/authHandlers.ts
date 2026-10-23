@@ -5,11 +5,11 @@
 
 import { http, HttpResponse } from 'msw'
 import { mockUsers, mockTokens } from '../data/users.fixture'
-import { URL } from '@/config'
+import { API } from '@/config'
 
 export const authHandlers = [
   // POST /login
-  http.post(`${URL}/login`, async ({ request }) => {
+  http.post(`${API}/auth/login`, async ({ request }) => {
     const body = await request.json()
     const { email, password } = body as { email: string; password: string }
 
@@ -50,7 +50,7 @@ export const authHandlers = [
   }),
 
   // POST /register
-  http.post(`${URL}/register`, async ({ request }) => {
+  http.post(`${API}/auth/register`, async ({ request }) => {
     const body = await request.json()
     const { email, name, password } = body as {
       email: string
@@ -89,7 +89,7 @@ export const authHandlers = [
   }),
 
   // POST /logout
-  http.post(`${URL}/logout`, () => {
+  http.post(`${API}/logout`, () => {
     return HttpResponse.json(
       {
         success: true,

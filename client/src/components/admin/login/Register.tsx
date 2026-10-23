@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@/utils/utils'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { URL } from '../../../config'
+import { API } from '../../../config'
 import Msgbox from '@/components/common/Msgbox'
 
 type PropsRegister = {
@@ -29,7 +29,7 @@ const Register = ({ login }: PropsRegister) => {
 
   const loginRegister = async () => {
     try {
-      const response = await postData(`${URL}/users/login`, {
+      const response = await postData(`${API}/auth/login`, {
         username: values.username,
         email: values.email,
         password: values.password
@@ -55,7 +55,7 @@ const Register = ({ login }: PropsRegister) => {
     if (isRegistering) return
     setIsRegistering(true)
     try {
-      const response = await postData(`${URL}/users/register`, {
+      const response = await postData(`${API}/auth/register`, {
         username: values.username,
         email: values.email,
         password: values.password,

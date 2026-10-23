@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@/utils/utils'
-import { URL } from '../../../config'
+import { API } from '../../../config'
 import { Experience } from '@/store/experienceStore'
 import SelectCategories from '@/components/common/SelectCategories'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
@@ -37,12 +37,12 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
       // Primero upsert de la ciudad, obtenemos su _id
       let cityId = null
       if (selectedCity) {
-        const cityRes = await postData(`${URL}/admin/cities/add`, selectedCity)
+        const cityRes = await postData(`${API}/cities`, selectedCity)
         cityId = cityRes.data.city._id
       }
 
       const validFilenames = selectedFilenames.filter((name) => !!name)
-      await postData(`${URL}/admin/experiences/add`, {
+      await postData(`${API}/experiences`, {
         user,
         title: values.title,
         category: values.category,

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
 import DOMPurify from 'dompurify'
 import { getData, postData } from '@utils/utils'
 import { useScoresStore } from '../../store/scoresStore'
-import { URL } from '../../config'
+import { API } from '../../config'
 import { useParams } from 'react-router-dom'
 import FormattedDate from '@/components/common/FormattedDate'
 import CommentsByExp from '../CommentsByExp'
@@ -51,7 +51,7 @@ const Experience = ({ user }: PropsExperience) => {
     const fetchExperience = async () => {
       setExpLoading(true)
       try {
-        const res = await getData(`${URL}/admin/experiences/${exp}`)
+        const res = await getData(`${API}/experiences/${exp}`)
         setExperience(res.data)
       } catch (err) {
         console.log(err)
@@ -96,7 +96,7 @@ const Experience = ({ user }: PropsExperience) => {
   // comments
   useEffect(() => {
     const getCommentsByExp = async () => {
-      const url = `${URL}/admin/comments`
+      const url = `${API}/comments`
       try {
         const res = await getData(url)
         const data = res.data
@@ -126,11 +126,11 @@ const Experience = ({ user }: PropsExperience) => {
       return
     }
     try {
-      const url = `${URL}/admin/comments/add`
+      const url = `${API}/comments`
       if (comment.trim()) {
         await postData(url, { experience: exp, content: comment.trim() })
         // Re-fetch comments after adding
-        const res = await getData(`${URL}/admin/comments`)
+        const res = await getData(`${API}/comments`)
         const tempComm = []
         for (const ele of res.data) {
           if (exp === ele.experience) {

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { getData } from '@utils/utils'
 
-import { URL } from '../config'
+import { API } from '../config'
 
 export interface Comment {
   readonly _id: string
@@ -30,7 +30,7 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${URL}/admin/comments`)
+      const response = await getData(`${API}/comments`)
       set({ comments: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false })

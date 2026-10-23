@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react'
-import { postData } from '@/utils/utils'
+import { postData, patchData, deleteData } from '@/utils/utils'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { useCategoriesStore, Cat } from '@/store/categoriesStore'
-import { URL } from '../../config'
+import { API } from '../../config'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -63,7 +63,7 @@ const Categories = () => {
     e.preventDefault()
 
     try {
-      const url = `${URL}/admin/categories/add`
+      const url = `${API}/categories`
       const name = valuesInputAdd.name?.trim() ?? ''
       const description = valuesInputAdd.description?.trim() ?? ''
       const result = cats.findIndex(item => item.name.toLowerCase() === name.toLowerCase())
@@ -87,8 +87,7 @@ const Categories = () => {
   const onClickDelete = async (ele: Cat) => {
     setUpdateActive(null)
     try {
-      const url = `${URL}/admin/categories/delete`
-      await postData(url, { name: ele.name })
+      await deleteData(`${API}/categories/${ele._id}`)
       await fetchCats(true)
       setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
     } catch (error) {
@@ -114,12 +113,10 @@ const Categories = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      const url = `${URL}/admin/categories/update`
       const updatedName = valuesInputUpdate.name?.trim() ?? ''
       const updatedDescription = valuesInputUpdate.description?.trim() ?? ''
       if (reg.exec(updatedName)) {
-        await postData(url, {
-          _id: idx,
+        await patchData(`${API}/categories/${idx}`, {
           name: updatedName,
           description: updatedDescription
         })

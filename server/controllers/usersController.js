@@ -46,16 +46,10 @@ const login = async (req, res) => {
   }
 }
 
-const verify_token = (req, res) => {
-  const header = req.headers.authorization || ''
-  const token = header.startsWith('Bearer ') ? header.slice(7) : header
-  if (!token) return res.status(401).json({ ok: false, message: 'No token provided' })
-  try {
-    const succ = jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
-    return res.json({ ok: true, succ })
-  } catch (error) {
-    return res.status(401).json({ ok: false, message: 'Invalid or expired token' })
-  }
+// The token was already verified by requireAuth
+const me = (req, res) => {
+  const { _id, username, email, role } = req.user
+  return res.json({ ok: true, user: { _id, username, email, role } })
 }
 
 const findAllUsers = async (req, res) => {
@@ -86,12 +80,13 @@ const addNewUser = async (req, res) => {
 }
 
 const deleteUser = async (req, res) => {
-  const { _id } = req.body
+  const _id = req.params.id
   if (String(_id) === String(req.user._id)) {
     return res.status(400).json({ ok: false, message: 'You cannot delete your own account' })
   }
   try {
     const removed = await User.deleteOne({ _id })
+    if (!removed.deletedCount) return res.status(404).json({ ok: false, message: 'User not found' })
     res.send({ removed })
   }
   catch (error) {
@@ -101,7 +96,8 @@ const deleteUser = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-  const { _id, username, role } = req.body
+  const _id = req.params.id
+  const { username, role } = req.body
   if (String(_id) === String(req.user._id) && role && role !== 'admin') {
     return res.status(400).json({ ok: false, message: 'You cannot remove your own admin role' })
   }
@@ -119,4 +115,4 @@ const updateUser = async (req, res) => {
   }
 }
 
-module.exports = { register, login, verify_token, findAllUsers, addNewUser, deleteUser, updateUser }
+module.exports = { register, login, me, findAllUsers, addNewUser, deleteUser, updateUser }

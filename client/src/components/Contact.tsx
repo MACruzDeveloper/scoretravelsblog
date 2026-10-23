@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { URL } from '../config'
+import { API } from '../config'
 import Msgbox from './common/Msgbox'
 import { validateEmail, postData } from '@utils/utils'
 
@@ -27,7 +27,7 @@ const Contact = () => {
 
     if (validateEmail(data.email)) {
       setIsSending(true)
-      postData(`${URL}/emails/send_email`, data)
+      postData(`${API}/contact`, data)
         .then((res) => {
           if (!res?.data?.ok) throw new Error(res?.data?.message || 'Send failed')
           nameInput.value = ""

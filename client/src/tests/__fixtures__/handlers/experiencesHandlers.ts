@@ -5,11 +5,11 @@
 
 import { http, HttpResponse } from 'msw'
 import { mockExperiences } from '../data/experiences.fixture'
-import { URL } from '@/config'
+import { API } from '@/config'
 
 export const experiencesHandlers = [
   // GET /experiences
-  http.get(`${URL}/experiences`, ({ request }) => {
+  http.get(`${API}/experiences`, ({ request }) => {
     const url = new URL(request.url)
     const category = url.searchParams.get('category')
     const city = url.searchParams.get('city')
@@ -39,7 +39,7 @@ export const experiencesHandlers = [
   }),
 
   // GET /experiences/:id
-  http.get(`${URL}/experiences/:id`, ({ params }) => {
+  http.get(`${API}/experiences/:id`, ({ params }) => {
     const { id } = params
     const experience = mockExperiences.find((exp) => exp.id === id)
 
@@ -63,7 +63,7 @@ export const experiencesHandlers = [
   }),
 
   // POST /experiences (crear nueva)
-  http.post(`${URL}/experiences`, async ({ request }) => {
+  http.post(`${API}/experiences`, async ({ request }) => {
     const body = await request.json()
     const { title, description, category, city, score } = body as {
       title: string
@@ -105,7 +105,7 @@ export const experiencesHandlers = [
   }),
 
   // PUT /experiences/:id (editar)
-  http.put(`${URL}/experiences/:id`, async ({ params, request }) => {
+  http.put(`${API}/experiences/:id`, async ({ params, request }) => {
     const { id } = params
     const body = await request.json()
     const experience = mockExperiences.find((exp) => exp.id === id)
@@ -132,7 +132,7 @@ export const experiencesHandlers = [
   }),
 
   // DELETE /experiences/:id
-  http.delete(`${URL}/experiences/:id`, ({ params }) => {
+  http.delete(`${API}/experiences/:id`, ({ params }) => {
     const { id } = params
     const experience = mockExperiences.find((exp) => exp.id === id)
 

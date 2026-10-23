@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { postData } from '@/utils/utils'
+import { deleteData } from '@/utils/utils'
 import { sortBy } from '@/utils/collections'
 import FormattedDate from '@/components/common/FormattedDate'
 import { MdDelete } from 'react-icons/md'
 import { useCommentsStore } from '@/store/commentsStore'
-import { URL } from '../../config'
+import { API } from '../../config'
 import Msgbox from '@/components/common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -20,8 +20,7 @@ const Comments = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      const url = `${URL}/admin/comments/delete`
-      await postData(url, { _id: id })
+      await deleteData(`${API}/comments/${id}`)
       await fetchComments(true)
       setMessage({ body: `Comment deleted!`, classname: 'msg_ok' })
     } catch (error) {

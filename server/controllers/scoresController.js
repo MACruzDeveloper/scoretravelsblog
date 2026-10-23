@@ -36,7 +36,7 @@ class scoresController {
   }
 
   async deleteScore(req, res) {
-    const { _id } = req.body;
+    const _id = req.params.id;
     try {
       const existing = await scores.findById(_id);
       if (!existing) return res.status(404).json({ ok: false, message: 'Score not found' })
@@ -51,7 +51,8 @@ class scoresController {
   }
 
   async updateScore(req, res) {
-    const { _id, score } = req.body;
+    const _id = req.params.id;
+    const { score } = req.body;
     try {
       const existing = await scores.findById(_id);
       if (!existing) return res.status(404).json({ ok: false, message: 'Score not found' })

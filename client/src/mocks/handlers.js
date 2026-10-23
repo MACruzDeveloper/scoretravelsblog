@@ -1,16 +1,16 @@
 import { http, HttpResponse } from 'msw'
-import { URL } from '../config'
+import { API } from '../config'
 
 export const handlers = [
-  http.get(`${URL}/admin/categories`, async () => {
+  http.get(`${API}/categories`, async () => {
     return HttpResponse.json([])
   }),
 
-  http.get(`${URL}/admin/experiences`, async () => {
+  http.get(`${API}/experiences`, async () => {
     return HttpResponse.json([])
   }),
 
-  http.get(`${URL}/admin/experiences/:id`, async ({ params }) => {
+  http.get(`${API}/experiences/:id`, async ({ params }) => {
     return HttpResponse.json({
         _id: params.id,
         title: 'Test experience',
@@ -19,11 +19,11 @@ export const handlers = [
     })
   }),
 
-  http.get(`${URL}/admin/scores`, async () => {
+  http.get(`${API}/scores`, async () => {
     return HttpResponse.json([])
   }),
 
-  http.get(`${URL}/admin/comments`, async () => {
+  http.get(`${API}/comments`, async () => {
     return HttpResponse.json([])
   })
 ]

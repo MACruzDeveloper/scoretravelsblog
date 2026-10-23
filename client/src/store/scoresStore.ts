@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { getData } from '@utils/utils'
 
-import { URL } from '../config'
+import { API } from '../config'
 
 export interface ScoreType {
   readonly _id: string
@@ -29,7 +29,7 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${URL}/admin/scores`)
+      const response = await getData(`${API}/scores`)
       set({ scores: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false })

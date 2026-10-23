@@ -35,9 +35,10 @@ class commentsController {
   }
 
   async deleteComment(req, res) {
-    const { _id } = req.body;
+    const _id = req.params.id;
     try {
       const removed = await comments.deleteOne({ _id });
+      if (!removed.deletedCount) return res.status(404).json({ ok: false, message: 'Comment not found' })
       res.send({ removed });
     }
     catch (error) {
@@ -48,7 +49,8 @@ class commentsController {
 
   // Admins can only moderate the text; author and experience stay unchanged
   async updateComment(req, res) {
-    const { _id, content } = req.body;
+    const _id = req.params.id;
+    const { content } = req.body;
     try {
       const updated = await comments.updateOne({ _id }, { content });
       res.send({ updated });

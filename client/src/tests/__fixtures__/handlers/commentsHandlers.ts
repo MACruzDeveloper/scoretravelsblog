@@ -5,11 +5,11 @@
 
 import { http, HttpResponse } from 'msw'
 import { mockComments } from '../data/comments.fixture'
-import { URL } from '@/config'
+import { API } from '@/config'
 
 export const commentsHandlers = [
   // GET /comments (todos)
-  http.get(`${URL}/comments`, () => {
+  http.get(`${API}/comments`, () => {
     return HttpResponse.json(
       {
         success: true,
@@ -20,7 +20,7 @@ export const commentsHandlers = [
   }),
 
   // GET /comments/:experienceId
-  http.get(`${URL}/comments/:experienceId`, ({ params }) => {
+  http.get(`${API}/comments/:experienceId`, ({ params }) => {
     const { experienceId } = params
     const comments = mockComments.filter((c) => c.experienceId === experienceId)
 
@@ -34,7 +34,7 @@ export const commentsHandlers = [
   }),
 
   // POST /comments (crear nuevo)
-  http.post(`${URL}/comments`, async ({ request }) => {
+  http.post(`${API}/comments`, async ({ request }) => {
     const body = await request.json()
     const { experienceId, userId, text, rating } = body as {
       experienceId: string

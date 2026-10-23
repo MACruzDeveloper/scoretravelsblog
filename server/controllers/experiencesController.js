@@ -74,7 +74,7 @@ class experiencesController {
   }
 
   async deleteExperience(req, res) {
-    let { _id } = req.body
+    const _id = req.params.id
     try {
       const existing = await experiences.findById(_id)
       if (!existing) return res.status(404).json({ ok: false, message: 'Experience not found' })
@@ -92,7 +92,7 @@ class experiencesController {
     let params = req.body
     let currentExp
     try {
-      currentExp = await experiences.findById(params._id)
+      currentExp = await experiences.findById(req.params.id)
     } catch (error) {
       console.error('Fetch experience failed:', error.message)
       return res.status(500).json({ ok: false, message: 'Error updating experience' })
@@ -128,7 +128,7 @@ class experiencesController {
 
     try {
       await experiences.updateOne(
-        { _id: params._id },
+        { _id: req.params.id },
         {
           image,
           images,
@@ -138,7 +138,7 @@ class experiencesController {
           content: params.content,
         }
       )
-      const updated = await experiences.findById(params._id).select('-userId').populate('city')
+      const updated = await experiences.findById(req.params.id).select('-userId').populate('city')
       // Images dropped in this edit are cleaned up if nothing else uses them
       const kept = new Set(getExperienceImages({ image, images }))
       const removedImages = await removeUnusedImages(getExperienceImages(currentExp).filter((name) => !kept.has(name)))

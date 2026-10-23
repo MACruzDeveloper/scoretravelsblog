@@ -70,6 +70,18 @@ export const postData = async (url, body, options = {}) => {
   })
 }
 
+export const patchData = async (url, body, options = {}) => {
+  return fetchData(url, {
+    method: 'PATCH',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    },
+    body: JSON.stringify(body)
+  })
+}
+
 export const deleteData = async (url, options = {}) => {
   return fetchData(url, { method: 'DELETE', ...options })
 }

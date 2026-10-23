@@ -1,10 +1,10 @@
 import { useState, useEffect, useContext, ChangeEvent, useMemo } from 'react'
-import { postData } from '@/utils/utils'
+import { postData, patchData, deleteData } from '@/utils/utils'
 import FormattedDate from '@/components/common/FormattedDate'
 import { sortBy } from '@/utils/collections'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle, MdAddCircleOutline } from 'react-icons/md'
 import { useExperienceStore, Experience, City } from '@/store/experienceStore'
-import { URL } from '../../../config'
+import { URL, API } from '../../../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import AddExperience from './AddExperience'
 import SelectCategories from '@/components/common/SelectCategories'
@@ -44,8 +44,7 @@ const Experiences = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      const url = `${URL}/admin/experiences/delete`
-      await postData(url, { _id: id })
+      await deleteData(`${API}/experiences/${id}`)
       setRefreshTrigger(prev => prev + 1)
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
     } catch (error) {
@@ -88,7 +87,6 @@ const Experiences = () => {
       city: experience.city && typeof experience.city === 'object' ? experience.city._id : (experience.city || null),
       category: experience.category,
       content: experience.content,
-      score: experience.score
     })
     // Set selected city if experience has a city object
     if (experience.city && typeof experience.city === 'object') {
@@ -127,7 +125,7 @@ const Experiences = () => {
       let cityId = newValues.city  // mantiene la ciudad existente por defecto
 
       if (selectedCity) {
-        const cityRes = await postData(`${URL}/admin/cities/add`, selectedCity)
+        const cityRes = await postData(`${API}/cities`, selectedCity)
         if (cityRes.data && cityRes.data.city) {
           cityId = cityRes.data.city._id
         } else if ((cityRes as any).city) {
@@ -144,16 +142,13 @@ const Experiences = () => {
 
       const validFilenames = selectedFilenames.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
 
-      await postData(`${URL}/admin/experiences/update`, {
-        _id: id,
-        user: newValues.user,
+      await patchData(`${API}/experiences/${id}`, {
         title: newValues.title,
         category: newValues.category,
         city: cityId,
         image: validFilenames[0] || '',
         images: validFilenames,
         content: newValues.content,
-        score: newValues.score,
       })
 
       setRefreshTrigger(prev => prev + 1)
@@ -282,11 +277,8 @@ const Experiences = () => {
             )}
           </div>
           <div className="tCol center">
-            {updateActive === ele._id ? (
-              <input type="text" name="score" className="form_control" placeholder="" value={newValues?.score?.toString() || ''} onChange={handleChangeUpdate} />
-            ) : (
-              <span>{ele.score}</span>
-            )}
+            {/* Read only: average of the votes, computed by the server */}
+            <span>{ele.score ?? '-'}</span>
           </div>
           <div className="tCol center">
             <TableActions actions={actions} item={ele} />

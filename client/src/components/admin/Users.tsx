@@ -1,9 +1,9 @@
 import { useState, useEffect, useContext, useMemo, ChangeEvent } from 'react'
-import { getData, postData } from '@utils/utils'
+import { getData, patchData, deleteData } from '@utils/utils'
 import { NavLink } from 'react-router-dom'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
-import { URL } from '../../config'
+import { API } from '../../config'
 import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -30,7 +30,7 @@ const Users = () => {
   ]
 
   const getUsers = async () => {
-    const url = `${URL}/users`
+    const url = `${API}/users`
     try {
       const res = await getData(url)
       setUsers(res.data)
@@ -67,9 +67,8 @@ const Users = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      const url = `${URL}/users/update`
       if (newRole !== '' && newUsername !== '') {
-        await postData(url, { _id: idx, role: newRole, username: newUsername })
+        await patchData(`${API}/users/${idx}`, { role: newRole, username: newUsername })
         setUpdateActive(null)
         const edited = users.find(e => e._id === idx)
         if (edited && edited.email === contextUser) setRole(newRole)
@@ -85,8 +84,7 @@ const Users = () => {
 
   const onClickDelete = async (idx: string) => {
     try {
-      const url = `${URL}/users/delete`
-      await postData(url, { _id: idx })
+      await deleteData(`${API}/users/${idx}`)
       getUsers()
       setMessage({ body: `User deleted!`, classname: 'msg_ok' })
     } catch (error) {

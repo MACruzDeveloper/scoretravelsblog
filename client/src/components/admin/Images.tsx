@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react'
-import { deleteData, getData, postData } from '@utils/utils'
+import { deleteData, getData, patchData } from '@utils/utils'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
-import { URL } from '../../config'
+import { URL, API } from '../../config'
 import ImageUpload from './ImageUpload'
 import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
@@ -33,7 +33,7 @@ const Images = () => {
 
   const fetch_images = async () => {
     try {
-      const res = await getData(`${URL}/images/fetch_images`)
+      const res = await getData(`${API}/images`)
       const dataImages = res.data.images
       setImages(dataImages)
     } catch (error) {
@@ -57,8 +57,7 @@ const Images = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      const url = `${URL}/images/update_image`
-      await postData(url, { _id: idx, featured: featuredValues[idx] ?? false })
+      await patchData(`${API}/images/${idx}`, { featured: featuredValues[idx] ?? false })
       setUpdateActive(null)
       setFeaturedValues(prev => {
         const next = { ...prev }
@@ -72,10 +71,9 @@ const Images = () => {
     }
   }
 
-  const onClickDelete = async (idx: string, filename: string) => {
+  const onClickDelete = async (idx: string) => {
     try {
-      const url = `${URL}/images/delete_image/${idx}/${filename}`
-      await deleteData(url)
+      await deleteData(`${API}/images/${idx}`)
       fetch_images()
       setMessage({ body: `Image removed!`, classname: 'msg_ok' })
     } catch (error) {
@@ -137,7 +135,7 @@ const Images = () => {
         key: 'delete',
         icon: <MdDelete />,
         title: 'Remove',
-        onClick: () => onClickDelete(item._id, item.filename),
+        onClick: () => onClickDelete(item._id),
       },
     ]
 

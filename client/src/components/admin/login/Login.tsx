@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import { postData } from '@utils/utils'
 import { useNavigate } from 'react-router-dom'
-import { URL } from '../../../config'
+import { API } from '../../../config'
 import Msgbox from '@common/Msgbox'
 
 type PropsLogin = {
@@ -31,7 +31,7 @@ const Login = ({ login }: PropsLogin) => {
     if (isLoggingIn) return
     setIsLoggingIn(true)
     try {
-      const response = await postData(`${URL}/users/login`, {
+      const response = await postData(`${API}/auth/login`, {
         email: values.email,
         password: values.password
       })

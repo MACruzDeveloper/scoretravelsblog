@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
-import { postData } from '@utils/utils'
+import { deleteData } from '@utils/utils'
 import { MdDelete } from 'react-icons/md'
 import { useScoresStore } from '@store/scoresStore'
-import { URL } from '../../config'
+import { API } from '../../config'
 import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -18,8 +18,7 @@ const Scores = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      const url = `${URL}/admin/scores/delete`
-      await postData(url, { _id: id })
+      await deleteData(`${API}/scores/${id}`)
       await fetchScores(true)
       setMessage({ body: `Score deleted!`, classname: 'msg_ok' })
     } catch (error) {

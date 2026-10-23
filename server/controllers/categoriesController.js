@@ -27,10 +27,11 @@ class categoriesController {
   }
 
   async deleteCategory(req, res) {
-    let { name } = req.body
+    const _id = req.params.id
 
     try {
-      const removed = await categories.deleteOne({ name: name })
+      const removed = await categories.deleteOne({ _id })
+      if (!removed.deletedCount) return res.status(404).json({ ok: false, message: 'Category not found' })
       res.send({ removed })
     }
     catch (error) {
@@ -42,7 +43,7 @@ class categoriesController {
     let params = req.body
     try {
       const updated = await categories.updateOne(
-        { _id: params._id }, { name: params.name, description: params.description }
+        { _id: req.params.id }, { name: params.name, description: params.description }
       )
       res.send({ updated })
     }
@@ -55,7 +56,7 @@ class categoriesController {
 
   async findOneCategory(req, res) {
     try {
-      const cat = await categories.findOne({ name: req.params.category })
+      const cat = await categories.findById(req.params.id)
       if (!cat) return res.status(404).json({ ok: false, message: 'Category not found' })
       res.send(cat)
     }

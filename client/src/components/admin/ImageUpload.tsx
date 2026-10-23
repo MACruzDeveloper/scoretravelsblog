@@ -1,6 +1,6 @@
 import { useState, useRef, ChangeEvent, FormEvent } from 'react'
 import { checkFileSize, getToken } from '@utils/utils'
-import { URL } from '../../config'
+import { URL, API } from '../../config'
 import Msgbox, { ParamsMsgBox } from '@common/Msgbox'
 
 type propsImageUpload = {
@@ -75,7 +75,7 @@ const ImageUpload = ({
 
     try {
       const token = getToken()
-      const response = await fetch(`${URL}/images/upload`, {
+      const response = await fetch(`${API}/images`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: data,

@@ -3,7 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/mocks/server'
-import { URL } from '@/config'
+import { API } from '@/config'
 import Experience from '@/components/experiences/Experience'
 
 const renderExperience = () => render(
@@ -25,7 +25,7 @@ describe('Experience', () => {
 
   it('shows the default image when the experience has no photos', async () => {
     server.use(
-      http.get(`${URL}/admin/experiences/experience-1`, () =>
+      http.get(`${API}/experiences/experience-1`, () =>
         HttpResponse.json({ _id: 'experience-1', title: 'No photos trip', date: '2024-01-01', images: [], image: '' })
       )
     )

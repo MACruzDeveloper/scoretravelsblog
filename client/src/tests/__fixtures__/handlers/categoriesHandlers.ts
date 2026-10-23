@@ -5,11 +5,11 @@
 
 import { http, HttpResponse } from 'msw'
 import { mockCategories } from '../data/categories.fixture'
-import { URL } from '@/config'
+import { API } from '@/config'
 
 export const categoriesHandlers = [
   // GET /categories
-  http.get(`${URL}/categories`, () => {
+  http.get(`${API}/categories`, () => {
     return HttpResponse.json(
       {
         success: true,
@@ -20,7 +20,7 @@ export const categoriesHandlers = [
   }),
 
   // GET /categories/:id
-  http.get(`${URL}/categories/:id`, ({ params }) => {
+  http.get(`${API}/categories/:id`, ({ params }) => {
     const { id } = params
     const category = mockCategories.find((cat) => cat.id === id)
 

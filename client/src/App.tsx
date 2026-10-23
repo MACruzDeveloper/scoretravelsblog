@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { postData, getToken } from './utils/utils'
+import { getData, getToken } from './utils/utils'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Helmet, HelmetProvider } from 'react-helmet-async'
-import { URL } from './config'
+import { API } from './config'
 import AdminLayout from './layouts/AdminLayout'
 import Header from '@/components/common/Header'
 import homeVideo from './assets/videos/home.mp4'
@@ -47,13 +47,16 @@ function App() {
 
   const verify_token = useCallback(async () => {
     try {
-      const response = await postData(`${URL}/users/verify_token`, {}, {
-        headers: { Authorization: token ? `Bearer ${token}` : '' }
-      })
-      if (response.data.succ) {
-        setRole(response.data.succ.role)
-        setUser(response.data.succ.email)
-        setUsername(response.data.succ.username || response.data.succ.email)
+      if (!token) {
+        setIsLoggedIn(false)
+        return
+      }
+      const response = await getData(`${API}/auth/me`)
+      const me = response.data.user
+      if (me) {
+        setRole(me.role)
+        setUser(me.email)
+        setUsername(me.username || me.email)
         setIsLoggedIn(true)
       } else {
         // Stale or invalid token: clear it so the app redirects to /login

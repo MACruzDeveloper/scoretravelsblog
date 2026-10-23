@@ -50,14 +50,15 @@ const fetch_images = async (req, res) => {
   }
 };
 
+// The filename comes from the database record, never from the URL
 const delete_image = async (req, res) => {
-  const { _id, filename } = req.params;
-  const filePath = resolveUpload(filename);
-  if (!filePath) return res.status(400).json({ ok: false, message: 'Invalid filename' });
-
+  const _id = req.params.id;
   try {
-    const image = await Images.findOne({ _id, filename });
+    const image = await Images.findById(_id);
     if (!image) return res.status(404).json({ ok: false, message: 'Image not found' });
+    const filename = image.filename;
+    const filePath = resolveUpload(filename);
+    if (!filePath) return res.status(400).json({ ok: false, message: 'Invalid filename' });
 
     const usedBy = await countExperiencesUsing(filename);
     if (usedBy) {
@@ -74,7 +75,8 @@ const delete_image = async (req, res) => {
 };
 
 const update_image = async (req, res) => {
-  const { _id, featured } = req.body;
+  const _id = req.params.id;
+  const { featured } = req.body;
   try {
     const updated = await Images.updateOne({ _id }, { featured });
     res.send({ updated });

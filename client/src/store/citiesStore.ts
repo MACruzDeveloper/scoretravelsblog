@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { getData } from '@utils/utils'
-import { URL } from '../config'
+import { API } from '../config'
 import { City } from './experienceStore'
 
 interface CitiesState {
@@ -35,7 +35,7 @@ export const useCitiesStore = create<CitiesState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${URL}/admin/cities`)
+      const response = await getData(`${API}/cities`)
       const cities = response.data
 
       // Extract unique continents and countries
@@ -73,7 +73,7 @@ export const useCitiesStore = create<CitiesState>((set, get) => ({
 
   fetchCitiesByContinent: async (continent: string) => {
     try {
-      const response = await getData(`${URL}/admin/cities/by-continent/${continent}`)
+      const response = await getData(`${API}/cities/by-continent/${continent}`)
       return response.data
     } catch (error: any) {
       console.error('Error fetching cities by continent:', error)
@@ -83,7 +83,7 @@ export const useCitiesStore = create<CitiesState>((set, get) => ({
 
   fetchCitiesByCountry: async (country: string) => {
     try {
-      const response = await getData(`${URL}/admin/cities/by-country/${country}`)
+      const response = await getData(`${API}/cities/by-country/${country}`)
       return response.data
     } catch (error: any) {
       console.error('Error fetching cities by country:', error)

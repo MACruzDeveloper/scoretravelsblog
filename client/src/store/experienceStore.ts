@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { getData } from '@utils/utils'
 
-import { URL } from '../config'
+import { API } from '../config'
 
 export interface City {
   _id: string
@@ -48,7 +48,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${URL}/admin/experiences`)
+      const response = await getData(`${API}/experiences`)
       set({ experiences: response.data, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false })

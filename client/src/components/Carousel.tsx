@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getData } from '@utils/utils'
-import { URL } from '../config'
+import { URL, API } from '../config'
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Spinner from './common/Spinner'
 import video from '../assets/videos/home.mp4'
@@ -52,7 +52,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
 
     const fetchImages = async () => {
       try {
-        const res = await getData(`${URL}/images/fetch_images`)
+        const res = await getData(`${API}/images`)
         const data = res.data.images
         const imagesFeatured = data?.filter((item: CarouselSlide) => item.featured)
           .map((image: CarouselSlide, index: number) => ({

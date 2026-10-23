@@ -1,14 +1,15 @@
-const express     = require('express'), 
-    router        = express.Router(),
-    controller    = require('../controllers/experiencesController');
-const { requireAdmin } = require('../middleware/auth');
-const { validate } = require('../middleware/validate');
-const schemas = require('../utils/schemas');
+const router = require('express').Router()
+const controller = require('../controllers/experiencesController')
+const { requireAdmin } = require('../middleware/auth')
+const { validate } = require('../middleware/validate')
+const schemas = require('../utils/schemas')
 
-router.get('/', controller.findAllExperiences);
-router.get('/:id', validate(schemas.idParam, 'params'), controller.findExperience);
-router.post('/add', requireAdmin, validate(schemas.addExperience), controller.addNewExperience);
-router.post('/delete', requireAdmin, validate(schemas.byId), controller.deleteExperience);
-router.post('/update', requireAdmin, validate(schemas.updateExperience), controller.updateExperience);
+const byId = validate(schemas.idParam, 'params')
 
-module.exports = router;
+router.get('/', controller.findAllExperiences)
+router.get('/:id', byId, controller.findExperience)
+router.post('/', requireAdmin, validate(schemas.addExperience), controller.addNewExperience)
+router.patch('/:id', requireAdmin, byId, validate(schemas.updateExperience), controller.updateExperience)
+router.delete('/:id', requireAdmin, byId, controller.deleteExperience)
+
+module.exports = router

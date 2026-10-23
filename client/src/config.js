@@ -5,4 +5,7 @@ const localHosts = ['localhost', '127.0.0.1', '0.0.0.0']
 const URL = import.meta.env.VITE_API_URL
   || (localHosts.includes(window.location.hostname) ? 'http://localhost:3040' : window.location.origin)
 
-export { URL }
+// Base URL of the REST API
+const API = `${URL}/api`
+
+export { URL, API }
