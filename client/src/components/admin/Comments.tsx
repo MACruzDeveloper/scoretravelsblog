@@ -68,7 +68,7 @@ const Comments = () => {
 
     <Table label="Comments" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={5} />
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

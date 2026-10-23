@@ -291,9 +291,10 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 
 - [x] Server: 49 tests con `node:test` + Supertest + `mongodb-memory-server` (`npm test`, ~7 s): autenticación y tokens, permisos por rol, inyecciones, límites de peticiones, listado/filtros/facets/timeline, moderación, categorías/ciudades/comentarios/votos (integridad, cascadas, un voto por usuario), imágenes (subida, protección, limpieza) y errores/CORS/CSP. La app Express se separa del arranque (`app.js` / `index.js`) para poder probarla sin abrir puertos.
 - [x] Client: 71 tests (Vitest + Testing Library + MSW) cubriendo formularios, admin, moderación, tablas, mapa, stores y hooks.
-- [ ] Client: e2e con Playwright para 3-4 flujos críticos (registro → crear experiencia → moderar → votar).
-- [ ] Client: decidir qué hacer con el andamiaje de tests sin uso (`tests/__fixtures__`, `tests/utils/*`, `testing-library-utils.jsx`).
+- [x] e2e con Playwright (`npm run test:e2e` en `client`, ~6 s): registro → crear experiencia → pendiente → el admin la publica → votar y comentar, con dos navegadores (usuario y admin); protección del panel por sesión y rol; validación de formularios. Usan un servidor propio con MongoDB en memoria (`server/tests/e2e-server.js`) y un build del cliente aparte. También en el CI.
+- [x] Eliminado el andamiaje de tests sin uso (`__fixtures__` con mocks de una API anterior, helpers, carpetas vacías).
 - [x] `ci.yml`: cliente (lint, tipos, tests, build), servidor (lint, formato, tests con caché del binario de MongoDB) y auditoría de dependencias de producción; en `main` y `develop`. Dependabot semanal (npm cliente y servidor) y mensual (GitHub Actions).
+- [x] Encontrado con los e2e y corregido: el aviso `Msgbox` bloqueaba la página 3 s (ahora se cierra con clic o Escape), no repetía un mismo mensaje dos veces seguidas y no se anunciaba a lectores de pantalla; las estrellas de votar y el menú de cuenta del Navbar no tenían nombre accesible correcto.
 - [x] `deploy.ml` eliminado (extensión incorrecta, nunca se ejecutaba y apuntaba a Vercel sin haber despliegue).
 - [ ] Deploy (cuando lo haya): decidir estrategia (droplet + nginx o similar). Corregir `_doc/nginx-scoretravelsblog.conf` (B-12): servir `dist` desde nginx (`root` + `try_files $uri /index.html`) y hacer proxy solo de `/api` y `/static/images`.
 - [x] `client/dist` fuera del repo y en `.gitignore`. (A-12)

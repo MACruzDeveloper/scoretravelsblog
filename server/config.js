@@ -29,6 +29,11 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => value || path.join(__dirname, 'uploads', 'images')),
+  // Built client served by Express (the e2e tests use their own build)
+  CLIENT_DIST_DIR: z
+    .string()
+    .optional()
+    .transform((value) => value || path.join(__dirname, '..', 'client', 'dist')),
   SMTP_HOST: z.string().default('smtp-relay.brevo.com'),
   SMTP_PORT: z.coerce.number().int().default(587),
   SMTP_USER: z.string().optional(),
@@ -62,6 +67,7 @@ module.exports = {
   corsOrigins: env.CORS_ORIGINS,
   trustProxy: env.TRUST_PROXY,
   uploadsDir: env.UPLOADS_DIR,
+  clientDistDir: env.CLIENT_DIST_DIR,
   smtp: {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,

@@ -38,7 +38,7 @@ describe('Header', () => {
 
     expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin')
 
-    await user.click(screen.getByRole('button', { name: 'login' }))
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
     await user.click(screen.getByRole('button', { name: 'logout' }))
 
     expect(logout).toHaveBeenCalledOnce()

@@ -57,11 +57,12 @@ const Stars = ({ exp, onScored }: PropsStars) => {
           onMouseEnter={() => onHandleHover(i)}
           onMouseLeave={() => onHandleHover(-1)}
           onClick={() => onClickScore(i)}
+          aria-label={`Score ${i + 1} out of 5`}
         >{starHover === i ? <MdStar /> : <MdStarBorder />}</button>
       })
     }
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

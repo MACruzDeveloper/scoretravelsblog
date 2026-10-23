@@ -49,6 +49,6 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/utils/utils.js", "src/**/_*"],
+  "exclude": ["src/**/_*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

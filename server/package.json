@@ -16,7 +16,8 @@
     "migrate:data-model": "node scripts/migrate-data-model.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "e2e:server": "node tests/e2e-server.js"
   },
   "keywords": [],
   "author": "",

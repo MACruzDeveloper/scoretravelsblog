@@ -7,15 +7,15 @@ export const useMessage = () => {
   const [message, setMessage] = useState<ParamsMsgBox>({ body: '', classname: '' })
 
   // Stable functions: safe to use as effect or callback dependencies
-  const showOk = useCallback((body: string) => setMessage({ body, classname: 'msg_ok' }), [])
+  const showOk = useCallback((body: string) => setMessage({ body, classname: 'msg_ok', id: Date.now() }), [])
 
   const showError = useCallback((error: unknown, fallback: string) => {
     console.error(error)
-    setMessage({ body: getErrorMessage(error, fallback), classname: 'msg_error' })
+    setMessage({ body: getErrorMessage(error, fallback), classname: 'msg_error', id: Date.now() })
   }, [])
 
   // For validation messages that are not exceptions
-  const showWarning = useCallback((body: string) => setMessage({ body, classname: 'msg_error' }), [])
+  const showWarning = useCallback((body: string) => setMessage({ body, classname: 'msg_error', id: Date.now() }), [])
 
   return { message, showOk, showError, showWarning }
 }

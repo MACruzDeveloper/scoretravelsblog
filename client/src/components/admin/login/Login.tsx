@@ -47,7 +47,7 @@ const Login = ({ login }: PropsLogin) => {
       <button className="btn" disabled={isSubmitting}>login</button>
     </form>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

@@ -144,7 +144,7 @@ const Categories = () => {
 
     <Table label="Categories" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={10} />
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

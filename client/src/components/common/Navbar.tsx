@@ -79,7 +79,14 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
       <SearchForm />
 
       <div ref={refNavAdmin} className="navbar_login">
-        <button className={`btn_icon btn_login ${isLoggedIn && 'flex'}`} onClick={openNavAdmin} aria-label="login">
+        {/* The accessible name matches the visible text ("Sign In") */}
+        <button
+          className={`btn_icon btn_login ${isLoggedIn ? 'flex' : ''}`}
+          onClick={openNavAdmin}
+          aria-label={isLoggedIn ? 'Account menu' : 'Sign in'}
+          aria-haspopup="true"
+          aria-expanded={isOpenNavAdmin}
+        >
           {
             !isLoggedIn && !isMobile && 'Sign In'
           }
@@ -119,7 +126,7 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
       </div>
     </div>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </nav>
 }
 

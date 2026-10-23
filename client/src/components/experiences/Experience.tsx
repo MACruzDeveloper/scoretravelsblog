@@ -173,7 +173,7 @@ const Experience = ({ user }: PropsExperience) => {
             <Stars exp={exp} onScored={handleScored} />
           </div>
 
-          <Msgbox body={message.body} classname={message.classname} />
+          <Msgbox {...message} />
         </div>}
       </div>
 

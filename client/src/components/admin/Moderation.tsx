@@ -115,7 +115,7 @@ const Moderation = () => {
       })}
     </ul>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

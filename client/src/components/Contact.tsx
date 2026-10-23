@@ -70,7 +70,7 @@ const Contact = () => {
         </form>
       </div>
 
-      <Msgbox body={message.body} classname={message.classname} />
+      <Msgbox {...message} />
     </div>
   </div>
 }

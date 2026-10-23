@@ -61,7 +61,7 @@ const Register = ({ login }: PropsRegister) => {
       <p className="form_legal">By registering you accept the <NavLink to="/privacy">privacy policy</NavLink>.</p>
     </form>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

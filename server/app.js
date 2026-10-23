@@ -77,11 +77,11 @@ app.use('/static', express.static(path.join(__dirname, '../client/public'), { se
 // Missing static files are a real 404, not the SPA index.html
 app.use('/static', (req, res) => res.status(404).end())
 
-app.use(express.static(path.join(__dirname, '../client/dist'), { setHeaders: setAvifHeader }))
+app.use(express.static(config.clientDistDir, { setHeaders: setAvifHeader }))
 
 // Any other path is a client route: serve the SPA
 app.get('/{*splat}', function (req, res) {
-  res.sendFile(path.join(__dirname, '../client/dist', 'index.html'))
+  res.sendFile(path.join(config.clientDistDir, 'index.html'))
 })
 
 // =============== GLOBAL ERROR HANDLER =====================

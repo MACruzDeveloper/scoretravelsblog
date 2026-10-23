@@ -27,6 +27,11 @@ export default tseslint.config(
     },
   },
   {
+    // Playwright tests and config run in Node, not in the browser
+    files: ['e2e/**', 'playwright.config.ts'],
+    languageOptions: { globals: globals.node },
+  },
+  {
     files: ['src/tests/**', '**/*.test.{ts,tsx}'],
     languageOptions: {
       globals: { ...globals.node, ...globals.vitest },
