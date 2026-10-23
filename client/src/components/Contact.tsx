@@ -1,20 +1,21 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { NavLink } from 'react-router-dom'
-import { API } from '../config'
 import Msgbox from './common/Msgbox'
-import { validateEmail, postData } from '@utils/utils'
+import { validateEmail } from '@utils/utils'
+import { sendContactMessage } from '@/api/contact'
 
 const Contact = () => {
   const [isChecked, setIsChecked] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [message, setMessage] = useState({ body: '', classname: '' })
   
-  const handleSubmit = (event: any) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const nameInput = event.target.elements.name
-    const emailInput = event.target.elements.email
-    const messageInput = event.target.elements.message
-    const websiteInput = event.target.elements.website
+    const field = (name: string) => event.currentTarget.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement
+    const nameInput = field('name')
+    const emailInput = field('email')
+    const messageInput = field('message')
+    const websiteInput = field('website')
     const subject = "Here is the message: "
 
     const data = { 
@@ -27,9 +28,8 @@ const Contact = () => {
 
     if (validateEmail(data.email)) {
       setIsSending(true)
-      postData(`${API}/contact`, data)
-        .then((res) => {
-          if (!res?.data?.ok) throw new Error(res?.data?.message || 'Send failed')
+      sendContactMessage(data)
+        .then(() => {
           nameInput.value = ""
           emailInput.value = ""
           messageInput.value = ""

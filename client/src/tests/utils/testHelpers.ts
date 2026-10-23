@@ -44,15 +44,9 @@ export const setupLocalStorageMock = () => {
  */
 export const setupIntersectionObserverMock = () => {
   class MockIntersectionObserver {
-    observe(): void {
-      return null
-    }
-    disconnect(): void {
-      return null
-    }
-    unobserve(): void {
-      return null
-    }
+    observe(): void {}
+    disconnect(): void {}
+    unobserve(): void {}
   }
 
   Object.defineProperty(window, 'IntersectionObserver', {
@@ -109,7 +103,7 @@ export const expectErrorMessage = (message: string) => {
  * Mock para fetch de API (alternativa a MSW para tests específicos)
  */
 export const mockFetch = (
-  response: Record<string, any>,
+  response: Record<string, unknown>,
   status: number = 200
 ) => {
   globalThis.fetch = vi.fn(() =>
@@ -119,7 +113,7 @@ export const mockFetch = (
         headers: { 'Content-Type': 'application/json' },
       })
     )
-  ) as any
+  ) as typeof fetch
 }
 
 /**

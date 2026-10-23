@@ -2,26 +2,17 @@ import { NavLink } from 'react-router-dom'
 import FormattedDate from '@/components/common/FormattedDate'
 import { URL } from '../../config'
 import thumb from '@images/thumb.png'
-import { City } from '../../store/experienceStore'
+import type { Experience } from '@/api/types'
+import { cityOf, coverOf } from '@/utils/experience'
 import { MdArrowRightAlt } from "react-icons/md"
 
-export type PropsCard = {
-  _id: string
-  title: string
-  category?: string
-  city?: City | string
-  content?: string
-  date?: Date
-  image?: string
-  images?: string[]
-  score?: number,
+export type PropsCard = Pick<Experience, '_id' | 'title' | 'category' | 'city' | 'content' | 'date' | 'image' | 'images' | 'score'> & {
   lazy?: boolean
 }
 
 const Card = ({ _id, title, city, content, date, image, images, score, lazy }: PropsCard) => {
-  const countryName = city && typeof city === 'object' ? city.country : null
-  const validImages = images?.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
-  const cardImage = validImages && validImages.length ? validImages[0] : (image && image !== 'null' ? image : undefined)
+  const countryName = cityOf({ city })?.country
+  const cardImage = coverOf({ image, images })
 
   return <div className="card">
     <NavLink className="card_link" to={`/experience/${_id}`}>

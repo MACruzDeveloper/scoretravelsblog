@@ -5,7 +5,7 @@
 
 export interface MockDataOptions {
   count?: number
-  overrides?: Record<string, any>
+  overrides?: Record<string, unknown>
 }
 
 /**

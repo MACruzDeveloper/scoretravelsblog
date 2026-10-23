@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
+import { useState, useRef, ChangeEvent, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useOutsideClick from '@/hooks/useOutsideClick'
 import { MdSearch, MdClose } from 'react-icons/md'
 
 const SearchForm = () => {
-  const ref = useRef()
+  const ref = useRef<HTMLDivElement>(null)
   const [value, setValue] = useState('')
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
-  const [focusInput, setFocusInput] = useState(false)
   const navigate = useNavigate()
 
   const openSearchForm = () => {
@@ -35,17 +34,8 @@ const SearchForm = () => {
     }
   }
   
-  const watchInput = () => {
-    if (value.length > 0) {
-      setFocusInput(true)
-    } else {
-      setFocusInput(false)
-    }
-  }
-
-  useEffect(() => {
-    watchInput()
-  }, [value])
+  // The clear and search buttons only make sense with some text
+  const focusInput = value.length > 0
 
   useOutsideClick(ref, () => {
     if (isSearchFormOpen) setIsSearchFormOpen(false)

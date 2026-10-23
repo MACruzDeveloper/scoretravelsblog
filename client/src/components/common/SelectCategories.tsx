@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, ChangeEvent } from 'react'
 import { sortBy } from '@/utils/collections'
 import { useCategoriesStore } from '@/store/categoriesStore'
 
 export type PropsSelectCategories = {
-  handleChange: any
+  handleChange: (e: ChangeEvent<HTMLSelectElement>) => void
   selected?: string
 }
 

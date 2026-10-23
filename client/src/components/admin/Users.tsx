@@ -1,23 +1,17 @@
 import { useState, useEffect, useContext, useMemo, ChangeEvent } from 'react'
-import { getData, patchData, deleteData } from '@utils/utils'
+import { listUsers, updateUser, deleteUser } from '@/api/users'
+import type { Role, User } from '@/api/types'
 import { NavLink } from 'react-router-dom'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle } from 'react-icons/md'
-import { API } from '../../config'
 import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
 
-type User = {
-  _id: string
-  username?: string
-  email: string
-  role: string
-}
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([])
-  const [newRole, setNewRole] = useState('')
+  const [newRole, setNewRole] = useState<Role>('user')
   const [newUsername, setNewUsername] = useState('')
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [updateActive, setUpdateActive] = useState<string | null>(null)
@@ -30,10 +24,8 @@ const Users = () => {
   ]
 
   const getUsers = async () => {
-    const url = `${API}/users`
     try {
-      const res = await getData(url)
-      setUsers(res.data)
+      setUsers(await listUsers())
     } catch (error) {
       console.log(error)
     }
@@ -45,7 +37,7 @@ const Users = () => {
 
   const handleChangeNew = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.currentTarget
-    if (target) setNewRole(target.value)
+    if (target) setNewRole(target.value as Role)
   }
 
   const handleChangeUsername = (e: ChangeEvent<HTMLInputElement>) => {
@@ -67,8 +59,8 @@ const Users = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      if (newRole !== '' && newUsername !== '') {
-        await patchData(`${API}/users/${idx}`, { role: newRole, username: newUsername })
+      if (newUsername !== '') {
+        await updateUser(idx, { role: newRole, username: newUsername })
         setUpdateActive(null)
         const edited = users.find(e => e._id === idx)
         if (edited && edited.email === contextUser) setRole(newRole)
@@ -84,7 +76,7 @@ const Users = () => {
 
   const onClickDelete = async (idx: string) => {
     try {
-      await deleteData(`${API}/users/${idx}`)
+      await deleteUser(idx)
       getUsers()
       setMessage({ body: `User deleted!`, classname: 'msg_ok' })
     } catch (error) {

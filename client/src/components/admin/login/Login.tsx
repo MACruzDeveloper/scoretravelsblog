@@ -1,8 +1,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { postData } from '@utils/utils'
+import { login as apiLogin } from '@/api/auth'
 import { useNavigate } from 'react-router-dom'
-import { API } from '../../../config'
 import Msgbox from '@common/Msgbox'
 import PasswordInput from '@common/PasswordInput'
 import type { LoginSession } from '@/App'
@@ -31,14 +30,10 @@ const Login = ({ login }: PropsLogin) => {
     if (isLoggingIn) return
     setIsLoggingIn(true)
     try {
-      const response = await postData(`${API}/auth/login`, {
-        email: values.email,
-        password: values.password
-      })
-
-      login(response.data)
-      // Only admins have something to do in the admin panel
-      navigate(response.data.role === 'admin' ? '/admin' : '/')
+      const session = await apiLogin(values.email, values.password)
+      login(session)
+      // Admins go to the panel; users to the home (they reach their experiences from the menu)
+      navigate(session.role === 'admin' ? '/admin' : '/')
     }
     catch (error) {
       console.log(error)

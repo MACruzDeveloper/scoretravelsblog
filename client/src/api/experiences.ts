@@ -1,10 +1,10 @@
-import { getData, patchData } from '@/utils/utils'
+import { deleteData, getData, patchData, postData } from '@/utils/utils'
 import { API } from '@/config'
-import type { Experience, City } from '@/store/experienceStore'
-import type { Comment } from '@/store/commentsStore'
+import type { City, Comment, Experience, ExperienceStatus } from './types'
+
+export type { ExperienceStatus }
 
 export type ExperienceSort = '-date' | 'date' | '-score' | 'score' | 'title' | '-title'
-export type ExperienceStatus = 'pending' | 'published' | 'rejected'
 // 'public': published only; 'mine': own experiences (session); 'all': every experience (admin)
 export type ExperienceScope = 'public' | 'mine' | 'all'
 
@@ -51,7 +51,7 @@ export const toQueryString = (params: ExperienceListParams): string => {
 }
 
 const get = async <T>(path: string, signal?: AbortSignal): Promise<T> =>
-  (await getData(`${API}${path}`, { signal })).data as T
+  (await getData<T>(`${API}${path}`, { signal })).data
 
 export const listExperiences = (params: ExperienceListParams = {}, signal?: AbortSignal) =>
   get<Paginated<Experience>>(`/experiences${toQueryString(params)}`, signal)
@@ -84,4 +84,26 @@ export const listAllExperiences = async (params: Pick<ExperienceListParams, 'sco
 
 // Admin decision on a pending experience; the reason is shown to the author
 export const reviewExperience = async (id: string, status: Exclude<ExperienceStatus, 'pending'>, reason = '') =>
-  (await patchData(`${API}/experiences/${id}/review`, { status, reason: reason || undefined })).data
+  (await patchData<{ updated: Experience }>(`${API}/experiences/${id}/review`, { status, reason: reason || undefined })).data
+
+// Fields sent when creating or editing; the author comes from the session
+export type ExperienceData = {
+  title?: string
+  content?: string
+  category?: string
+  city?: string | null
+  image?: string
+  images?: string[]
+}
+
+// A user's experience is created pending review; the admin's is published
+export const createExperience = async (data: ExperienceData & { title: string }) =>
+  (await postData<Experience>(`${API}/experiences`, data)).data
+
+// A user's edit sends the experience back to review
+export const updateExperience = async (id: string, data: ExperienceData) =>
+  (await patchData<{ updated: Experience; removedImages: string[] }>(`${API}/experiences/${id}`, data)).data
+
+export const deleteExperience = async (id: string) => {
+  await deleteData(`${API}/experiences/${id}`)
+}

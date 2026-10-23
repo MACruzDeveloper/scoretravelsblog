@@ -31,5 +31,9 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.node, ...globals.vitest },
     },
+    rules: {
+      // Test helpers are never hot reloaded
+      'react-refresh/only-export-components': 'off',
+    },
   },
 )

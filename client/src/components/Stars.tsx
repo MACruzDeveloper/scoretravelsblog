@@ -1,8 +1,7 @@
 import { useState, useContext } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { postData } from '@utils/utils'
+import { vote } from '@/api/scores'
 import { MdStar, MdStarBorder } from 'react-icons/md'
-import { API } from '../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import Msgbox from './common/Msgbox'
 
@@ -38,9 +37,8 @@ const Stars = ({ exp, onScored }: PropsStars) => {
 
     setIsSending(true)
     try {
-      const url = `${API}/scores`
-      const response = await postData(url, { experience: exp, score: i+1 })
-      onScored?.(response.data.experienceScore, response.data.votes)
+      const result = await vote(exp, i + 1)
+      onScored?.(result.experienceScore, result.votes)
       setMessage({ body: `Score added!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)

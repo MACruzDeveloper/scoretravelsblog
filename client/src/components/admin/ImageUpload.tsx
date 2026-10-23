@@ -1,6 +1,7 @@
 import { useState, useRef, ChangeEvent, FormEvent } from 'react'
-import { checkFileSize, getToken } from '@utils/utils'
-import { URL, API } from '../../config'
+import { checkFileSize } from '@utils/utils'
+import { uploadImage as uploadImageApi } from '@/api/images'
+import { URL } from '../../config'
 import Msgbox, { ParamsMsgBox } from '@common/Msgbox'
 
 type propsImageUpload = {
@@ -68,28 +69,10 @@ const ImageUpload = ({
   }
 
   const uploadImage = async (file: File) => {
-    const data = new FormData()
-    data.append('file', file)
-    data.append('title', valueInputAdd || '')
     setLoadingFile(true)
 
     try {
-      const token = getToken()
-      const response = await fetch(`${API}/images`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: data,
-      })
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || response.statusText)
-      }
-      const res = await response.json()
-      const filename = res.filename || res.file?.filename
-      if (!filename) {
-        throw new Error('Upload response missing filename')
-      }
-      console.log('upload success', filename, 'title=', valueInputAdd)
+      const { filename } = await uploadImageApi(file, valueInputAdd || '')
       if (addSelectedFilename) {
         addSelectedFilename(filename)
       }

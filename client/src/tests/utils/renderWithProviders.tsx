@@ -19,9 +19,8 @@ export const resetAllStores = () => {
     // Resetear cada store a su estado inicial
     // El patrón es: store.getState().reset() o similar
     // Esto depende de cómo estén implementados los stores
-    Object.keys(experienceStore).forEach((key) => {
-      const store = (experienceStore as any)[key]
-      if (store?.setState) {
+    Object.values(experienceStore).forEach((store: unknown) => {
+      if (store && typeof store === 'object' && 'setState' in store && typeof store.setState === 'function') {
         store.setState({
           experiences: [],
           loading: false,

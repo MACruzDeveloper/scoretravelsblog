@@ -13,8 +13,8 @@ type PropsNavbar = {
 }
 
 const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
-  const refNav = useRef()
-  const refNavAdmin = useRef()
+  const refNav = useRef<HTMLDivElement>(null)
+  const refNavAdmin = useRef<HTMLDivElement>(null)
   const { username, role } = useContext(MyGlobalContext)
   const [isOpenNav, setIsOpenNav] = useState(false)
   const [isOpenNavAdmin, setIsOpenNavAdmin] = useState(false)

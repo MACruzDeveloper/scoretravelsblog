@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { getData } from '@utils/utils'
-import { URL, API } from '../config'
+import { useState, useEffect, useCallback } from 'react'
+import { URL } from '../config'
+import { listImages } from '@/api/images'
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md'
 import Spinner from './common/Spinner'
 import video from '../assets/videos/home.mp4'
@@ -24,9 +24,11 @@ type CarouselProps = {
   hasVideo?: boolean
 }
 
+// Home video as the first slide
+const videoSlideFor = (title?: string): CarouselSlide => ({ _id: 'video-slide', filename: video, type: 'video', title })
+
 const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, showTitle = true, hasVideo = false }: CarouselProps) => {
-  const videoSlide: CarouselSlide = { _id: 'video-slide', filename: video, type: 'video', title }
-  const [slideItems, setSlideItems] = useState<Array<CarouselSlide>>(hasVideo ? [videoSlide] : [])
+  const [slideItems, setSlideItems] = useState<Array<CarouselSlide>>(hasVideo ? [videoSlideFor(title)] : [])
   const [slideIndex, setSlideIndex] = useState<number>(0)
   const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
   // Autoplay keeps running after manual navigation
@@ -44,33 +46,32 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
   useEffect(() => {
     if (images && images.length > 0) {
       const validImages = images
-        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0 && item !== 'null')
-        .map((filename, index) => ({ _id: `image-${index}`, filename, type: 'image' } as CarouselSlide))
-      setSlideItems([...(hasVideo ? [videoSlide] : []), ...validImages])
+        .filter((item) => item.trim().length > 0)
+        .map((filename, index): CarouselSlide => ({ _id: `image-${index}`, filename, type: 'image' }))
+      setSlideItems([...(hasVideo ? [videoSlideFor(title)] : []), ...validImages])
       setSlideIndex(0)
       return
     }
 
     const fetchImages = async () => {
       try {
-        const res = await getData(`${API}/images`)
-        const data = res.data.images
-        const imagesFeatured = data?.filter((item: CarouselSlide) => item.featured)
-          .map((image: CarouselSlide, index: number) => ({
+        const imagesFeatured = (await listImages())
+          .filter((item) => item.featured)
+          .map((image, index): CarouselSlide => ({
             _id: `image-${index}`,
             filename: image.filename,
             type: 'image',
             title: image.title,
             featured: image.featured
           })) || []
-        setSlideItems([...(hasVideo ? [videoSlide] : []), ...imagesFeatured])
+        setSlideItems([...(hasVideo ? [videoSlideFor(title)] : []), ...imagesFeatured])
       } catch (error) {
         console.log('error =>', error)
       }
     }
 
     fetchImages()
-  }, [images, title])
+  }, [images, title, hasVideo])
 
   useEffect(() => {
     if (!transitioning) return
@@ -103,12 +104,12 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
   const isPrevDisabled = slideIndex === 0 || numSlides <= 1
   const isNextDisabled = slideIndex === numSlides - 1 || numSlides <= 1
 
-  const changeSlide = (nextIndex: number) => {
+  const changeSlide = useCallback((nextIndex: number) => {
     if (nextIndex === slideIndex || numSlides === 0 || nextIndex < 0 || nextIndex >= numSlides) return
 
     if ('startViewTransition' in document) {
       // Use View Transition API for smooth transition
-      (document as any).startViewTransition(() => {
+      document.startViewTransition(() => {
         setSlideIndex(nextIndex)
       })
     } else {
@@ -119,7 +120,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
       setEntering(true)
     }
     setIsAutoplayOn(true)
-  }
+  }, [slideIndex, numSlides])
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -130,7 +131,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
     }, options.time)
 
     return () => window.clearInterval(interval)
-  }, [slideIndex, isAutoplayOn, numSlides, options.autoplay, options.time])
+  }, [slideIndex, isAutoplayOn, numSlides, options.autoplay, options.time, changeSlide])
 
   const handleClickPrev = () => {
     if (isPrevDisabled) return

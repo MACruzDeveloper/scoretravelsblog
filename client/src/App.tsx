@@ -1,8 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
-import { getData, getToken } from './utils/utils'
+import { getToken } from './utils/utils'
+import { getCurrentUser } from './api/auth'
+import type { Session } from './api/types'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Helmet, HelmetProvider } from 'react-helmet-async'
-import { API } from './config'
 import AdminLayout from './layouts/AdminLayout'
 import RequireAdmin from './layouts/RequireAdmin'
 import Header from '@/components/common/Header'
@@ -35,12 +36,8 @@ const Users = lazy(() => import('./components/admin/Users'))
 const Images = lazy(() => import('./components/admin/Images'))
 const Moderation = lazy(() => import('./components/admin/Moderation'))
 
-export type LoginSession = {
-  token: string
-  role: string
-  username?: string
-  email?: string
-}
+// What login and register return
+export type LoginSession = Session
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -65,7 +62,7 @@ function App() {
     const verifyToken = async () => {
       if (!getToken()) return
       try {
-        const { user: me } = (await getData(`${API}/auth/me`)).data
+        const me = await getCurrentUser()
         setRole(me.role)
         setUser(me.email)
         setUsername(me.username || me.email)

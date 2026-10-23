@@ -4,7 +4,6 @@ import {
   deleteData,
   fetchData,
   getToken,
-  groupBy,
   postData,
   validateEmail,
 } from '@utils/utils'
@@ -15,12 +14,9 @@ afterEach(() => {
 })
 
 describe('utils', () => {
-  it('validates emails and groups values by a field', () => {
-    expect(validateEmail('valid@example.com')).toBeTruthy()
-    expect(validateEmail('invalid-email')).toBeNull()
-    expect(groupBy([{ type: 'a', value: 1 }, { type: 'a', value: 2 }], 'type')).toEqual({
-      a: [{ type: 'a', value: 1 }, { type: 'a', value: 2 }],
-    })
+  it('validates emails', () => {
+    expect(validateEmail('valid@example.com')).toBe(true)
+    expect(validateEmail('invalid-email')).toBe(false)
   })
 
   it('reads tokens and validates file size limits', () => {

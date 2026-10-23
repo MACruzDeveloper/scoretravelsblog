@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext, ChangeEvent, useMemo } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { postData, patchData, deleteData } from '@/utils/utils'
+import { deleteExperience, updateExperience as saveExperience } from '@/api/experiences'
+import { saveCity } from '@/api/cities'
+import { cityOf } from '@/utils/experience'
 import FormattedDate from '@/components/common/FormattedDate'
 import { sortBy } from '@/utils/collections'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle, MdAddCircleOutline } from 'react-icons/md'
 import { useExperienceStore, Experience, City } from '@/store/experienceStore'
-import { URL, API } from '../../../config'
+import { URL } from '../../../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import AddExperience from './AddExperience'
 import SelectCategories from '@/components/common/SelectCategories'
@@ -16,11 +18,14 @@ import TableActions from '@/components/common/TableActions'
 import ImageUpload from '../ImageUpload'
 import thumb from '@images/thumb.png'
 
+// Fields edited inline in the table; images are kept in selectedFilenames
+type EditValues = { title: string; content: string; category: string; city: string | null }
+
 const STATUS_LABELS = { pending: 'Pending review', published: 'Published', rejected: 'Rejected' }
 
 const Experiences = () => {
   const { role } = useContext(MyGlobalContext)
-  const [newValues, setNewValues] = useState<Experience>()
+  const [newValues, setNewValues] = useState<EditValues>()
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
   const [message, setMessage] = useState({ body: '', classname: '' })
@@ -44,12 +49,12 @@ const Experiences = () => {
 
   const handleChangeUpdate = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const target = e.currentTarget
-    if (target) setNewValues({ ...newValues, [target.name]: target.value })
+    if (target && newValues) setNewValues({ ...newValues, [target.name]: target.value })
   }
 
   const onClickDelete = async (id: string) => {
     try {
-      await deleteData(`${API}/experiences/${id}`)
+      await deleteExperience(id)
       setRefreshTrigger(prev => prev + 1)
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
     } catch (error) {
@@ -78,28 +83,17 @@ const Experiences = () => {
     if (idExp === -1) return
     const experience = experiences[idExp]
 
-    const existingImages = Array.isArray(experience.images)
-      ? experience.images.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
-      : experience.image && experience.image !== 'null'
-        ? [experience.image]
-        : []
+    const existingImages = experience.images?.filter(Boolean).length
+      ? experience.images.filter(Boolean)
+      : experience.image ? [experience.image] : []
 
     setNewValues({
-      _id: idx,
-      user: experience.user,
-      image: experience.image,
-      images: existingImages,
       title: experience.title,
-      city: experience.city && typeof experience.city === 'object' ? experience.city._id : (experience.city || null),
-      category: experience.category,
-      content: experience.content,
+      content: experience.content ?? '',
+      category: experience.category ?? '',
+      city: cityOf(experience)?._id ?? (typeof experience.city === 'string' ? experience.city : null),
     })
-    // Set selected city if experience has a city object
-    if (experience.city && typeof experience.city === 'object') {
-      setSelectedCity(experience.city as City)
-    } else {
-      setSelectedCity(null)
-    }
+    setSelectedCity(cityOf(experience) ?? null)
     setSelectedFilenames(existingImages)
   }
 
@@ -115,10 +109,6 @@ const Experiences = () => {
 
   const removeSelectedImage = (index: number) => {
     setSelectedFilenames((prev) => prev.filter((_, idx) => idx !== index))
-    setNewValues((prev) => prev ? {
-      ...prev,
-      images: Array.isArray(prev.images) ? prev.images.filter((_, idx) => idx !== index) : prev.images,
-    } : prev)
   }
 
   const updateExperience = async (id: string) => {
@@ -128,27 +118,12 @@ const Experiences = () => {
     }
 
     try {
-      let cityId = newValues.city  // mantiene la ciudad existente por defecto
+      // A newly picked city is saved first; otherwise the current one stays
+      const cityId = selectedCity ? (await saveCity(selectedCity))._id : newValues.city
 
-      if (selectedCity) {
-        const cityRes = await postData(`${API}/cities`, selectedCity)
-        if (cityRes.data && cityRes.data.city) {
-          cityId = cityRes.data.city._id
-        } else if ((cityRes as any).city) {
-          // Fallback: maybe postData doesn't wrap the response
-          cityId = (cityRes as any).city._id
-        } else {
-          console.error('API response does not have city data:', cityRes)
-          throw new Error('Failed to create city')
-        }
-      } else if (!cityId) {
-        console.warn('No city selected and no existing city. Setting cityId to null.')
-        cityId = null
-      }
+      const validFilenames = selectedFilenames.filter(Boolean)
 
-      const validFilenames = selectedFilenames.filter((src): src is string => typeof src === 'string' && src && src !== 'null')
-
-      const response = await patchData(`${API}/experiences/${id}`, {
+      const { updated } = await saveExperience(id, {
         title: newValues.title,
         category: newValues.category,
         city: cityId,
@@ -162,7 +137,7 @@ const Experiences = () => {
       setSelectedCity(null)
       setSelectedFilenames([])
       setMessage({
-        body: response.data.updated?.status === 'pending' ? 'Changes saved and sent for review' : 'Experience updated!',
+        body: updated.status === 'pending' ? 'Changes saved and sent for review' : 'Experience updated!',
         classname: 'msg_ok'
       })
     } catch (error) {

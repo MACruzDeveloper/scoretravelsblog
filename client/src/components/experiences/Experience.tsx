@@ -1,9 +1,9 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
 import DOMPurify from 'dompurify'
-import { postData } from '@utils/utils'
-import { API } from '../../config'
 import { getExperience, getExperienceComments } from '@/api/experiences'
+import { addComment } from '@/api/comments'
+import { cityOf } from '@/utils/experience'
 import type { Comment } from '@/store/commentsStore'
 import type { Experience as ExperienceType } from '@/store/experienceStore'
 import { useParams } from 'react-router-dom'
@@ -22,7 +22,8 @@ type PropsExperience = {
 }
 
 const Experience = ({ user }: PropsExperience) => {
-  const { exp } = useParams()
+  // The route always provides it; '' keeps the types simple
+  const { exp = '' } = useParams()
   const [experience, setExperience] = useState<ExperienceType>()
   const [expLoading, setExpLoading] = useState(true)
   const [comments, setComments] = useState<Comment[]>([])
@@ -46,7 +47,8 @@ const Experience = ({ user }: PropsExperience) => {
   }, [exp])
 
   // To read html code from data api
-  const getDataParsed = (data: string) => {
+  // Content may contain HTML: sanitized before rendering
+  const getDataParsed = (data = '') => {
     const theObj = { __html: DOMPurify.sanitize(data) }
     return <span dangerouslySetInnerHTML={theObj} />
   }
@@ -60,13 +62,9 @@ const Experience = ({ user }: PropsExperience) => {
     }
   }, [experience?.title, setTitleExperience])
 
-  const validExperienceImages = experience?.images?.filter((src): src is string => typeof src === 'string' && src && src !== 'null') || []
-  const fallbackImage = experience?.image && experience.image !== 'null' ? experience.image : undefined
-  const experienceImages = validExperienceImages.length > 0
-    ? validExperienceImages
-    : fallbackImage
-      ? [fallbackImage]
-      : []
+  // Gallery images, or the single legacy `image`
+  const galleryImages = experience?.images?.filter(Boolean) ?? []
+  const experienceImages = galleryImages.length > 0 ? galleryImages : experience?.image ? [experience.image] : []
 
   // Only the comments of this experience, newest first
   const loadComments = async () => {
@@ -99,9 +97,8 @@ const Experience = ({ user }: PropsExperience) => {
       return
     }
     try {
-      const url = `${API}/comments`
       if (comment.trim()) {
-        await postData(url, { experience: exp, content: comment.trim() })
+        await addComment(exp, comment.trim())
         await loadComments()
         setComment('')
         setMessage({ body: `Comment added!`, classname: 'msg_ok' })
@@ -149,8 +146,8 @@ const Experience = ({ user }: PropsExperience) => {
 
                 <p className="content_info">
                   <span>
-                    <span className="cat">{experience.city && typeof experience.city === 'object' ? experience.city.name : ''} </span>
-                    <span className="cat">({experience.city && typeof experience.city === 'object' ? experience.city.country : ''})</span>
+                    <span className="cat">{cityOf(experience)?.name} </span>
+                    <span className="cat">({cityOf(experience)?.country})</span>
                     <span> · </span>
                     {/* <span className="cat">{experience.category}</span> */}
                   </span>

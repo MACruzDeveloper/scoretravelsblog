@@ -1,15 +1,16 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { deleteData, getData, patchData } from '@utils/utils'
+import { listImages, setImageFeatured, deleteImage } from '@/api/images'
+import type { Image } from '@/api/types'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
-import { URL, API } from '../../config'
+import { URL } from '../../config'
 import ImageUpload from './ImageUpload'
 import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
 
 const Images = () => {
-  const [images, setImages] = useState([])
+  const [images, setImages] = useState<Image[]>([])
   const [featuredValues, setFeaturedValues] = useState<Record<string, boolean>>({})
 
   // No column by default: newest images first, as returned by the server
@@ -34,9 +35,7 @@ const Images = () => {
 
   const fetch_images = async () => {
     try {
-      const res = await getData(`${API}/images`)
-      const dataImages = res.data.images
-      setImages(dataImages)
+      setImages(await listImages())
     } catch (error) {
       console.log("error ==>", error)
     }
@@ -58,7 +57,7 @@ const Images = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      await patchData(`${API}/images/${idx}`, { featured: featuredValues[idx] ?? false })
+      await setImageFeatured(idx, featuredValues[idx] ?? false)
       setUpdateActive(null)
       setFeaturedValues(prev => {
         const next = { ...prev }
@@ -74,7 +73,7 @@ const Images = () => {
 
   const onClickDelete = async (idx: string) => {
     try {
-      await deleteData(`${API}/images/${idx}`)
+      await deleteImage(idx)
       fetch_images()
       setMessage({ body: `Image removed!`, classname: 'msg_ok' })
     } catch (error) {

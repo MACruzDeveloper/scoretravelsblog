@@ -1,35 +1,10 @@
 import { create } from 'zustand'
-
+import { getErrorMessage } from '@/utils/errors'
 import { listAllExperiences, ExperienceScope } from '@/api/experiences'
 
-export interface City {
-  _id: string
-  name: string
-  country: string
-  countryCode: string
-  continent: string
-  lat: number
-  lng: number
-}
-
-export interface Experience {
-  _id: string
-  user?: string,
-  title: string,
-  category?: string,
-  city?: City | string,
-  date?: Date,
-  year?: number,
-  image?: string,
-  images?: string[],
-  content?: string,
-  score?: number | null,
-  votes?: number,
-  status?: 'pending' | 'published' | 'rejected',
-  rejectionReason?: string,
-  lat?: number,
-  lng?: number
-}
+// Types live in api/types; re-exported here for the components that import them from the store
+export type { City, Experience } from '@/api/types'
+import type { Experience } from '@/api/types'
 
 interface ExperienceState {
   experiences: Experience[]
@@ -54,8 +29,8 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
       // Used by the admin table, which sorts and paginates on the client
       const experiences = await listAllExperiences({ scope })
       set({ experiences, loading: false, error: undefined, hasFetched: true })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+    } catch (error) {
+      set({ error: getErrorMessage(error, 'Could not load experiences'), loading: false })
     }
   }
 }))

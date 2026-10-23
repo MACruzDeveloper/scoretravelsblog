@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { postData, patchData, deleteData } from '@/utils/utils'
+import { createCategory, updateCategory, deleteCategory } from '@/api/categories'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { useCategoriesStore, Cat } from '@/store/categoriesStore'
-import { API } from '../../config'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -64,13 +63,12 @@ const Categories = () => {
     e.preventDefault()
 
     try {
-      const url = `${API}/categories`
       const name = valuesInputAdd.name?.trim() ?? ''
       const description = valuesInputAdd.description?.trim() ?? ''
       const result = cats.findIndex(item => item.name.toLowerCase() === name.toLowerCase())
       if (result === -1) {
         if (reg.exec(name)) {
-          await postData(url, { name, description })
+          await createCategory({ name, description })
           await fetchCats(true)
           setValuesInputAdd({ name: '', description: '' })
           setMessage({ body: `Category ${name} added!`, classname: 'msg_ok' })
@@ -89,7 +87,7 @@ const Categories = () => {
   const onClickDelete = async (ele: Cat) => {
     setUpdateActive(null)
     try {
-      await deleteData(`${API}/categories/${ele._id}`)
+      await deleteCategory(ele._id)
       await fetchCats(true)
       setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
     } catch (error) {
@@ -119,7 +117,7 @@ const Categories = () => {
       const updatedName = valuesInputUpdate.name?.trim() ?? ''
       const updatedDescription = valuesInputUpdate.description?.trim() ?? ''
       if (reg.exec(updatedName)) {
-        await patchData(`${API}/categories/${idx}`, {
+        await updateCategory(idx, {
           name: updatedName,
           description: updatedDescription
         })

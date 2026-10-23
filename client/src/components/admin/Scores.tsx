@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { deleteData } from '@utils/utils'
+import { deleteScore } from '@/api/scores'
 import { MdDelete } from 'react-icons/md'
 import { useScoresStore } from '@store/scoresStore'
-import { API } from '../../config'
 import Msgbox from '@common/Msgbox'
 import Table from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
@@ -18,7 +17,7 @@ const Scores = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      await deleteData(`${API}/scores/${id}`)
+      await deleteScore(id)
       await fetchScores(true)
       setMessage({ body: `Score deleted!`, classname: 'msg_ok' })
     } catch (error) {

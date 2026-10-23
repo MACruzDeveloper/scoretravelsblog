@@ -1,14 +1,11 @@
 import { create } from 'zustand'
-import { getData } from '@utils/utils'
+import { listCategories } from '@/api/categories'
+import { getErrorMessage } from '@/utils/errors'
 
-import { API } from '../config'
+import type { Category } from '@/api/types'
 
-export interface Cat {
-  readonly _id: string
-  name: string
-  description?: string
-  continent?: string
-}
+// Type defined in api/types
+export type Cat = Category
 
 interface CategoriesState {
   cats: Cat[]
@@ -29,10 +26,9 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${API}/categories`)
-      set({ cats: response.data, loading: false, error: undefined, hasFetched: true })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+      set({ cats: await listCategories(), loading: false, error: undefined, hasFetched: true })
+    } catch (error) {
+      set({ error: getErrorMessage(error, 'Could not load categories'), loading: false })
     }
   }
 }))

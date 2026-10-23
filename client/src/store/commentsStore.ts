@@ -1,15 +1,11 @@
 import { create } from 'zustand'
-import { getData } from '@utils/utils'
+import { listComments } from '@/api/comments'
+import { getErrorMessage } from '@/utils/errors'
 
-import { API } from '../config'
+import type { Comment } from '@/api/types'
 
-export interface Comment {
-  readonly _id: string
-  user?: string
-  experience: string
-  date: Date
-  content?: string
-}
+// Type defined in api/types
+export type { Comment } from '@/api/types'
 
 interface CommentsState {
   comments: Comment[]
@@ -30,10 +26,9 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${API}/comments`)
-      set({ comments: response.data, loading: false, error: undefined, hasFetched: true })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+      set({ comments: await listComments(), loading: false, error: undefined, hasFetched: true })
+    } catch (error) {
+      set({ error: getErrorMessage(error, 'Could not load comments'), loading: false })
     }
   }
 }))

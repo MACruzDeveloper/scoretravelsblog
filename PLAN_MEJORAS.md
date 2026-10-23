@@ -255,7 +255,10 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [ ] B-7 (peticiones duplicadas en los stores): con la factoría de stores.
 - [ ] B-1 (teclado del About): **al final, junto con el resto de la página About**.
 - [x] Rutas del admin anidadas con `<Outlet/>`; todas las páginas salvo la Home se cargan bajo demanda (`React.lazy`): el JS inicial de la app pasa de 104 KB a 46 KB. (A-8)
-- [ ] Cliente API tipado (`api/experiences.ts`…) con `VITE_API_URL`; migrar `utils.js`/`config.js` a TS; activar `strictNullChecks`; arreglar los 82 problemas de ESLint. (A-8, A-10)
+- [x] API tipada por recurso (`api/auth`, `categories`, `cities`, `comments`, `contact`, `experiences`, `images`, `scores`, `users`) con los tipos de dominio en `api/types.ts`; ningún componente construye URLs del API. `utils.js` y `config.js` pasados a TypeScript (helpers HTTP genéricos en el tipo de respuesta). (A-8, A-10)
+- [x] `strictNullChecks` activado sin errores. Helpers `cityOf`/`coverOf` en lugar de comprobaciones repetidas. ESLint: de 82 problemas iniciales a 19 avisos, todos en las tablas del admin (se van con el paso 3).
+- [x] Código muerto eliminado: `SelectContinent` (pedía los continentes a un servicio externo), `SelectCity`, `citiesStore`, `groupBy`. Fallback muerto del mapa (coordenadas en la experiencia) eliminado.
+- [x] `ImageUpload` mostraba el JSON de error en crudo; ahora el mensaje del servidor.
 - [ ] Factoría de stores y hook `useCrudTable`. (A-9)
 - [ ] Formularios con `react-hook-form` + zod; labels, `autocomplete`, mensajes de error visibles (§2.5).
 - [ ] Manejo de errores unificado (toast/Msgbox) en vez de `console.log`. (A-11)

@@ -1,8 +1,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { postData } from '@/utils/utils'
+import { register } from '@/api/auth'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { API } from '../../../config'
 import Msgbox from '@/components/common/Msgbox'
 import PasswordInput from '@/components/common/PasswordInput'
 import type { LoginSession } from '@/App'
@@ -31,15 +30,8 @@ const Register = ({ login }: PropsRegister) => {
     if (isRegistering) return
     setIsRegistering(true)
     try {
-      const response = await postData(`${API}/auth/register`, {
-        username: values.username,
-        email: values.email,
-        password: values.password,
-        password2: values.password2
-      })
-
       // The server signs the new user in and returns the session
-      login(response.data)
+      login(await register(values))
       navigate('/')
     }
     catch (error) {

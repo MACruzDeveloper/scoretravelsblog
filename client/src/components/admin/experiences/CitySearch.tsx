@@ -11,6 +11,13 @@ export type City = {
   lng: number
 }
 
+// Subset of the OpenStreetMap Nominatim search result used here
+type NominatimPlace = {
+  lat: string
+  lon: string
+  address?: { city?: string; town?: string; village?: string; country?: string; country_code?: string }
+}
+
 type Props = {
   onSelect: (city: City | null) => void
   value?: string
@@ -42,17 +49,18 @@ export const CitySearch = ({ onSelect, value }: Props) => {
         `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&featuretype=city&format=json&limit=8&addressdetails=1`,
         { headers: { 'Accept-Language': 'en', 'User-Agent': 'my-travel-app' } }
       )
-      const data = await res.json()
+      const data: NominatimPlace[] = await res.json()
 
       const seen = new Set<string>()
       const cities: City[] = data
-        .filter((item: any) => item.address?.city || item.address?.town || item.address?.village)
-        .map((item: any) => {
-          const countryCode = item.address.country_code?.toUpperCase()
+        .filter((item) => item.address?.city || item.address?.town || item.address?.village)
+        .map((item) => {
+          const address = item.address ?? {}
+          const countryCode = address.country_code?.toUpperCase() ?? ''
           const continent = COUNTRY_TO_CONTINENT[countryCode] || 'unknown'
           return {
-            name: item.address.city || item.address.town || item.address.village,
-            country: item.address.country,
+            name: address.city || address.town || address.village || '',
+            country: address.country ?? '',
             countryCode,
             continent,
             lat: parseFloat(item.lat),

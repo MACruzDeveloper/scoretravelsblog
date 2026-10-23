@@ -1,14 +1,11 @@
 import { create } from 'zustand'
-import { getData } from '@utils/utils'
+import { listScores } from '@/api/scores'
+import { getErrorMessage } from '@/utils/errors'
 
-import { API } from '../config'
+import type { Score } from '@/api/types'
 
-export interface ScoreType {
-  readonly _id: string
-  experience: string
-  user: string
-  score: number
-}
+// Type defined in api/types
+export type ScoreType = Score
 
 interface ScoresState {
   scores: ScoreType[]
@@ -29,10 +26,9 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${API}/scores`)
-      set({ scores: response.data, loading: false, error: undefined, hasFetched: true })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
+      set({ scores: await listScores(), loading: false, error: undefined, hasFetched: true })
+    } catch (error) {
+      set({ error: getErrorMessage(error, 'Could not load scores'), loading: false })
     }
   }
 }))

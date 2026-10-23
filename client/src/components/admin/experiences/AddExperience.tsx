@@ -1,12 +1,13 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { getErrorMessage } from '@/utils/errors'
-import { postData } from '@/utils/utils'
-import { API } from '../../../config'
-import { Experience } from '@/store/experienceStore'
+import { createExperience } from '@/api/experiences'
+import { saveCity } from '@/api/cities'
 import SelectCategories from '@/components/common/SelectCategories'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import ImageUpload from '../ImageUpload'
 import { CitySearch, City as SearchCity } from './CitySearch'
+
+const EMPTY_FORM = { title: '', content: '', category: '' }
 
 type PropsAddExperience = {
   handleFetchExperiences: () => void
@@ -15,18 +16,16 @@ type PropsAddExperience = {
 }
 
 const AddExperience = ({ handleFetchExperiences, isFormAddVisible, setIsFormAddVisible }: PropsAddExperience) => {
-  const [values, setValues] = useState<Experience>()
+  const [values, setValues] = useState(EMPTY_FORM)
   const [selectedCity, setSelectedCity] = useState<SearchCity | null>(null)
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
-  //const [isFileValid, setIsFileValid] = useState(false)
-  //const [loadingFile, setLoadingFile] = useState(false)
   const [message, setMessage] = useState<ParamsMsgBox>({ body: '', classname: '' })
 
   const removeSelectedImage = (index: number) => {
     setSelectedFilenames(prev => prev.filter((_, idx) => idx !== index))
   }
 
-  const handleChangeNew = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChangeNew = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const target = e.currentTarget
     if (target) setValues({ ...values, [target.name]: target.value })
   }
@@ -34,30 +33,26 @@ const AddExperience = ({ handleFetchExperiences, isFormAddVisible, setIsFormAddV
   const handleSubmitNew = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      // Primero upsert de la ciudad, obtenemos su _id
-      let cityId = null
-      if (selectedCity) {
-        const cityRes = await postData(`${API}/cities`, selectedCity)
-        cityId = cityRes.data.city._id
-      }
+      // Save the chosen city first (returns the existing one if already saved)
+      const cityId = selectedCity ? (await saveCity(selectedCity))._id : null
 
-      const validFilenames = selectedFilenames.filter((name) => !!name)
-      const response = await postData(`${API}/experiences`, {
+      const validFilenames = selectedFilenames.filter(Boolean)
+      const created = await createExperience({
         title: values.title,
         category: values.category,
-        city: cityId,                    // guardamos el ObjectId
+        city: cityId,
         image: validFilenames[0] || '',
         images: validFilenames,
         content: values.content,
       })
       // Users' experiences wait for an admin; the admin's are published at once
       setMessage({
-        body: response.data.status === 'pending' ? 'Experience sent for review. It will be published once an admin approves it' : 'New Experience added!',
+        body: created.status === 'pending' ? 'Experience sent for review. It will be published once an admin approves it' : 'New Experience added!',
         classname: 'msg_ok'
       })
       handleFetchExperiences()
       setIsFormAddVisible(false)
-      setValues(undefined)
+      setValues(EMPTY_FORM)
       setSelectedCity(null)
       setSelectedFilenames([])
     } catch (error) {

@@ -8,6 +8,7 @@ import { listExperiences, getExperienceFacets, toQueryString } from '@/api/exper
 import Filters from '@common/Filters'
 import { URL } from '../config'
 import { scrollToTop } from '@/utils/utils'
+import { cityOf } from '@/utils/experience'
 
 // Each "Show more" loads two rows of three images
 const CHUNK_SIZE = 3
@@ -67,8 +68,8 @@ const Gallery = () => {
                       return <div key={ele._id} className="gallery_item">
                         <img loading="lazy" src={`${URL}/static/images/${ele.image}`} alt={ele.title} />
                         <p className="gallery_item_info">
-                          <span className="city">{typeof ele.city === 'object' ? ele.city.name : ele.city}</span>
-                          <span className="country">{typeof ele.city === 'object' ? ele.city.country : ''}</span>
+                          <span className="city">{cityOf(ele)?.name}</span>
+                          <span className="country">{cityOf(ele)?.country}</span>
                         </p>
                       </div>
                     })
