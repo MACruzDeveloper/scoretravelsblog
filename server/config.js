@@ -55,6 +55,7 @@ if (env.JWT_SECRET.length < 32) {
 
 module.exports = {
   isProduction: env.NODE_ENV === 'production',
+  isTest: env.NODE_ENV === 'test',
   port: env.PORT,
   mongoUrl: env.ATLAS_URL,
   jwtSecret: env.JWT_SECRET,

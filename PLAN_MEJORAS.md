@@ -289,12 +289,15 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 
 ### Fase 5 — Tests y CI/CD (3-4 días) 🟡
 
-- [ ] Server: Vitest/Jest + Supertest + `mongodb-memory-server`. Cubrir primero auth, permisos por rol, validación (casos de inyección y del crash S-2), scores.
-- [ ] Client: completar integración (flujos login, comentar, votar, CRUD admin) con MSW; e2e con Playwright para 3-4 flujos críticos.
-- [ ] `ci.yml`: lint + typecheck + test + build de client **y** server; `npm audit --audit-level=high`; Dependabot/Renovate.
-- [ ] Deploy (ahora mismo no hay ningún entorno desplegado): decidir **una** estrategia (droplet+nginx vs Vercel+API aparte). Arreglar o borrar `deploy.ml`. Corregir `_doc/nginx-scoretravelsblog.conf` (B-12): servir `dist` directamente desde nginx (`root` + `try_files $uri /index.html`) y proxy solo `/api` y `/uploads`.
+- [x] Server: 49 tests con `node:test` + Supertest + `mongodb-memory-server` (`npm test`, ~7 s): autenticación y tokens, permisos por rol, inyecciones, límites de peticiones, listado/filtros/facets/timeline, moderación, categorías/ciudades/comentarios/votos (integridad, cascadas, un voto por usuario), imágenes (subida, protección, limpieza) y errores/CORS/CSP. La app Express se separa del arranque (`app.js` / `index.js`) para poder probarla sin abrir puertos.
+- [x] Client: 71 tests (Vitest + Testing Library + MSW) cubriendo formularios, admin, moderación, tablas, mapa, stores y hooks.
+- [ ] Client: e2e con Playwright para 3-4 flujos críticos (registro → crear experiencia → moderar → votar).
+- [ ] Client: decidir qué hacer con el andamiaje de tests sin uso (`tests/__fixtures__`, `tests/utils/*`, `testing-library-utils.jsx`).
+- [x] `ci.yml`: cliente (lint, tipos, tests, build), servidor (lint, formato, tests con caché del binario de MongoDB) y auditoría de dependencias de producción; en `main` y `develop`. Dependabot semanal (npm cliente y servidor) y mensual (GitHub Actions).
+- [x] `deploy.ml` eliminado (extensión incorrecta, nunca se ejecutaba y apuntaba a Vercel sin haber despliegue).
+- [ ] Deploy (cuando lo haya): decidir estrategia (droplet + nginx o similar). Corregir `_doc/nginx-scoretravelsblog.conf` (B-12): servir `dist` desde nginx (`root` + `try_files $uri /index.html`) y hacer proxy solo de `/api` y `/static/images`.
 - [x] `client/dist` fuera del repo y en `.gitignore`. (A-12)
-- [ ] Sacar del repo las imágenes subidas (`client/public/images`) cuando se mueva la carpeta de uploads (S-16).
+- [x] Imágenes subidas fuera del repo (`server/uploads`, Fase 1). (S-16)
 
 ### Fase 6 — Producto, portfolio y documentación (continuo) 🟢
 

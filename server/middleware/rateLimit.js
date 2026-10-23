@@ -1,7 +1,14 @@
 const { rateLimit } = require('express-rate-limit')
 
+// Tests switch the limits off, except the ones that check them (skipped requests are not counted)
+let enabled = true
+const setRateLimitsEnabled = (value) => {
+  enabled = value
+}
+
 const limiter = (windowMinutes, limit, message) =>
   rateLimit({
+    skip: () => !enabled,
     windowMs: windowMinutes * 60 * 1000,
     limit,
     standardHeaders: 'draft-8',
@@ -22,4 +29,4 @@ const emailLimiter = limiter(60, 5, 'Too many messages sent, please try again la
 // User generated content
 const writeLimiter = limiter(15, 60, 'Too many requests, please slow down')
 
-module.exports = { apiLimiter, loginLimiter, registerLimiter, emailLimiter, writeLimiter }
+module.exports = { apiLimiter, loginLimiter, registerLimiter, emailLimiter, writeLimiter, setRateLimitsEnabled }
