@@ -10,4 +10,6 @@ const commentSchema = new mongoose.Schema ({
   content: {type: String}
 });
 
+commentSchema.index({ experience: 1, date: -1 });
+
 module.exports =  mongoose.model('comments', commentSchema);

@@ -230,7 +230,12 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 - [ ] Estructura `routes → validators → controllers → services → models`; `asyncHandler` o Express 5; error handler central con clases de error (`NotFound`, `Validation`…).
 - [x] API REST bajo `/api` (`routes/index.js`) con verbos correctos: `GET/POST /api/<recurso>`, `GET/PATCH/DELETE /api/<recurso>/:id`, `/api/auth/{register,login,me}`, `/api/contact`. El id va en la URL y se valida; las imágenes se borran por id (el nombre de fichero sale de la BD). Rutas `/api` desconocidas → 404 JSON. Resuelve B-15. (A-2)
-- [ ] Paginación, búsqueda y filtros en servidor; endpoint de comentarios por experiencia (A-3).
+- [x] Paginación, búsqueda y filtros en servidor: `GET /api/experiences?page&limit&search&category&city&continent&minScore&year&month&hasImage&sort` → `{ items, total, page, limit, pages }`; `/api/experiences/facets` (opciones de los filtros), `/api/experiences/timeline` (mejor por año, en una agregación) y `/api/experiences/:id/comments`. Índices en `date`, `score`, `category`, `city`. (A-3)
+- [x] Cliente: cada pantalla pide solo lo que muestra (`api/experiences.ts` + `useApiQuery`, que descarta respuestas obsoletas y comparte peticiones iguales en curso). La galería carga más páginas con "Show more"; la búsqueda y la búsqueda por continente paginan en el servidor (`SearchResults`). Los stores de Zustand quedan solo para el admin.
+- [x] Las experiencias guardan `votes` (número de votos) junto a `score`; la página de detalle ya no descarga todos los votos. `GET /api/comments` y `GET /api/scores` (listas completas) pasan a ser solo de admin.
+- [ ] Ejecutar `npm run scores:recalculate -- --apply` en el servidor para rellenar `votes` en las experiencias con votos.
+- [x] Bug previo: el enlace "Oceania" buscaba `australia` y nunca devolvía resultados.
+- [ ] Admin: paginar y ordenar las tablas en el servidor (hoy el admin descarga todas las páginas con `listAllExperiences`).
 - [ ] Modelo: `ObjectId` en referencias (categoría, usuario, experiencia), `timestamps`, índices, borrado en cascada o comprobación de uso. Script de migración de datos existentes. (B-4, A-5)
 - [x] Rutas `PATCH`/`DELETE /api/cities/:id` (el borrado comprueba que ninguna experiencia use la ciudad).
 - [x] Conexión a Mongo antes de `listen` (si falla, el proceso termina con un mensaje claro), `GET /api/health`, *graceful shutdown* con SIGTERM/SIGINT. (A-7)

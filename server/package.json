@@ -9,7 +9,8 @@
     "seed": "node scripts/seed-experiences.js",
     "migrate:user-refs": "node scripts/migrate-user-refs.js",
     "migrate:roles": "node scripts/migrate-roles.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scores:recalculate": "node scripts/recalculate-scores.js"
   },
   "keywords": [],
   "author": "",

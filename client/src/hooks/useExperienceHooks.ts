@@ -1,63 +1,25 @@
-import { useMemo } from 'react'
-import { useExperienceStore, Experience } from '../store/experienceStore'
-import { sortBy } from '@/utils/collections'
+import { useApiQuery } from './useApiQuery'
+import { listExperiences, getTimeline } from '@/api/experiences'
+
+const NUM_DISPLAY = 3
 
 export const useLastExperiences = () => {
-  const { experiences, loading, error } = useExperienceStore()
-  const lastExperiences = useMemo(() => {
-    const numDisplay = 3
-    const sortedExps = sortBy(experiences, 'date').reverse()
-    return sortedExps.slice(0, numDisplay)
-  }, [experiences])
-
-  return { lastExperiences, loading, error }
+  const { data, loading, error } = useApiQuery('experiences:last', () =>
+    listExperiences({ sort: '-date', limit: NUM_DISPLAY })
+  )
+  return { lastExperiences: data?.items ?? [], loading, error }
 }
 
+// Also used by the map, which shares the same request
 export const useBestExperiences = () => {
-  const { experiences, loading, error } = useExperienceStore()
-  const bestExperiences = useMemo(() => {
-    const numDisplay = 3
-    const sortedExps = sortBy(experiences, 'date')
-    const expsWithScore = sortedExps.filter(item => item.score)
-    let bestExps = sortBy(expsWithScore, 'score').reverse()
-    bestExps = bestExps.slice(0, numDisplay)
-    return bestExps
-  }, [experiences])
-
-  return { bestExperiences, loading, error }
+  const { data, loading, error } = useApiQuery('experiences:best', () =>
+    listExperiences({ sort: '-score', minScore: 1, limit: NUM_DISPLAY })
+  )
+  return { bestExperiences: data?.items ?? [], loading, error }
 }
 
+// Best scored experience of each year, computed by the server
 export const useTimelineExperiences = () => {
-  const { experiences, loading, error } = useExperienceStore()
-  const timelineExperiences = useMemo(() => {
-    const filteredExpsWithScore = experiences?.filter((elem: Experience) => elem.score)
-    const sortedExperiences = sortBy(filteredExpsWithScore, 'date')
-
-    const tempExps: Array<Experience & { year: number }> = []
-    for (const ele of sortedExperiences) {
-      const date = new Date(ele.date || '')
-      tempExps.push({
-        ...ele,
-        year: date.getFullYear()
-      })
-    }
-
-    const groupBy = (array: any[], key: string) => {
-      return array.reduce((result, currentValue) => {
-        (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue)
-        return result
-      }, {})
-    }
-
-    const expsByDate = groupBy(tempExps, 'year')
-    const tempExpsByDateAsArray: Experience[] = []
-    Object.values(expsByDate).forEach((element: any) => {
-      const filteredExpsByDate = element.reduce((prev: any, current: any) => (prev && prev.score > current.score) ? prev : current)
-      tempExpsByDateAsArray.push(filteredExpsByDate)
-    })
-
-    return tempExpsByDateAsArray
-  }, [experiences])
-
-  return { timelineExperiences, loading, error }
+  const { data, loading, error } = useApiQuery('experiences:timeline', () => getTimeline())
+  return { timelineExperiences: data ?? [], loading, error }
 }

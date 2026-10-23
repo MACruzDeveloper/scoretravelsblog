@@ -6,13 +6,17 @@ import "@testing-library/jest-dom/vitest"
 
 // src/setupTests.js
 import { server } from './mocks/server'
+import { clearPendingQueries } from './hooks/useApiQuery'
 
 // Establish API mocking before all tests.
 beforeAll(() => server.listen())
 
 // Reset any request handlers that we may add during the tests,
 // so they don't affect other tests.
-afterEach(() => server.resetHandlers())
+afterEach(() => {
+  server.resetHandlers()
+  clearPendingQueries()
+})
 
 // Clean up after the tests are finished.
 afterAll(() => server.close())

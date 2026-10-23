@@ -67,6 +67,21 @@ const experienceFields = {
   date: z.coerce.date().optional()
 }
 const addExperience = z.object(experienceFields)
+
+// Query string of GET /api/experiences (values arrive as strings)
+const listExperiences = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(12),
+  search: z.string().trim().max(100).optional(),
+  category: z.string().trim().max(50).optional(),
+  city: objectId.optional(),
+  continent: z.enum(CONTINENTS).optional(),
+  minScore: z.coerce.number().min(1).max(5).optional(),
+  year: z.coerce.number().int().min(1900).max(2100).optional(),
+  month: z.coerce.number().int().min(1).max(12).optional(),
+  hasImage: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
+  sort: z.enum(['-date', 'date', '-score', 'score', 'title', '-title']).default('-date'),
+})
 const updateExperience = z.object({ ...experienceFields, title: experienceFields.title.optional() })
 
 // =============== COMMENTS =====================
@@ -96,7 +111,7 @@ module.exports = {
   register, login, addUser, updateUser,
   addCategory, updateCategory,
   addCity, updateCity, continentParam, countryParam,
-  addExperience, updateExperience,
+  addExperience, updateExperience, listExperiences,
   addComment, updateComment,
   addScore, updateScore,
   updateImage, uploadImage,

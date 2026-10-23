@@ -1,5 +1,7 @@
 const experiences = require('../models/experiencesModel');
+const comments = require('../models/commentsModel');
 const { getExperienceImages, removeUnusedImages } = require('../services/imageService');
+const { listExperiences, getFacets, getTimeline } = require('../services/experienceQuery');
 
 const normalizeExperienceImages = (params) => {
   const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
@@ -27,12 +29,41 @@ const normalizeExperienceImages = (params) => {
 }
 
 class experiencesController {
+  // Paginated and filtered list: { items, total, page, limit, pages }
   async findAllExperiences(req, res) {
     try {
-      const exps = await experiences.find().select('-userId').populate('city')
-      res.send(exps)
+      res.send(await listExperiences(req.query))
     } catch (error) {
+      console.error('Fetch experiences failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error fetching experiences' })
+    }
+  }
+
+  async findFacets(req, res) {
+    try {
+      res.send(await getFacets())
+    } catch (error) {
+      console.error('Fetch facets failed:', error.message)
+      res.status(500).json({ ok: false, message: 'Error fetching filters' })
+    }
+  }
+
+  async findTimeline(req, res) {
+    try {
+      res.send(await getTimeline())
+    } catch (error) {
+      console.error('Fetch timeline failed:', error.message)
+      res.status(500).json({ ok: false, message: 'Error fetching timeline' })
+    }
+  }
+
+  async findExperienceComments(req, res) {
+    try {
+      const list = await comments.find({ experience: req.params.id }).select('-userId').sort({ date: -1 })
+      res.send(list)
+    } catch (error) {
+      console.error('Fetch experience comments failed:', error.message)
+      res.status(500).json({ ok: false, message: 'Error fetching comments' })
     }
   }
 

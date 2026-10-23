@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { getData } from '@utils/utils'
 
-import { API } from '../config'
+import { listAllExperiences } from '@/api/experiences'
 
 export interface City {
   _id: string
@@ -24,7 +23,8 @@ export interface Experience {
   image?: string,
   images?: string[],
   content?: string,
-  score?: number,
+  score?: number | null,
+  votes?: number,
   lat?: number,
   lng?: number
 }
@@ -48,8 +48,9 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
     set({ loading: true })
     try {
-      const response = await getData(`${API}/experiences`)
-      set({ experiences: response.data, loading: false, error: undefined, hasFetched: true })
+      // Used by the admin table, which sorts and paginates on the client
+      const experiences = await listAllExperiences()
+      set({ experiences, loading: false, error: undefined, hasFetched: true })
     } catch (error: any) {
       set({ error: error.message, loading: false })
     }

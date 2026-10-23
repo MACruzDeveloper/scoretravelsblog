@@ -1,58 +1,44 @@
 import { useState, useEffect, useMemo } from "react"
 import { chunk } from '@/utils/collections'
 import { MdArrowUpward } from 'react-icons/md'
-import { useExperienceStore, Experience } from "@/store/experienceStore"
+import type { Experience } from "@/store/experienceStore"
 import { useExperienceFilters } from "@/hooks/useExperienceFilters"
+import { useApiQuery } from '@/hooks/useApiQuery'
+import { listExperiences, getExperienceFacets, toQueryString } from '@/api/experiences'
 import Filters from '@common/Filters'
 import { URL } from '../config'
 import { scrollToTop } from '@/utils/utils'
 
+// Each "Show more" loads two rows of three images
+const CHUNK_SIZE = 3
+const PAGE_SIZE = CHUNK_SIZE * 2
+
 const Gallery = () => {
-  const { experiences, loading, error, fetchExperiences } = useExperienceStore()
+  const { filters, setFilter, resetFilters, hasActiveFilters, params } = useExperienceFilters()
+  const [page, setPage] = useState(1)
+  const [loaded, setLoaded] = useState<Experience[]>([])
 
+  // New filters start again from the first page
   useEffect(() => {
-    fetchExperiences()
-  }, [fetchExperiences])
+    setPage(1)
+  }, [params])
 
-  // Use filters hook
-  const { filters, setFilter, resetFilters, hasActiveFilters, filtered } = useExperienceFilters(experiences)
+  const query = { ...params, hasImage: true, sort: '-date' as const, page, limit: PAGE_SIZE }
+  const { data, loading, error } = useApiQuery(`experiences:gallery${toQueryString(query)}`, () => listExperiences(query))
+  const { data: facets } = useApiQuery('experiences:facets', () => getExperienceFacets())
 
-  // Extract unique cities from all experiences (options shouldn't disappear when filtering)
-  const cities = useMemo(() => {
-    const cityMap = new Map()
-    experiences.forEach(exp => {
-      if (exp.city && typeof exp.city === 'object') {
-        if (!cityMap.has(exp.city._id)) {
-          cityMap.set(exp.city._id, { _id: exp.city._id, name: exp.city.name })
-        }
-      }
-    })
-    return Array.from(cityMap.values())
-  }, [experiences])
+  // Page 1 replaces the list, next pages are appended
+  useEffect(() => {
+    if (!data) return
+    setLoaded((prev) => (data.page === 1 ? data.items : [...prev, ...data.items]))
+  }, [data])
 
-  // Filter and Group experiences in chunks of 3 (deterministic order: newest first)
-  const experiencesByGroup = useMemo(() => {
-    const expsWithImage = filtered
-      .filter((exp) => exp.image)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    return chunk(expsWithImage, 3)
-  }, [filtered])
+  const experiencesByGroup = useMemo(() => chunk(loaded, CHUNK_SIZE), [loaded])
+  const hasMore = data ? data.page < data.pages : false
 
   const getImageClass = (index: number) => {
     return index % 2 ? 'gallery_chunk--right' : 'gallery_chunk--left'
   }
-
-  // For Show more button
-  const chunksPerRow = 2
-  const [next, setNext] = useState(chunksPerRow)
-  const handleMoreChunks = () => {
-    setNext(next + chunksPerRow)
-  }
-
-  // Reset "Show more" when the filtered results change
-  useEffect(() => {
-    setNext(chunksPerRow)
-  }, [filtered, chunksPerRow])
 
   return <div className="page gallery">
     <div className="container">
@@ -68,13 +54,13 @@ const Gallery = () => {
             resetFilters={resetFilters}
             hasActiveFilters={hasActiveFilters}
             categories={[]}
-            cities={cities}
+            cities={facets?.cities ?? []}
             availableYears={[]}
           />
 
           <div className="gallery_content">
             {
-              !loading && experiencesByGroup.slice(0, next)?.map((item, idx) => {
+              experiencesByGroup.map((item, idx) => {
                 return <div key={`chunk-${idx}`} className={`gallery_chunk ${getImageClass(idx)}`}>
                   {
                     item.map((ele: Experience) => {
@@ -92,9 +78,9 @@ const Gallery = () => {
             }
           </div>
 
-          {next < experiencesByGroup?.length && (
+          {hasMore && (
             <div className="gallery_actions">
-              <button className="btn btn_show_more" onClick={handleMoreChunks}>Show more</button>
+              <button className="btn btn_show_more" onClick={() => setPage(page + 1)} disabled={loading}>Show more</button>
               <button className="btn_icon btn_top" onClick={scrollToTop}>
                 <MdArrowUpward />
               </button>

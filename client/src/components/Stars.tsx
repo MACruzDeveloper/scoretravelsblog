@@ -3,16 +3,16 @@ import { postData } from '@utils/utils'
 import { MdStar, MdStarBorder } from 'react-icons/md'
 import { API } from '../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
-import { useScoresStore } from '@/store/scoresStore'
 import Msgbox from './common/Msgbox'
 
 type PropsStars = {
   exp: string
+  // Receives the new average and vote count returned by the server
+  onScored?: (score: number | null, votes: number) => void
 }
 
-const Stars = ({ exp }: PropsStars) => {
+const Stars = ({ exp, onScored }: PropsStars) => {
   const { user } = useContext(MyGlobalContext)
-  const { fetchScores } = useScoresStore()
   const [message, setMessage] = useState({ body: '', classname: '' })
   const [starHover, setStarHover] = useState(-1)
   const [isSending, setIsSending] = useState(false)
@@ -38,8 +38,8 @@ const Stars = ({ exp }: PropsStars) => {
     setIsSending(true)
     try {
       const url = `${API}/scores`
-      await postData(url, { experience: exp, score: i+1 })
-      await fetchScores(true)
+      const response = await postData(url, { experience: exp, score: i+1 })
+      onScored?.(response.data.experienceScore, response.data.votes)
       setMessage({ body: `Score added!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)

@@ -31,7 +31,7 @@ const SearchByContinent = () => {
         </li>
         <li>
           <img src={australia} loading="lazy" alt="australian map" />
-          <NavLink to={`${urlSearchPage}/australia`} className="link">Oceania</NavLink>
+          <NavLink to={`${urlSearchPage}/oceania`} className="link">Oceania</NavLink>
         </li>
       </ul>
     </div>

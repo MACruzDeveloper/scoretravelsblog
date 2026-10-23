@@ -1,20 +1,16 @@
-import type { ScoreType } from '@/store/scoresStore'
-
 type PropsScore = {
-  scores: Array<ScoreType>
-  exp: string
+  score?: number | null
+  votes?: number
 }
 
-// Display only: the server keeps the experience score in sync with its votes
-const Score = ({ scores, exp }: PropsScore) => {
-  const expScores = scores.filter(ele => exp === ele.experience && typeof ele.score === 'number' && ele.score > 0)
+// Display only: the server keeps score (average) and votes (count) in sync
+const Score = ({ score, votes = 0 }: PropsScore) => {
+  if (score == null) return null
 
-  if (expScores.length === 0) return null
+  const display = Math.round(score * 10) / 10
+  const title = votes ? `${votes} ${votes === 1 ? 'vote' : 'votes'}` : undefined
 
-  const avg = expScores.reduce((acc, ele) => acc + ele.score, 0) / expScores.length
-  const display = Math.round(avg * 10) / 10
-
-  return <p className="score">
+  return <p className="score" title={title}>
     {display}<span>/5</span>
   </p>
 }

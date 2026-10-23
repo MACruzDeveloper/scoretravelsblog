@@ -9,8 +9,9 @@ const recalculateExperienceScore = async (experienceId) => {
     { $group: { _id: null, avg: { $avg: '$score' }, count: { $sum: 1 } } }
   ])
   const score = stats ? Math.round(stats.avg * 10) / 10 : null
-  await Experiences.updateOne({ _id: experienceId }, { score })
-  return { score, count: stats ? stats.count : 0 }
+  const votes = stats ? stats.count : 0
+  await Experiences.updateOne({ _id: experienceId }, { score, votes })
+  return { score, count: votes }
 }
 
 module.exports = { recalculateExperienceScore }

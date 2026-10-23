@@ -11,7 +11,15 @@ const experienceSchema = new mongoose.Schema ({
   image: { type: String, default: '' },
   images: { type: [String], default: [], maxlength: 5 },
   content: { type: String },
+  // Average of the votes and how many there are, kept in sync by services/scoreService.js
   score: { type: Number },
+  votes: { type: Number, default: 0 },
 })
+
+// Indexes for the list filters and sort orders
+experienceSchema.index({ date: -1 })
+experienceSchema.index({ score: -1 })
+experienceSchema.index({ category: 1 })
+experienceSchema.index({ city: 1 })
 
 module.exports =  mongoose.model('experiences', experienceSchema)

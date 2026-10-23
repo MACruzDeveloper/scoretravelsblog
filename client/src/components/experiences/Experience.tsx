@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
 import DOMPurify from 'dompurify'
-import { getData, postData } from '@utils/utils'
-import { useScoresStore } from '../../store/scoresStore'
+import { postData } from '@utils/utils'
 import { API } from '../../config'
+import { getExperience, getExperienceComments } from '@/api/experiences'
+import type { Comment } from '@/store/commentsStore'
+import type { Experience as ExperienceType } from '@/store/experienceStore'
 import { useParams } from 'react-router-dom'
 import FormattedDate from '@/components/common/FormattedDate'
 import CommentsByExp from '../CommentsByExp'
@@ -18,31 +20,11 @@ type PropsExperience = {
   user: string
 }
 
-type SingleExperience = {
-  _id: string
-  user?: string
-  title: string
-  category?: string
-  date: Date
-  image?: string
-  images?: string[]
-  content?: string
-  score?: number
-  city?: {
-    name: string
-    country: string
-    countryCode: string
-    continent: string
-    lat: number
-    lng: number
-  }
-}
-
 const Experience = ({ user }: PropsExperience) => {
   const { exp } = useParams()
-  const [experience, setExperience] = useState<SingleExperience>()
+  const [experience, setExperience] = useState<ExperienceType>()
   const [expLoading, setExpLoading] = useState(true)
-  const [comments, setComments] = useState([])
+  const [comments, setComments] = useState<Comment[]>([])
   const [comment, setComment] = useState('')
   const [message, setMessage] = useState({ body: '', classname: '' })
 
@@ -51,8 +33,7 @@ const Experience = ({ user }: PropsExperience) => {
     const fetchExperience = async () => {
       setExpLoading(true)
       try {
-        const res = await getData(`${API}/experiences/${exp}`)
-        setExperience(res.data)
+        setExperience(await getExperience(exp))
       } catch (err) {
         console.log(err)
         setExperience(undefined)
@@ -78,13 +59,6 @@ const Experience = ({ user }: PropsExperience) => {
     }
   }, [experience?.title, setTitleExperience])
 
-  // fetch scores
-  const { scores, error, fetchScores } = useScoresStore()
-
-  useEffect(() => {
-    fetchScores()
-  }, [fetchScores])
-
   const validExperienceImages = experience?.images?.filter((src): src is string => typeof src === 'string' && src && src !== 'null') || []
   const fallbackImage = experience?.image && experience.image !== 'null' ? experience.image : undefined
   const experienceImages = validExperienceImages.length > 0
@@ -93,26 +67,24 @@ const Experience = ({ user }: PropsExperience) => {
       ? [fallbackImage]
       : []
 
-  // comments
-  useEffect(() => {
-    const getCommentsByExp = async () => {
-      const url = `${API}/comments`
-      try {
-        const res = await getData(url)
-        const data = res.data
-        const tempComm = []
-        for (const ele of data) {
-          if (exp === ele.experience) {
-            tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
-          }
-        }
-        setComments(tempComm)
-      } catch (error) {
-        console.log(error)
-      }
+  // Only the comments of this experience, newest first
+  const loadComments = async () => {
+    try {
+      setComments(await getExperienceComments(exp))
+    } catch (error) {
+      console.log(error)
     }
-    getCommentsByExp()
+  }
+
+  useEffect(() => {
+    loadComments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exp])
+
+  // The server answers a vote with the new average and vote count
+  const handleScored = (score: number | null, votes: number) => {
+    setExperience((prev) => prev && { ...prev, score, votes })
+  }
 
   const handleChangeComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.currentTarget
@@ -129,15 +101,7 @@ const Experience = ({ user }: PropsExperience) => {
       const url = `${API}/comments`
       if (comment.trim()) {
         await postData(url, { experience: exp, content: comment.trim() })
-        // Re-fetch comments after adding
-        const res = await getData(`${API}/comments`)
-        const tempComm = []
-        for (const ele of res.data) {
-          if (exp === ele.experience) {
-            tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
-          }
-        }
-        setComments(tempComm)
+        await loadComments()
         setComment('')
         setMessage({ body: `Comment added!`, classname: 'msg_ok' })
       } else {
@@ -158,7 +122,7 @@ const Experience = ({ user }: PropsExperience) => {
               <>
                 <div className="content_top">
                   <h3 className="content_title">{experience.title}</h3>
-                  <Score exp={exp} scores={scores} />
+                  <Score score={experience.score} votes={experience.votes} />
                 </div>
 
                 {experienceImages.length > 0
@@ -190,7 +154,6 @@ const Experience = ({ user }: PropsExperience) => {
               </>
               : <p className="msg error">Experience not found</p>
           }
-          {error}
         </div>
 
         <div className="sidebar">
@@ -206,7 +169,7 @@ const Experience = ({ user }: PropsExperience) => {
           <div className="sidebar_scores">
             <h3 className="sidebar_title">Score the experience <span>(1/5)</span></h3>
 
-            <Stars exp={exp} />
+            <Stars exp={exp} onScored={handleScored} />
           </div>
 
           <Msgbox body={message.body} classname={message.classname} />
