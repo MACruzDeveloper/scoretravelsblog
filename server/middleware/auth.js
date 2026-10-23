@@ -10,13 +10,29 @@ const extractToken = (req) => {
   return header || null
 }
 
+const verify = (token) => jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
+
+// For routes that work for everyone but show more to a signed in user:
+// sets req.user when the token is valid and simply continues otherwise
+const optionalAuth = (req, res, next) => {
+  const token = extractToken(req)
+  if (token) {
+    try {
+      req.user = verify(token)
+    } catch {
+      // An invalid token is treated like no token on public routes
+    }
+  }
+  return next()
+}
+
 const requireAuth = (req, res, next) => {
   const token = extractToken(req)
   if (!token) {
     return res.status(401).json({ ok: false, message: 'Authentication required' })
   }
   try {
-    const payload = jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
+    const payload = verify(token)
     req.user = payload
     return next()
   } catch (error) {
@@ -31,4 +47,8 @@ const requireAdmin = (req, res, next) => {
   })
 }
 
-module.exports = { requireAuth, requireAdmin, JWT_ALGORITHM }
+// Admins can act on anything; users only on what they created
+const isOwnerOrAdmin = (user, doc) =>
+  Boolean(user) && (user.role === 'admin' || String(doc.userId) === String(user._id))
+
+module.exports = { optionalAuth, requireAuth, requireAdmin, isOwnerOrAdmin, JWT_ALGORITHM }

@@ -10,7 +10,7 @@ const findAllComments = async (req, res) => {
 // The author always comes from the token, never from the request body
 const addNewComment = async (req, res) => {
   const { experience, content } = req.body
-  if (!(await experiences.exists({ _id: experience }))) throw notFound('Experience not found')
+  if (!(await experiences.exists({ _id: experience, status: 'published' }))) throw notFound('Experience not found')
   const done = await comments.create({ user: req.user.username, userId: req.user._id, experience, content })
   res.send(done)
 }

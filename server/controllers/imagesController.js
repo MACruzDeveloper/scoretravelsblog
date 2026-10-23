@@ -18,7 +18,13 @@ const upload_image = async (req, res) => {
   await image.rotate().avif({ quality: 70, effort: 6 }).toFile(path.join(uploadsDir, filename))
 
   const title = req.body.title || ''
-  await Images.create({ filename, title, width: metadata.width || null, height: metadata.height || null })
+  await Images.create({
+    filename,
+    title,
+    userId: req.user._id,
+    width: metadata.width || null,
+    height: metadata.height || null,
+  })
   res.json({ filename, title })
 }
 

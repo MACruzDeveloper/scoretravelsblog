@@ -15,6 +15,10 @@ const experienceSchema = new mongoose.Schema(
     // Average of the votes and how many there are, kept in sync by services/scoreService.js
     score: { type: Number },
     votes: { type: Number, default: 0 },
+    // Moderation: what users create waits for an admin; only 'published' is public
+    status: { type: String, enum: ['pending', 'published', 'rejected'], default: 'pending' },
+    rejectionReason: { type: String, default: '' },
+    reviewedAt: { type: Date },
   },
   { timestamps: true }
 )
@@ -24,5 +28,7 @@ experienceSchema.index({ date: -1 })
 experienceSchema.index({ score: -1 })
 experienceSchema.index({ category: 1 })
 experienceSchema.index({ city: 1 })
+experienceSchema.index({ status: 1, date: -1 })
+experienceSchema.index({ userId: 1 })
 
 module.exports = mongoose.model('experiences', experienceSchema)

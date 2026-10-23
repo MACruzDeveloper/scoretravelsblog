@@ -12,15 +12,27 @@ const IN_USE = 'Email or username already in use'
 // Never send password hashes to the client
 const toPublicUser = (user) => ({ _id: user._id, username: user.username, email: user.email, role: user.role })
 
+// Session token and public data returned by login and register
+const sessionFor = (user) => ({
+  token: jwt.sign({ _id: user._id, username: user.username, email: user.email, role: user.role }, jwtSecret, {
+    expiresIn: '1d',
+    algorithm: JWT_ALGORITHM,
+  }),
+  username: user.username,
+  email: user.email,
+  role: user.role,
+})
+
 const ensureAvailable = async (email, username) => {
   if (await User.exists({ $or: [{ email }, { username }] })) throw conflict(IN_USE)
 }
 
+// Registering also signs the user in
 const register = async (req, res) => {
   const { username, email, password } = req.body
   await ensureAvailable(email, username)
-  await User.create({ username, email, password: await argon2.hash(password), role: 'user' })
-  res.status(201).json({ ok: true, message: 'Successful register' })
+  const user = await User.create({ username, email, password: await argon2.hash(password), role: 'user' })
+  res.status(201).json({ ok: true, message: `Welcome ${user.username}!`, ...sessionFor(user) })
 }
 
 const login = async (req, res) => {
@@ -28,19 +40,7 @@ const login = async (req, res) => {
   const user = await User.findOne({ email })
   const match = user ? await argon2.verify(user.password, password) : false
   if (!match) throw unauthorized(INVALID_CREDENTIALS)
-
-  const token = jwt.sign({ _id: user._id, username: user.username, email: user.email, role: user.role }, jwtSecret, {
-    expiresIn: '1d',
-    algorithm: JWT_ALGORITHM,
-  })
-  res.json({
-    ok: true,
-    message: `Hi ${user.username}!`,
-    token,
-    username: user.username,
-    email: user.email,
-    role: user.role,
-  })
+  res.json({ ok: true, message: `Hi ${user.username}!`, ...sessionFor(user) })
 }
 
 // The token was already verified by requireAuth

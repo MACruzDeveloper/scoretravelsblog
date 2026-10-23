@@ -24,6 +24,8 @@ const filename = z
   .max(255)
   .refine((value) => value === path.basename(value) && !value.includes('..'), 'Invalid filename')
 
+const EXPERIENCE_STATUS = ['pending', 'published', 'rejected']
+
 const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', 'oceania', 'south-america', 'unknown']
 
 // `:id` route parameter
@@ -98,6 +100,15 @@ const listExperiences = z.object({
     .transform((value) => value === 'true')
     .optional(),
   sort: z.enum(['-date', 'date', '-score', 'score', 'title', '-title']).default('-date'),
+  // 'mine' needs a session, 'all' an admin (checked in the controller)
+  scope: z.enum(['public', 'mine', 'all']).default('public'),
+  status: z.enum(EXPERIENCE_STATUS).optional(),
+})
+
+// Admin decision on a pending experience; the reason is shown to the author
+const reviewExperience = z.object({
+  status: z.enum(['published', 'rejected']),
+  reason: optionalText(500),
 })
 const updateExperience = z.object({ ...experienceFields, title: experienceFields.title.optional() })
 
@@ -138,6 +149,7 @@ module.exports = {
   addExperience,
   updateExperience,
   listExperiences,
+  reviewExperience,
   addComment,
   updateComment,
   addScore,

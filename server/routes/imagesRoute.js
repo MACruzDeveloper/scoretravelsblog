@@ -1,7 +1,8 @@
 const router = require('express').Router()
 const controller = require('../controllers/imagesController')
 const multer = require('multer')
-const { requireAdmin } = require('../middleware/auth')
+const { requireAuth, requireAdmin } = require('../middleware/auth')
+const { writeLimiter } = require('../middleware/rateLimit')
 const { validate } = require('../middleware/validate')
 const schemas = require('../utils/schemas')
 
@@ -32,6 +33,7 @@ const handleUpload = (req, res, next) => {
   })
 }
 
-router.post('/', requireAdmin, handleUpload, validate(schemas.uploadImage), controller.upload_image)
+// Users upload images for their own experiences; the library (edit/delete) is for admins
+router.post('/', requireAuth, writeLimiter, handleUpload, validate(schemas.uploadImage), controller.upload_image)
 
 module.exports = router

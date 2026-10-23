@@ -17,8 +17,27 @@ const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
  * Builds the MongoDB filter for the experience list from validated query params.
  * Search covers title, content, category and city name.
  */
-const buildFilter = async ({ search, category, city, continent, minScore, year, month, hasImage }) => {
-  const filter = {}
+const PUBLISHED = Object.freeze({ status: 'published' })
+
+/**
+ * Who can see what:
+ *   'public' (default): published experiences only
+ *   'mine': the signed in user's experiences, in any status
+ *   'all': every experience (admins), optionally filtered by status
+ * The controller has already checked the viewer may use the scope.
+ */
+const scopeFilter = ({ scope, status }, viewer) => {
+  if (scope === 'mine') return { userId: viewer._id, ...(status && { status }) }
+  if (scope === 'all') return status ? { status } : {}
+  // A copy: buildFilter adds more conditions to the returned object
+  return { ...PUBLISHED }
+}
+
+const buildFilter = async (
+  { search, category, city, continent, minScore, year, month, hasImage, scope, status },
+  viewer
+) => {
+  const filter = scopeFilter({ scope, status }, viewer)
   const and = []
 
   if (search) {
@@ -45,9 +64,9 @@ const buildFilter = async ({ search, category, city, continent, minScore, year, 
   return filter
 }
 
-const listExperiences = async (query) => {
+const listExperiences = async (query, viewer) => {
   const { page, limit, sort } = query
-  const filter = await buildFilter(query)
+  const filter = await buildFilter(query, viewer)
   const [items, total] = await Promise.all([
     Experiences.find(filter)
       .select('-userId')
@@ -63,10 +82,10 @@ const listExperiences = async (query) => {
 // Options for the filter selects, computed from the experiences that exist
 const getFacets = async () => {
   const [categories, cityIds, years] = await Promise.all([
-    Experiences.distinct('category', { category: { $nin: ['', null] } }),
-    Experiences.distinct('city', { city: { $ne: null } }),
+    Experiences.distinct('category', { ...PUBLISHED, category: { $nin: ['', null] } }),
+    Experiences.distinct('city', { ...PUBLISHED, city: { $ne: null } }),
     Experiences.aggregate([
-      { $match: { date: { $ne: null } } },
+      { $match: { ...PUBLISHED, date: { $ne: null } } },
       { $group: { _id: { $year: '$date' } } },
       { $sort: { _id: -1 } },
     ]),
@@ -84,7 +103,7 @@ const getFacets = async () => {
 // Best scored experience of each year, oldest year first
 const getTimeline = async () => {
   const rows = await Experiences.aggregate([
-    { $match: { score: { $gt: 0 }, date: { $ne: null } } },
+    { $match: { ...PUBLISHED, score: { $gt: 0 }, date: { $ne: null } } },
     { $sort: { score: -1, date: -1 } },
     { $group: { _id: { $year: '$date' }, experience: { $first: '$$ROOT' } } },
     { $sort: { _id: 1 } },
@@ -96,4 +115,4 @@ const getTimeline = async () => {
   return Experiences.populate(experiences, { path: 'city' })
 }
 
-module.exports = { listExperiences, getFacets, getTimeline, SORTS }
+module.exports = { listExperiences, getFacets, getTimeline, SORTS, PUBLISHED }

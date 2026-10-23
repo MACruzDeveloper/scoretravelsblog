@@ -4,6 +4,7 @@
  *   2. Experience categories use the spelling of the defined category ('ocio' -> 'Ocio')
  *   3. Comments and scores: orphans are deleted, experience references become ObjectIds
  *   4. Indexes are synced with the models (drops legacy ones such as cities.name_1)
+ *   5. Experiences created before moderation existed are marked as published
  *
  * Usage:
  *   node scripts/migrate-data-model.js          # dry run, only prints what would change
@@ -96,6 +97,14 @@ async function fixExperienceRefs(Model, label) {
   )
 }
 
+// Experiences from before moderation existed were already public
+async function publishExisting() {
+  const filter = { status: { $exists: false } }
+  const count = await Experiences.collection.countDocuments(filter)
+  if (apply && count) await Experiences.collection.updateMany(filter, { $set: { status: 'published' } })
+  console.log(`5. Experiences without moderation status, marked as published: ${count}`)
+}
+
 async function syncIndexes() {
   console.log('4. Indexes')
   for (const Model of [Users, Categories, Experiences, Comments, Scores, Cities, Images]) {
@@ -123,6 +132,7 @@ async function main() {
   await fixExperienceRefs(Comments, 'Comments')
   await fixExperienceRefs(Scores, 'Scores')
   await syncIndexes()
+  await publishExisting()
 
   await mongoose.disconnect()
 }

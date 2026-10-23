@@ -11,7 +11,7 @@ const findAllScores = async (req, res) => {
 // One vote per user: voting again updates the previous vote
 const addNewScore = async (req, res) => {
   const { experience, score } = req.body
-  if (!(await experiences.exists({ _id: experience }))) throw notFound('Experience not found')
+  if (!(await experiences.exists({ _id: experience, status: 'published' }))) throw notFound('Experience not found')
   const done = await scores.findOneAndUpdate(
     { experience, userId: req.user._id },
     { experience, userId: req.user._id, user: req.user.username, score },
