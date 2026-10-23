@@ -26,7 +26,7 @@ La sección **"OPENCODE REVIEW"** del README está **mayormente desactualizada**
 
 Además, el README tiene otros problemas: título "UI-FRONT", Node `16.17.0` (EOL; el proyecto ya corre en Node 22), comando `rundev` que no coincide con lo descrito, un "Sonnet 4.6" suelto, y la lista de "Tipos de viaje" mezclada con la documentación técnica. → Tarea en Fase 6.
 
-Hay **otros 4 .md en la raíz** (`PROJECT_REVIEW.md`, `TESTING_PLAN.md`, `PERFORMANCE_OPTIMIZATION.md`, `HTTPS_SETUP.md`) y un `.rtf` en `_doc/`. Conviene consolidarlos en `/docs`.
+Los documentos antiguos (`PROJECT_REVIEW.md`, `TESTING_PLAN.md`, `PERFORMANCE_OPTIMIZATION.md`, `HTTPS_SETUP.md`, `nginx-scoretravelsblog.conf`) se han movido a `_doc/`, que está en `.gitignore`.
 
 ---
 
@@ -58,7 +58,7 @@ Severidad: 🔴 crítico · 🟠 alto · 🟡 medio · 🟢 bajo/mejora. Entre c
 | S-5 | 🟠 | **Suplantación de identidad**: `user` en comentarios, scores y experiencias se toma del body en vez de `req.user`. Se puede comentar/votar en nombre de otro. [A01/A08] | `commentsController.js:18`, `scoresController.js:18`, `experiencesController.js:55,120` |
 | S-6 | 🟠 | **El score medio lo calcula el navegador** y lo envía a `/update_score` en cada visita (`Score.tsx:28-37`). Es manipulable y genera escrituras por cada vista. Además no hay límite de 1 voto por usuario/experiencia ni validación de rango 1-5 → *ballot stuffing*. [A04/A08] | `Score.tsx`, `scoresController.js`, `scoresModel.js` |
 | S-7 | 🟠 | **Sin rate limiting**: `express-rate-limit` está instalado pero no se usa. Login (fuerza bruta), registro y `/emails/send_email` (spam/coste SMTP) quedan abiertos. [A07/A04] | `server/index.js` |
-| S-8 | 🟠 | **Producción por HTTP plano a una IP** (`http://146.190.159.240`): el JWT y las contraseñas viajan sin cifrar. `VITE_API_URL` existe en `server/utils/apiRoutes.ts` pero no se usa. [A02] | `client/src/config.js:5` |
+| S-8 | 🟠 | **La URL de producción apunta a HTTP plano sobre una IP** (aún no hay despliegue, pero cuando lo haya) (`http://146.190.159.240`): el JWT y las contraseñas viajan sin cifrar. `VITE_API_URL` existe en `server/utils/apiRoutes.ts` pero no se usa. [A02] | `client/src/config.js:5` |
 | S-9 | 🟠 | **Dependencias con CVEs conocidos** (ver §2.4). [A06] | `package.json` ×2 |
 | S-10 | 🟡 | **Enumeración de usuarios**: el login responde "Please provide a valid email" si no existe y "Invalid password" si existe. Todas las respuestas de error son `200 OK` con `ok:false`. [A07] | `usersController.js:38,48` |
 | S-11 | 🟡 | **Fuga de email**: el contexto guarda `user = email` y se envía como autor de comentarios/votos → los emails de los usuarios se muestran públicamente en los comentarios. `findAllUsers` además devuelve los hashes (`User.find()` sin `.select('-password')`). [A01/A02] | `App.tsx:54`, `Experience.tsx:126`, `usersController.js:68` |
@@ -86,7 +86,7 @@ Severidad: 🔴 crítico · 🟠 alto · 🟡 medio · 🟢 bajo/mejora. Entre c
 | B-9 | 🟡 | `AdminLayout` deja entrar si existe *cualquier* token (aunque sea inválido, hasta que responda `verify_token`) y no comprueba rol → un `author` ve todo el panel admin y recibe 403 en cada acción. | `AdminLayout.tsx:43` |
 | B-10 | 🟡 | `Register` hace login con un 2º request y espera 2 s artificiales; lo mismo en `Login`. El registro debería devolver directamente el token. | `Register.tsx:30-51`, `Login.tsx:41` |
 | B-11 | 🟡 | `index.html` precarga fuentes desde `/src/assets/fonts/...` → 404 en producción (en `dist` no existe `/src`). | `client/index.html:11-12` |
-| B-12 | 🟡 | `nginx-scoretravelsblog.conf`: los `location` de regex para `.js/.css/imágenes/fuentes` **no tienen `proxy_pass`** → nginx los busca en su `root` y devuelve 404; `/admin/api/` no existe; el bloque de Google Fonts no tiene sentido (un `location` no puede casar con otra URL); `proxy_cache_valid` sin `proxy_cache`; `Cache-Control: public` en API. | `nginx-scoretravelsblog.conf` |
+| B-12 | 🟡 | `nginx-scoretravelsblog.conf`: los `location` de regex para `.js/.css/imágenes/fuentes` **no tienen `proxy_pass`** → nginx los busca en su `root` y devuelve 404; `/admin/api/` no existe; el bloque de Google Fonts no tiene sentido (un `location` no puede casar con otra URL); `proxy_cache_valid` sin `proxy_cache`; `Cache-Control: public` en API. | `_doc/nginx-scoretravelsblog.conf` |
 | B-13 | 🟢 | `AdminLayout` y `About` usan `setTimeout` sin limpiar al desmontar. Carousel: la variable `slideStop` funciona al revés de lo que dice su nombre. | `AdminLayout.tsx:17`, `About.tsx:104`, `Carousel.tsx:124` |
 | B-14 | 🟢 | `robots.txt` con typo (`User=agent`) y fuera de `public/` (no se sirve); `sitemap.txt` vacío. | `client/robots.txt` |
 
@@ -192,7 +192,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [ ] Revisar matriz de permisos: imágenes y ciudades → `requireAdmin`; `update_score` → eliminar endpoint público. Decidir si el registro debe estar abierto (para comentar/votar sí, pero con rol `user`, no `author`). (S-4)
 - [ ] Score en servidor: índice único `{experience, user}`, `score` entero 1-5, recalcular media en servidor al votar; quitar el POST de `Score.tsx`. (S-6, A-4)
 - [ ] `express-rate-limit` en `/users/login`, `/users/register`, `/emails/send_email` y global suave. (S-7)
-- [ ] HTTPS: dominio + certbot (ya documentado en `HTTPS_SETUP.md`), `URL` del cliente desde `VITE_API_URL`, `app.set('trust proxy', 1)`. (S-8)
+- [ ] HTTPS: dominio + certbot (ver `_doc/HTTPS_SETUP.md`), `URL` del cliente desde `VITE_API_URL`, `app.set('trust proxy', 1)`. (S-8)
 - [ ] Mensaje genérico de login ("Credenciales inválidas") y códigos HTTP correctos (400/401/403/404/409). (S-10)
 - [ ] `User.find().select('-password')` y DTOs de salida. (S-11)
 - [ ] `jwt.verify(token, secret, { algorithms: ['HS256'] })`, fallar al arrancar si falta `JWT_SECRET`. Valorar cookie `httpOnly; Secure; SameSite=Strict` en lugar de `localStorage`. (S-12)
@@ -234,13 +234,14 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [ ] Server: Vitest/Jest + Supertest + `mongodb-memory-server`. Cubrir primero auth, permisos por rol, validación (casos de inyección y del crash S-2), scores.
 - [ ] Client: completar integración (flujos login, comentar, votar, CRUD admin) con MSW; e2e con Playwright para 3-4 flujos críticos.
 - [ ] `ci.yml`: lint + typecheck + test + build de client **y** server; `npm audit --audit-level=high`; Dependabot/Renovate.
-- [ ] Deploy: decidir **una** estrategia (droplet+nginx vs Vercel+API aparte). Arreglar o borrar `deploy.ml`. Corregir `nginx-scoretravelsblog.conf` (B-12): servir `dist` directamente desde nginx (`root` + `try_files $uri /index.html`) y proxy solo `/api` y `/uploads`.
-- [ ] Quitar `client/dist` y las imágenes subidas del repo; `.gitignore` actualizado. (A-12)
+- [ ] Deploy (ahora mismo no hay ningún entorno desplegado): decidir **una** estrategia (droplet+nginx vs Vercel+API aparte). Arreglar o borrar `deploy.ml`. Corregir `_doc/nginx-scoretravelsblog.conf` (B-12): servir `dist` directamente desde nginx (`root` + `try_files $uri /index.html`) y proxy solo `/api` y `/uploads`.
+- [x] `client/dist` fuera del repo y en `.gitignore`. (A-12)
+- [ ] Sacar del repo las imágenes subidas (`client/public/images`) cuando se mueva la carpeta de uploads (S-16).
 
 ### Fase 6 — Producto, portfolio y documentación (continuo) 🟢
 
 - [ ] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. Mover la lista de "tipos de viaje" a `docs/` o al modelo de categorías.
-- [ ] Consolidar `PROJECT_REVIEW.md`, `TESTING_PLAN.md`, `PERFORMANCE_OPTIMIZATION.md`, `HTTPS_SETUP.md`, `_doc/` y este plan en `docs/`.
+- [ ] Revisar lo aprovechable de `_doc/` (HTTPS, rendimiento, testing) e incorporarlo a una carpeta `docs/` actualizada.
 - [ ] SEO: meta y Open Graph por experiencia, sitemap, robots; valorar prerender/SSR.
 - [ ] Accesibilidad y `prefers-reduced-motion`.
 - [ ] About/portfolio: contenido externo (JSON/MD/BD), proyectos, CV, decidir idioma o i18n (A-14).
