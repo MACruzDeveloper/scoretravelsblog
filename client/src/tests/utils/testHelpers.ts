@@ -112,7 +112,7 @@ export const mockFetch = (
   response: Record<string, any>,
   status: number = 200
 ) => {
-  global.fetch = vi.fn(() =>
+  globalThis.fetch = vi.fn(() =>
     Promise.resolve(
       new Response(JSON.stringify(response), {
         status,
@@ -126,7 +126,7 @@ export const mockFetch = (
  * Restaurar fetch original
  */
 export const restoreFetch = () => {
-  global.fetch = fetch
+  globalThis.fetch = fetch
 }
 
 /**

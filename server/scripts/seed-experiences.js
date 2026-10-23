@@ -9,7 +9,7 @@
  *   node scripts/seed-experiences.js 10         # generates 10
  *   node scripts/seed-experiences.js 10 --user=admin
  */
-require('dotenv').config()
+require('dotenv').config({ quiet: true })
 
 const mongoose = require('mongoose')
 const Experiences = require('../models/experiencesModel')
@@ -47,7 +47,7 @@ async function main() {
   }
 
   console.log('Connecting to the database...')
-  await mongoose.connect(process.env.ATLAS_URL, { useUnifiedTopology: true, useNewUrlParser: true })
+  await mongoose.connect(process.env.ATLAS_URL)
 
   const categories = await Categories.find({}).lean()
   const cities = await Cities.find({}).select('name').lean()

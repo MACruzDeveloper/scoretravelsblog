@@ -211,11 +211,20 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 ### Fase 2 — Actualización de dependencias (2-3 días) 🟠
 
-- [ ] Server: mongoose 8 (activar `sanitizeFilter`, quitar opciones obsoletas, `populate` con await), jsonwebtoken 9, multer 2, validator 13 (o eliminar a favor de zod), nodemailer, argon2, sharp, dotenv. Express 4.22.x ahora; Express 5 en Fase 3.
-- [ ] Client: vite + vitest + plugin-react al día, ESLint 9 + typescript-eslint 8, react 18.3, react-router 6.30 (luego 7), dompurify 3.4.17+.
-- [ ] Sustituir `moment`/`react-moment` y `lodash`; limpiar paquetes sin uso y recolocar `dependencies`/`devDependencies`.
-- [ ] Añadir `.nvmrc` y `engines` (Node 22 LTS).
-- [ ] Verificar con `npm audit` = 0 altas/críticas y suite de tests verde.
+- [x] Server: mongoose 5 → 9, jsonwebtoken 9, multer 2, nodemailer 10, argon2 0.45, sharp 0.35.5, dotenv 18, express 4.22.3, helmet/cors/morgan/rate-limit al día. Código adaptado (`returnDocument`, sin `execPopulate` ni opciones de conexión obsoletas, ObjectId validado con regex).
+- [x] Server: eliminados `validator` y `@genkit-ai/express` (sin uso); `genkit` y `nodemon` pasan a `devDependencies`; scripts `start` (node), `dev` (nodemon), `migrate:*`.
+- [x] Server: `npm audit --omit=dev` → **0 vulnerabilidades**. Las que quedan en desarrollo vienen de `genkit` (OpenTelemetry, sin arreglo publicado) y de `nodemon`.
+- [x] Client: React 18.3, react-router 7, dompurify, react-icons 5, zustand, leaflet al día. Vite 4 → 8 (Rolldown, `codeSplitting` por grupos), vitest 1 → 5, testing-library 16, jest-dom 7, msw 2.15, TypeScript 5.9, ESLint 9 (flat config) + typescript-eslint 8.
+- [x] Client: eliminados `moment`, `react-moment`, `lodash`, `trig-js`, `prop-types`, `sass-loader`, `@types/jest`, `@types/react-helmet`, `wait-on`, `nodemon`; sustituidos por `utils/collections.ts`, `utils/format.ts` y `<FormattedDate>` (con tests).
+- [x] Client: `npm audit` → **0 vulnerabilidades**. ESLint: 0 errores (antes 30), 49 avisos (casi todos `any`).
+- [x] `.nvmrc` (22.12) y `engines` en ambos `package.json`; CI usa `.nvmrc`.
+- [ ] Actualizar Node local a la última 22.x LTS (o 24): `jsdom` 28 necesita Node > 22.12, por eso está fijado en 26.
+- [ ] React 19 + react-leaflet 5 (cuando haya tiempo para probar el mapa a fondo).
+- [ ] Migrar Sass de `@import` y funciones globales a `@use`/módulos (los avisos están silenciados en `vite.config.ts`).
+- [ ] Activar las reglas del React Compiler de `eslint-plugin-react-hooks` 7 cuando se aborde la Fase 4.
+- [x] Regresiones tras la actualización, corregidas: fuentes Catamaran sin empaquetar (rutas `url()` con alias `@/assets/fonts`), dos reglas reordenadas por Sass (declaraciones antes de los `@include`), `build.cssTarget` para que Lightning CSS mantenga sintaxis compatible con Safari 14+.
+- [x] Mapa: CARTO exige ahora API key (gratuita). Se lee de `VITE_CARTO_API_KEY` en `client/.env.local`; sin clave se usa OpenStreetMap estándar. Documentado en `client/.env.example`.
+- [ ] Al desplegar: restringir la API key de CARTO al dominio en su panel.
 
 ### Fase 3 — Arquitectura del backend (4-6 días) 🟡
 
@@ -236,6 +245,8 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [ ] Formularios con `react-hook-form` + zod; labels, `autocomplete`, mensajes de error visibles (§2.5).
 - [ ] Manejo de errores unificado (toast/Msgbox) en vez de `console.log`. (A-11)
 - [ ] Eliminar código muerto: `PrivateRoute.tsx`, `_Image.tsx`, comentarios de axios.
+- [x] Página de Experience: imagen por defecto (`thumb.png`, la misma que `Card`) cuando la experiencia no tiene imágenes, con test.
+- [x] Biblioteca de imágenes: más recientes primero por defecto y sin columna de dimensiones.
 
 ### Fase 5 — Tests y CI/CD (3-4 días) 🟡
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { sortBy } from 'lodash'
+import { sortBy } from '@/utils/collections'
 import { useCategoriesStore } from '@/store/categoriesStore'
 
 export type PropsSelectCategories = {
@@ -9,7 +9,7 @@ export type PropsSelectCategories = {
 
 const SelectCategories = ({ handleChange, selected }: PropsSelectCategories) => {
   const { cats, loading, error, fetchCats } = useCategoriesStore()
-  const sortedCats = sortBy(cats, [cat => cat.name.toLowerCase()])
+  const sortedCats = sortBy(cats, cat => cat.name.toLowerCase())
 
   useEffect(() => {
     fetchCats()

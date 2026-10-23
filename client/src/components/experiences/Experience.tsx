@@ -4,13 +4,14 @@ import { getData, postData } from '@utils/utils'
 import { useScoresStore } from '../../store/scoresStore'
 import { URL } from '../../config'
 import { useParams } from 'react-router-dom'
-import Moment from 'react-moment'
+import FormattedDate from '@/components/common/FormattedDate'
 import CommentsByExp from '../CommentsByExp'
 import Score from '../Score'
 import Stars from '../Stars'
 import Msgbox from '../common/Msgbox'
 import Spinner from '../common/Spinner'
 import Carousel from '../Carousel'
+import thumb from '@images/thumb.png'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 
 type PropsExperience = {
@@ -160,8 +161,8 @@ const Experience = ({ user }: PropsExperience) => {
                   <Score exp={exp} scores={scores} />
                 </div>
 
-                {experienceImages.length > 0 &&
-                  <Carousel
+                {experienceImages.length > 0
+                  ? <Carousel
                     images={experienceImages}
                     showTitle={false}
                     title={experience.title}
@@ -169,6 +170,8 @@ const Experience = ({ user }: PropsExperience) => {
                     autoplay={false}
                     interval={4000}
                   />
+                  // Same default image as the cards when there are no photos
+                  : <img className="content_image" src={thumb} alt={experience.title} />
                 }
 
                 <p className="content_info">
@@ -179,7 +182,7 @@ const Experience = ({ user }: PropsExperience) => {
                     {/* <span className="cat">{experience.category}</span> */}
                   </span>
                   <span className="date">
-                    <Moment format="YYYY/MM/DD">{experience.date}</Moment>
+                    <FormattedDate date={experience.date} />
                   </span>
                 </p>
 

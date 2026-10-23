@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, ChangeEvent, useMemo } from 'react'
 import { postData } from '@/utils/utils'
-import Moment from 'react-moment'
-import { sortBy } from "lodash"
+import FormattedDate from '@/components/common/FormattedDate'
+import { sortBy } from '@/utils/collections'
 import { MdDelete, MdEdit, MdClose, MdCheckCircle, MdAddCircleOutline } from 'react-icons/md'
 import { useExperienceStore, Experience, City } from '@/store/experienceStore'
 import { URL } from '../../../config'
@@ -34,7 +34,7 @@ const Experiences = () => {
   // Show Add experience form
   const [isFormAddVisible, setIsFormAddVisible] = useState(false)
   const showFormAdd = () => {
-    !isFormAddVisible ? setIsFormAddVisible(true) : setIsFormAddVisible(false)
+    setIsFormAddVisible(!isFormAddVisible)
   }
 
   const handleChangeUpdate = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -44,7 +44,7 @@ const Experiences = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      let url = `${URL}/admin/experiences/delete`
+      const url = `${URL}/admin/experiences/delete`
       await postData(url, { _id: id })
       setRefreshTrigger(prev => prev + 1)
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
@@ -180,7 +180,7 @@ const Experiences = () => {
   }
 
   const sortedExps = useMemo(() => {
-    if (!sortColumn) return sortBy(experiences, ['date']).reverse()
+    if (!sortColumn) return sortBy(experiences, 'date').reverse()
     const list = role === 'admin' ? experiences : experiences.filter(exp => exp.user === user)
     return [...list].sort((a, b) => {
       const aVal = (a as any)[sortColumn]
@@ -242,7 +242,7 @@ const Experiences = () => {
       <div className="tGroup" key={ele._id}>
         <div className="tRow">
           <div className="tCol">
-            <span><Moment format="YYYY/MM/DD">{ele.date}</Moment></span>
+            <span><FormattedDate date={ele.date} /></span>
           </div>
           <div className="tCol ellipsis">
             <span>{ele.user}</span>

@@ -63,10 +63,10 @@ const Categories = () => {
     e.preventDefault()
 
     try {
-      let url = `${URL}/admin/categories/add`
+      const url = `${URL}/admin/categories/add`
       const name = valuesInputAdd.name?.trim() ?? ''
       const description = valuesInputAdd.description?.trim() ?? ''
-      let result = cats.findIndex(item => item.name.toLowerCase() === name.toLowerCase())
+      const result = cats.findIndex(item => item.name.toLowerCase() === name.toLowerCase())
       if (result === -1) {
         if (reg.exec(name)) {
           await postData(url, { name, description })
@@ -87,7 +87,7 @@ const Categories = () => {
   const onClickDelete = async (ele: Cat) => {
     setUpdateActive(null)
     try {
-      let url = `${URL}/admin/categories/delete`
+      const url = `${URL}/admin/categories/delete`
       await postData(url, { name: ele.name })
       await fetchCats(true)
       setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
@@ -97,7 +97,7 @@ const Categories = () => {
   }
 
   const onClickShowUpdate = async (idx: string) => {
-    let idCat = cats.findIndex(e => e._id === idx)
+    const idCat = cats.findIndex(e => e._id === idx)
     if (idCat === -1) return
     setUpdateActive(idx)
     setValuesInputUpdate({ 
@@ -114,7 +114,7 @@ const Categories = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      let url = `${URL}/admin/categories/update`
+      const url = `${URL}/admin/categories/update`
       const updatedName = valuesInputUpdate.name?.trim() ?? ''
       const updatedDescription = valuesInputUpdate.description?.trim() ?? ''
       if (reg.exec(updatedName)) {

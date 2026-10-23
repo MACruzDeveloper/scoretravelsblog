@@ -56,11 +56,25 @@ export const getIconForContinent = (continent: string) => {
   })
 }
 
+// CARTO requires a (free) API key: https://carto.com/basemaps/apikey
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY
+
 // CartoDB Positron Light tile layer configuration
-export const MAP_TILE_LAYER = {
-  url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+const CARTO_LIGHT_LAYER = {
+  url: `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_API_KEY}`,
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   subdomains: 'abcd',
   maxZoom: 20,
 }
+
+// Fallback without key so the map never shows CARTO's "API key required" tiles
+const OSM_STANDARD_LAYER = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  subdomains: 'abc',
+  maxZoom: 19,
+}
+
+export const MAP_TILE_LAYER = CARTO_API_KEY ? CARTO_LIGHT_LAYER : OSM_STANDARD_LAYER

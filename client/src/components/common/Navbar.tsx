@@ -54,11 +54,11 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
   }
 
   useOutsideClick(refNav, () => {
-    isOpenNav && setIsOpenNav(false)
+    if (isOpenNav) setIsOpenNav(false)
   })
 
   useOutsideClick(refNavAdmin, () => {
-    isOpenNavAdmin && setIsOpenNavAdmin(false)
+    if (isOpenNavAdmin) setIsOpenNavAdmin(false)
   })
 
   return <nav className="navbar">

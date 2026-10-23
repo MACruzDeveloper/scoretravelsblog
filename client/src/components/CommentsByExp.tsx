@@ -1,4 +1,4 @@
-import Moment from 'react-moment'
+import FormattedDate from '@/components/common/FormattedDate'
 import type { Comment } from '@/store/commentsStore'
 
 type PropsComments = {
@@ -21,7 +21,7 @@ const CommentsByExp = ({ comments }: PropsComments) => {
               <p className="info">
                 <span className="user">{ele.user}</span>
                 <span className="date">
-                  <Moment format="YYYY/MM/DD">{ele.date}</Moment>
+                  <FormattedDate date={ele.date} />
                 </span>
               </p>
             </li>

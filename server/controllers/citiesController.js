@@ -41,7 +41,7 @@ class citiesController {
       const city = await City.findOneAndUpdate(
         { name, countryCode },
         { name, country, countryCode, continent, lat, lng },
-        { upsert: true, new: true, runValidators: true }
+        { upsert: true, returnDocument: 'after', runValidators: true }
       )
       res.send({ city })
     } catch (error) {
@@ -56,7 +56,7 @@ class citiesController {
       const updated = await City.findByIdAndUpdate(
         _id,
         { name, country, countryCode, continent, lat, lng },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
       )
       res.send({ updated })
     } catch (error) {

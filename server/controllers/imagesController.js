@@ -41,7 +41,8 @@ const upload_image = async (req, res) => {
 
 const fetch_images = async (req, res) => {
   try {
-    const images = await Images.find({}).select('-pathname');
+    // Newest first (ObjectIds grow with creation time)
+    const images = await Images.find({}).select('-pathname').sort({ _id: -1 });
     res.status(200).json({ images });
   } catch (error) {
     console.error('Fetch images failed:', error.message)

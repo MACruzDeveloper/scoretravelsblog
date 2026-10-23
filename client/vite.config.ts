@@ -1,33 +1,36 @@
-import { defineConfig, UserConfig } from 'vite'
-import type { InlineConfig } from 'vitest'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import sass from 'sass'
 import path from 'path'
 
-interface VitestConfigExport extends UserConfig {
-  test: InlineConfig
-}
+// Vendor chunks: each group of packages goes to its own file for better caching.
+// Higher priority wins, so React always lands in vendor-react even when a map
+// or icon package depends on it.
+const vendorGroup = (name: string, packages: string[], priority: number) => ({
+  name,
+  priority,
+  test: new RegExp(`[\\\\/]node_modules[\\\\/](${packages.join('|')})[\\\\/]`),
+})
 
-/** @type {import('vite').UserConfig} */
 export default defineConfig({
   plugins: [react()],
   resolve: {
     mainFields: [],
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@images': path.resolve(__dirname, './src/assets/images'),
-      '@admin': path.resolve(__dirname, './src/components/admin'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@common': path.resolve(__dirname, './src/components/common'),
-      '@store': path.resolve(__dirname, './src/store'),
-      '@utils': path.resolve(__dirname, './src/utils'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@hooks': path.resolve(import.meta.dirname, './src/hooks'),
+      '@images': path.resolve(import.meta.dirname, './src/assets/images'),
+      '@admin': path.resolve(import.meta.dirname, './src/components/admin'),
+      '@components': path.resolve(import.meta.dirname, './src/components'),
+      '@common': path.resolve(import.meta.dirname, './src/components/common'),
+      '@store': path.resolve(import.meta.dirname, './src/store'),
+      '@utils': path.resolve(import.meta.dirname, './src/utils'),
     },
   },
   css: {
     preprocessorOptions: {
       scss: {
-        implementation: sass,
+        // TODO: migrate @import and global functions to @use (Sass 3 removes them)
+        silenceDeprecations: ['import', 'global-builtin', 'color-functions'],
       },
     },
   },
@@ -39,14 +42,16 @@ export default defineConfig({
         drop_console: true,
       },
     },
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['react-moment', 'dompurify'],
-          'vendor-icons': ['react-icons'],
-          'vendor-map': ['leaflet', 'react-leaflet'],
-          'vendor-zustand': ['zustand'],
+        codeSplitting: {
+          groups: [
+            vendorGroup('vendor-react', ['react', 'react-dom', 'react-router', 'react-router-dom', 'scheduler'], 50),
+            vendorGroup('vendor-map', ['leaflet', 'react-leaflet', '@react-leaflet'], 40),
+            vendorGroup('vendor-icons', ['react-icons'], 30),
+            vendorGroup('vendor-ui', ['dompurify'], 20),
+            vendorGroup('vendor-zustand', ['zustand'], 10),
+          ],
         },
       },
     },
@@ -54,6 +59,9 @@ export default defineConfig({
     sourcemap: false,
     // Reduce CSS size
     cssCodeSplit: true,
+    // Same browsers Vite 4 supported: keeps classic CSS syntax (min-width media
+    // queries, rgba colors) instead of newer forms older Safari versions ignore
+    cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
   },
   server: {
     open: true,
@@ -65,4 +73,4 @@ export default defineConfig({
     setupFiles: "./src/setupTests.js",
     css: true,
   }
-} as VitestConfigExport)
+})

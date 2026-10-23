@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import Moment from 'react-moment'
+import FormattedDate from '@/components/common/FormattedDate'
 import { URL } from '../../config'
 import thumb from '@images/thumb.png'
 import { City } from '../../store/experienceStore'
@@ -38,7 +38,7 @@ const Card = ({ _id, title, city, content, date, image, images, score, lazy }: P
 
       { date && 
       <p className="card_date">
-        <Moment format="YYYY/MM/DD">{date}</Moment>
+        <FormattedDate date={date} />
       </p> 
       }
       <p className="card_content">{content}</p>

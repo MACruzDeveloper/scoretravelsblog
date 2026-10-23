@@ -24,7 +24,7 @@ class scoresController {
       const done = await scores.findOneAndUpdate(
         { experience, userId: req.user._id },
         { experience, userId: req.user._id, user: req.user.username, score },
-        { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+        { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true }
       );
       const summary = await recalculateExperienceScore(experience);
       res.send({ ok: true, score: done.score, experienceScore: summary.score, votes: summary.count });

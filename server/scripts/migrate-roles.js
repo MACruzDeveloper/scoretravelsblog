@@ -5,7 +5,7 @@
  *   node scripts/migrate-roles.js          # dry run, only prints what would change
  *   node scripts/migrate-roles.js --apply  # writes the changes
  */
-require('dotenv').config()
+require('dotenv').config({ quiet: true })
 
 const mongoose = require('mongoose')
 const Users = require('../models/usersModels')
@@ -17,11 +17,11 @@ async function main() {
     console.error('ERROR: Missing ATLAS_URL in server/.env')
     process.exit(1)
   }
-  await mongoose.connect(process.env.ATLAS_URL, { useUnifiedTopology: true, useNewUrlParser: true })
+  await mongoose.connect(process.env.ATLAS_URL)
   console.log(apply ? 'APPLYING changes' : 'DRY RUN (use --apply to write changes)')
 
-  // Anything that is not admin becomes a regular user
-  const filter = { role: { $ne: 'admin' } }
+  // Any legacy role (e.g. 'author') becomes a regular user
+  const filter = { role: { $nin: ['admin', 'user'] } }
   const users = await Users.find(filter).select('username role').lean()
   users.forEach((u) => console.log(`  ${u.username}: "${u.role}" -> "user"`))
   if (apply && users.length) await Users.updateMany(filter, { role: 'user' })

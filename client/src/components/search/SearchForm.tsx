@@ -48,7 +48,7 @@ const SearchForm = () => {
   }, [value])
 
   useOutsideClick(ref, () => {
-    isSearchFormOpen && setIsSearchFormOpen(false)
+    if (isSearchFormOpen) setIsSearchFormOpen(false)
   })
 
   return <div ref={ref} className="search_form">

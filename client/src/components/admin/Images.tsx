@@ -11,7 +11,8 @@ const Images = () => {
   const [images, setImages] = useState([])
   const [featuredValues, setFeaturedValues] = useState<Record<string, boolean>>({})
 
-  const [sortColumn, setSortColumn] = useState<string | null>('title')
+  // No column by default: newest images first, as returned by the server
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const itemsPerPage = 10
 
@@ -21,10 +22,9 @@ const Images = () => {
   // table columns
   const columns = [
     { key: 'featured', label: 'Featured', sortable: true, width: 'w10', align: 'center' },
-    { key: 'image', label: 'Image', sortable: false, width: 'w25' },
-    { key: 'dimensions', label: 'Dimensions', sortable: false, width: 'w15' },
-    { key: 'title', label: 'Title', sortable: true, width: 'w25' },
-    { key: 'actions', label: 'Action', sortable: false, width: 'w10', align: 'right' }
+    { key: 'image', label: 'Image', sortable: false, width: 'w30' },
+    { key: 'title', label: 'Title', sortable: true, width: 'w40' },
+    { key: 'actions', label: 'Action', sortable: false, width: 'w20', align: 'right' }
   ]
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const Images = () => {
     try {
       const res = await getData(`${URL}/images/fetch_images`)
       const dataImages = res.data.images
-      setImages([...dataImages].reverse())
+      setImages(dataImages)
     } catch (error) {
       console.log("error ==>", error)
     }
@@ -57,7 +57,7 @@ const Images = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      let url = `${URL}/images/update_image`
+      const url = `${URL}/images/update_image`
       await postData(url, { _id: idx, featured: featuredValues[idx] ?? false })
       setUpdateActive(null)
       setFeaturedValues(prev => {
@@ -74,7 +74,7 @@ const Images = () => {
 
   const onClickDelete = async (idx: string, filename: string) => {
     try {
-      let url = `${URL}/images/delete_image/${idx}/${filename}`
+      const url = `${URL}/images/delete_image/${idx}/${filename}`
       await deleteData(url)
       fetch_images()
       setMessage({ body: `Image removed!`, classname: 'msg_ok' })
@@ -94,7 +94,7 @@ const Images = () => {
   }
 
   const sortedImages = useMemo(() => {
-    if (!sortColumn) return [...images].reverse()
+    if (!sortColumn) return images
     return [...images].sort((a, b) => {
       const aVal = (a as any)[sortColumn]
       const bVal = (b as any)[sortColumn]
@@ -162,9 +162,6 @@ const Images = () => {
               src={`${URL}/static/images/${item.filename}`}
               alt={item.title}
             />
-          </div>
-          <div className="tCol">
-            <span>{item.width && item.height ? `${item.width}x${item.height}` : '-'}</span>
           </div>
           <div className="tCol">
             <span>{item.title || '-'}</span>

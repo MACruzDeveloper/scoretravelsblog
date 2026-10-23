@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { chunk } from 'lodash'
+import { chunk } from '@/utils/collections'
 import { MdArrowUpward } from 'react-icons/md'
 import { useExperienceStore, Experience } from "@/store/experienceStore"
 import { useExperienceFilters } from "@/hooks/useExperienceFilters"

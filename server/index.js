@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const express = require("express");
 const path = require('path');
 const app = express();
@@ -27,7 +27,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
       fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'blob:', 'https://*.basemaps.cartocdn.com', 'https://*.tile.openstreetmap.org', 'https://unpkg.com'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://*.basemaps.cartocdn.com', 'https://tile.openstreetmap.org', 'https://*.tile.openstreetmap.org', 'https://unpkg.com'],
       connectSrc: ["'self'", 'https://nominatim.openstreetmap.org', 'https://restcountries.com'],
       mediaSrc: ["'self'", 'blob:'],
       objectSrc: ["'none'"],
@@ -53,11 +53,9 @@ app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // =============== DATABASE CONNECTION =====================
 const mongoose = require('mongoose');
-mongoose.set('useCreateIndex', true);
-mongoose.set('useFindAndModify', false);
 async function connecting() {
   try {
-    await mongoose.connect(process.env.ATLAS_URL, { useUnifiedTopology: true, useNewUrlParser: true })
+    await mongoose.connect(process.env.ATLAS_URL)
     console.log('Connected to the DB')
   } catch (error) {
     console.log(error);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { sortBy } from "lodash"
+import { sortBy } from '@/utils/collections'
 import { useExperienceStore, City } from '@store/experienceStore'
 import Card, { PropsCard } from '@common/Card'
 import Pagination from '@common/Pagination'
@@ -43,7 +43,7 @@ const AllExperiences = () => {
   }, [filters])
 
   const sortedFiltered = useMemo(() =>
-    sortBy(filtered, ['date']).reverse()
+    sortBy(filtered, 'date').reverse()
   , [filtered])
 
   const indexOfLastItem = currentPage * itemsPerPage

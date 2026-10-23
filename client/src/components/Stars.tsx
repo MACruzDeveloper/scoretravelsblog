@@ -37,7 +37,7 @@ const Stars = ({ exp }: PropsStars) => {
 
     setIsSending(true)
     try {
-      let url = `${URL}/admin/scores/add`
+      const url = `${URL}/admin/scores/add`
       await postData(url, { experience: exp, score: i+1 })
       await fetchScores(true)
       setMessage({ body: `Score added!`, classname: 'msg_ok' })

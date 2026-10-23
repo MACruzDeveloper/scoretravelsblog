@@ -7,7 +7,7 @@ type ParamsPagination = {
 }
 
 const Pagination = ({ itemsPerPage, currentPage, totalItems, paginate }: ParamsPagination) => {
-  let pageNums = []
+  const pageNums = []
   for (let i = 1; i <= Math.ceil(totalItems / itemsPerPage); i++) {
     pageNums.push(i)
   }

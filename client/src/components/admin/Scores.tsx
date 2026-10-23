@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { postData } from '@utils/utils'
-import { sortBy } from 'lodash'
 import { MdDelete } from 'react-icons/md'
 import { useScoresStore } from '@store/scoresStore'
 import { URL } from '../../config'
@@ -19,7 +18,7 @@ const Scores = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      let url = `${URL}/admin/scores/delete`
+      const url = `${URL}/admin/scores/delete`
       await postData(url, { _id: id })
       await fetchScores(true)
       setMessage({ body: `Score deleted!`, classname: 'msg_ok' })
@@ -42,7 +41,8 @@ const Scores = () => {
   }
 
   const sortedScores = useMemo(() => {
-    if (!sortColumn) return sortBy(scores, ['date']).reverse()
+    // Scores have no date: newest first by insertion order
+    if (!sortColumn) return [...scores].reverse()
     return [...scores].sort((a, b) => {
       const aVal = (a as any)[sortColumn]
       const bVal = (b as any)[sortColumn]

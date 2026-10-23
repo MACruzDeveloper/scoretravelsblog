@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { postData } from '@/utils/utils'
-import { sortBy } from "lodash"
-import Moment from 'react-moment'
+import { sortBy } from '@/utils/collections'
+import FormattedDate from '@/components/common/FormattedDate'
 import { MdDelete } from 'react-icons/md'
 import { useCommentsStore } from '@/store/commentsStore'
 import { URL } from '../../config'
@@ -20,7 +20,7 @@ const Comments = () => {
 
   const onClickDelete = async (id: string) => {
     try {
-      let url = `${URL}/admin/comments/delete`
+      const url = `${URL}/admin/comments/delete`
       await postData(url, { _id: id })
       await fetchComments(true)
       setMessage({ body: `Comment deleted!`, classname: 'msg_ok' })
@@ -43,7 +43,7 @@ const Comments = () => {
   }
 
   const sortedComments = useMemo(() => {
-    if (!sortColumn) return sortBy(comments, ['date']).reverse()
+    if (!sortColumn) return sortBy(comments, 'date').reverse()
     return [...comments].sort((a, b) => {
       const aVal = (a as any)[sortColumn]
       const bVal = (b as any)[sortColumn]
@@ -78,7 +78,7 @@ const Comments = () => {
             <span>{ele.user || 'Not registered'}</span>
           </div>
           <div className="tCol">
-            <span><Moment format="YYYY/MM/DD">{ele.date}</Moment></span>
+            <span><FormattedDate date={ele.date} /></span>
           </div>
           <div className="tCol">
             <span>{ele.experience}</span>

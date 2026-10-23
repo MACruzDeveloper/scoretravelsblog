@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { useExperienceStore, Experience } from '../store/experienceStore'
-import { sortBy } from 'lodash'
+import { sortBy } from '@/utils/collections'
 
 export const useLastExperiences = () => {
   const { experiences, loading, error } = useExperienceStore()
   const lastExperiences = useMemo(() => {
     const numDisplay = 3
-    const sortedExps = sortBy(experiences, ['date']).reverse()
+    const sortedExps = sortBy(experiences, 'date').reverse()
     return sortedExps.slice(0, numDisplay)
   }, [experiences])
 
@@ -17,9 +17,9 @@ export const useBestExperiences = () => {
   const { experiences, loading, error } = useExperienceStore()
   const bestExperiences = useMemo(() => {
     const numDisplay = 3
-    const sortedExps = sortBy(experiences, ['date'])
+    const sortedExps = sortBy(experiences, 'date')
     const expsWithScore = sortedExps.filter(item => item.score)
-    let bestExps = sortBy(expsWithScore, ['score']).reverse()
+    let bestExps = sortBy(expsWithScore, 'score').reverse()
     bestExps = bestExps.slice(0, numDisplay)
     return bestExps
   }, [experiences])
@@ -31,10 +31,10 @@ export const useTimelineExperiences = () => {
   const { experiences, loading, error } = useExperienceStore()
   const timelineExperiences = useMemo(() => {
     const filteredExpsWithScore = experiences?.filter((elem: Experience) => elem.score)
-    const sortedExperiences = sortBy(filteredExpsWithScore, ['date'])
+    const sortedExperiences = sortBy(filteredExpsWithScore, 'date')
 
-    let tempExps: Array<Experience & { year: number }> = []
-    for (let ele of sortedExperiences) {
+    const tempExps: Array<Experience & { year: number }> = []
+    for (const ele of sortedExperiences) {
       const date = new Date(ele.date || '')
       tempExps.push({
         ...ele,

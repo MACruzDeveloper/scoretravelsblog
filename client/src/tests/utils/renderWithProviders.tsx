@@ -30,7 +30,7 @@ export const resetAllStores = () => {
         })
       }
     })
-  } catch (error) {
+  } catch {
     // Silenciar errores en reset
     console.debug('Store reset completed')
   }

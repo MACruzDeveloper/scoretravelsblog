@@ -35,3 +35,6 @@ dist/
 
 # uploaded images
 server/uploads/
+
+# TypeScript incremental build info
+*.tsbuildinfo

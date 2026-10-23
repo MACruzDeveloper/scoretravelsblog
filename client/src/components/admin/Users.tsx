@@ -30,7 +30,7 @@ const Users = () => {
   ]
 
   const getUsers = async () => {
-    let url = `${URL}/users`
+    const url = `${URL}/users`
     try {
       const res = await getData(url)
       setUsers(res.data)
@@ -54,7 +54,7 @@ const Users = () => {
   }
 
   const onClickShowUpdate = async (idx: string) => {
-    let idUser = users.findIndex(e => e._id === idx)
+    const idUser = users.findIndex(e => e._id === idx)
     if (idUser === -1) return
     setUpdateActive(idx)
     setNewRole(users[idUser].role)
@@ -67,7 +67,7 @@ const Users = () => {
 
   const onClickUpdate = async (idx: string) => {
     try {
-      let url = `${URL}/users/update`
+      const url = `${URL}/users/update`
       if (newRole !== '' && newUsername !== '') {
         await postData(url, { _id: idx, role: newRole, username: newUsername })
         setUpdateActive(null)
@@ -85,7 +85,7 @@ const Users = () => {
 
   const onClickDelete = async (idx: string) => {
     try {
-      let url = `${URL}/users/delete`
+      const url = `${URL}/users/delete`
       await postData(url, { _id: idx })
       getUsers()
       setMessage({ body: `User deleted!`, classname: 'msg_ok' })

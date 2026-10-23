@@ -65,7 +65,7 @@ class experiencesController {
         content: params.content,
         date: params.date || Date.now()
       })
-      const populated = await done.populate('city').execPopulate()
+      const populated = await done.populate('city')
       res.send(populated)
     } catch (error) {
       console.error('Create experience failed:', error.message)

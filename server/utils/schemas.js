@@ -1,9 +1,9 @@
 const path = require('path')
 const { z } = require('zod')
-const mongoose = require('mongoose')
+const { isValidId } = require('./validators')
 
 // =============== PRIMITIVES =====================
-const objectId = z.string().refine((value) => mongoose.isValidObjectId(value), 'Invalid id')
+const objectId = z.string().refine(isValidId, 'Invalid id')
 const text = (max) => z.string().trim().min(1).max(max)
 const optionalText = (max) => z.string().trim().max(max).optional()
 const email = z.string().trim().email().max(254)
