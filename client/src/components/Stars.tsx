@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import { postData } from '@utils/utils'
 import { MdStar, MdStarBorder } from 'react-icons/md'
 import { API } from '../config'
@@ -43,7 +44,7 @@ const Stars = ({ exp, onScored }: PropsStars) => {
       setMessage({ body: `Score added!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
-      setMessage({ body: error instanceof Error && error.message ? error.message : 'Could not add your score', classname: 'msg_error' })
+      setMessage({ body: getErrorMessage(error, 'Could not add your score'), classname: 'msg_error' })
     } finally {
       setIsSending(false)
     }

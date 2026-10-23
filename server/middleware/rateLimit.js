@@ -1,12 +1,13 @@
 const { rateLimit } = require('express-rate-limit')
 
-const limiter = (windowMinutes, limit, message) => rateLimit({
-  windowMs: windowMinutes * 60 * 1000,
-  limit,
-  standardHeaders: 'draft-8',
-  legacyHeaders: false,
-  message: { ok: false, message }
-})
+const limiter = (windowMinutes, limit, message) =>
+  rateLimit({
+    windowMs: windowMinutes * 60 * 1000,
+    limit,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { ok: false, message },
+  })
 
 // Generous global cap for the whole API
 const apiLimiter = limiter(15, 1000, 'Too many requests, please try again later')

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import { postData, patchData, deleteData } from '@/utils/utils'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { useCategoriesStore, Cat } from '@/store/categoriesStore'
@@ -81,6 +82,7 @@ const Categories = () => {
       }
     } catch (error) {
       console.log(error)
+      setMessage({ body: getErrorMessage(error, 'Could not add the category'), classname: 'msg_error' })
     }
   }
 
@@ -92,6 +94,7 @@ const Categories = () => {
       setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
+      setMessage({ body: getErrorMessage(error, 'Could not delete the category'), classname: 'msg_error' })
     }
   }
 
@@ -129,6 +132,7 @@ const Categories = () => {
       }
     } catch (error) {
       console.log(error)
+      setMessage({ body: getErrorMessage(error, 'Could not update the category'), classname: 'msg_error' })
     }
   }
 

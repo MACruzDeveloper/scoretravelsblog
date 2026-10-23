@@ -69,24 +69,30 @@ const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', '
 
 const classifyExperiencesInputSchema = z.object({
   categories: z.array(z.string()).min(1),
-  experiences: z.array(z.object({
-    id: z.string(),
-    title: z.string(),
-    content: z.string(),
-    // Old category, often a country name, used as a location hint
-    hint: z.string().optional(),
-  })).min(1),
+  experiences: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        content: z.string(),
+        // Old category, often a country name, used as a location hint
+        hint: z.string().optional(),
+      })
+    )
+    .min(1),
 })
 
 const classifyExperiencesOutputSchema = z.object({
-  results: z.array(z.object({
-    id: z.string(),
-    category: z.string(),
-    city: z.string().nullable(),
-    country: z.string().nullable(),
-    countryCode: z.string().nullable(),
-    continent: z.enum(CONTINENTS).nullable(),
-  })),
+  results: z.array(
+    z.object({
+      id: z.string(),
+      category: z.string(),
+      city: z.string().nullable(),
+      country: z.string().nullable(),
+      countryCode: z.string().nullable(),
+      continent: z.enum(CONTINENTS).nullable(),
+    })
+  ),
 })
 
 // Suggests a category from the given list and the main place of several existing
@@ -99,9 +105,9 @@ const classifyExperiencesFlow = ai.defineFlow(
     outputSchema: classifyExperiencesOutputSchema,
   },
   async (input) => {
-    const posts = input.experiences.map((exp) =>
-      `### id: ${exp.id}\nTitle: ${exp.title}\nLocation hint: ${exp.hint || '-'}\nText: ${exp.content}`
-    ).join('\n\n')
+    const posts = input.experiences
+      .map((exp) => `### id: ${exp.id}\nTitle: ${exp.title}\nLocation hint: ${exp.hint || '-'}\nText: ${exp.content}`)
+      .join('\n\n')
 
     const response = await ai.generate({
       output: { format: 'json', schema: classifyExperiencesOutputSchema },

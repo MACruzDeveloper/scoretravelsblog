@@ -8,12 +8,20 @@ const text = (max) => z.string().trim().min(1).max(max)
 const optionalText = (max) => z.string().trim().max(max).optional()
 const email = z.string().trim().email().max(254)
 const password = z.string().min(8, 'Password must be at least 8 characters').max(128)
-const username = z.string().trim().min(3).max(30)
+const username = z
+  .string()
+  .trim()
+  .min(3)
+  .max(30)
   .regex(/^[\p{L}\p{N}_.-]+$/u, 'Username can only contain letters, numbers, _ . -')
 // 'user': registered visitor who can comment and score; 'admin': manages the site
 const role = z.enum(['admin', 'user'])
 const score = z.number().int().min(1).max(5)
-const filename = z.string().trim().min(1).max(255)
+const filename = z
+  .string()
+  .trim()
+  .min(1)
+  .max(255)
   .refine((value) => value === path.basename(value) && !value.includes('..'), 'Invalid filename')
 
 const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', 'oceania', 'south-america', 'unknown']
@@ -22,17 +30,19 @@ const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', '
 const idParam = z.object({ id: objectId })
 
 // =============== USERS =====================
-const register = z.object({
-  username,
-  email,
-  password,
-  password2: z.string()
-}).refine((data) => data.password === data.password2, { message: 'Passwords must match', path: ['password2'] })
+const register = z
+  .object({
+    username,
+    email,
+    password,
+    password2: z.string(),
+  })
+  .refine((data) => data.password === data.password2, { message: 'Passwords must match', path: ['password2'] })
 
 // Login does not enforce the password policy so older accounts can still sign in
 const login = z.object({
   email,
-  password: z.string().min(1).max(128)
+  password: z.string().min(1).max(128),
 })
 
 const addUser = z.object({ username, email, password, role: role.default('user') })
@@ -47,10 +57,14 @@ const updateCategory = addCategory
 const addCity = z.object({
   name: text(100),
   country: text(100),
-  countryCode: z.string().trim().regex(/^[A-Za-z]{2,3}$/, 'Invalid country code').transform((value) => value.toUpperCase()),
+  countryCode: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2,3}$/, 'Invalid country code')
+    .transform((value) => value.toUpperCase()),
   continent: z.enum(CONTINENTS),
   lat: z.number().min(-90).max(90),
-  lng: z.number().min(-180).max(180)
+  lng: z.number().min(-180).max(180),
 })
 const updateCity = addCity.partial()
 const continentParam = z.object({ continent: z.enum(CONTINENTS) })
@@ -64,7 +78,7 @@ const experienceFields = {
   image: z.union([filename, z.literal('')]).optional(),
   images: z.array(filename).max(5).optional(),
   content: optionalText(20000),
-  date: z.coerce.date().optional()
+  date: z.coerce.date().optional(),
 }
 const addExperience = z.object(experienceFields)
 
@@ -79,7 +93,10 @@ const listExperiences = z.object({
   minScore: z.coerce.number().min(1).max(5).optional(),
   year: z.coerce.number().int().min(1900).max(2100).optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
-  hasImage: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
+  hasImage: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
   sort: z.enum(['-date', 'date', '-score', 'score', 'title', '-title']).default('-date'),
 })
 const updateExperience = z.object({ ...experienceFields, title: experienceFields.title.optional() })
@@ -103,17 +120,29 @@ const sendEmail = z.object({
   subject: optionalText(200),
   message: text(5000),
   // Honeypot: hidden field that humans leave empty
-  website: z.string().max(200).optional()
+  website: z.string().max(200).optional(),
 })
 
 module.exports = {
   idParam,
-  register, login, addUser, updateUser,
-  addCategory, updateCategory,
-  addCity, updateCity, continentParam, countryParam,
-  addExperience, updateExperience, listExperiences,
-  addComment, updateComment,
-  addScore, updateScore,
-  updateImage, uploadImage,
-  sendEmail
+  register,
+  login,
+  addUser,
+  updateUser,
+  addCategory,
+  updateCategory,
+  addCity,
+  updateCity,
+  continentParam,
+  countryParam,
+  addExperience,
+  updateExperience,
+  listExperiences,
+  addComment,
+  updateComment,
+  addScore,
+  updateScore,
+  updateImage,
+  uploadImage,
+  sendEmail,
 }

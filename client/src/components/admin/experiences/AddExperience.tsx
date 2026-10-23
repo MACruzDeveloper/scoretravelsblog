@@ -1,4 +1,5 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import { postData } from '@/utils/utils'
 import { API } from '../../../config'
 import { Experience } from '@/store/experienceStore'
@@ -59,6 +60,7 @@ const AddExperience = ({ user, handleFetchExperiences, isFormAddVisible, setIsFo
       setSelectedFilenames([])
     } catch (error) {
       console.log(error)
+      setMessage({ body: getErrorMessage(error, 'Could not add the experience'), classname: 'msg_error' })
     }
   }
 

@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const Images = require('../models/imagesModel')
 const Experiences = require('../models/experiencesModel')
-const { UPLOADS_DIR } = require('../utils/paths')
+const { uploadsDir: UPLOADS_DIR } = require('../config')
 
 // Resolve a stored filename inside the uploads folder, refusing anything that escapes it
 const resolveUpload = (filename) => {
@@ -21,10 +21,8 @@ const unlinkUpload = async (filePath) => {
 const countExperiencesUsing = (filename) =>
   Experiences.countDocuments({ $or: [{ image: filename }, { images: filename }] })
 
-const getExperienceImages = (experience) => [
-  experience.image,
-  ...(Array.isArray(experience.images) ? experience.images : [])
-].filter(Boolean)
+const getExperienceImages = (experience) =>
+  [experience.image, ...(Array.isArray(experience.images) ? experience.images : [])].filter(Boolean)
 
 /**
  * Deletes the given images unless another experience still uses them or they are

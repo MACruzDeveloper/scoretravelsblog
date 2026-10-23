@@ -66,10 +66,14 @@ async function main() {
   const cityByName = new Map(cities.map((c) => [c.name, c._id]))
 
   if (count > cityNames.length) {
-    console.warn(`NOTE: You asked for ${count} experiences but there are only ${cityNames.length} cities. The model will start repeating cities.`)
+    console.warn(
+      `NOTE: You asked for ${count} experiences but there are only ${cityNames.length} cities. The model will start repeating cities.`
+    )
   }
 
-  console.log(`Generating ${count} mock experiences from ${categoryNames.length} categories and ${cityNames.length} cities...`)
+  console.log(
+    `Generating ${count} mock experiences from ${categoryNames.length} categories and ${cityNames.length} cities...`
+  )
 
   const generated = []
   const usedCities = []
@@ -78,9 +82,7 @@ async function main() {
     try {
       // Only offer cities not yet used in this batch, forcing variety.
       // If we run out (batch larger than city count), fall back to all cities.
-      const availableCities = remainingCities.length
-        ? remainingCities
-        : cityNames
+      const availableCities = remainingCities.length ? remainingCities : cityNames
 
       const result = await generateMockExperienceFlow({
         categories: categoryNames,
@@ -96,7 +98,7 @@ async function main() {
 
       // Map the chosen city name back to its ObjectId; fall back to a random city
       // if the model returned something off-list.
-      const cityId = (cityByName.get(result.city) || cities[Math.floor(Math.random() * cities.length)]._id)
+      const cityId = cityByName.get(result.city) || cities[Math.floor(Math.random() * cities.length)]._id
 
       const experience = {
         user,
@@ -108,7 +110,9 @@ async function main() {
       }
 
       generated.push(experience)
-      console.log(`  [${i + 1}/${count}] "${result.title}" (${result.city}, ${result.category}) [left: ${remainingCities.length}]`)
+      console.log(
+        `  [${i + 1}/${count}] "${result.title}" (${result.city}, ${result.category}) [left: ${remainingCities.length}]`
+      )
     } catch (err) {
       console.warn(`  [${i + 1}/${count}] failed: ${err.message}`)
     }

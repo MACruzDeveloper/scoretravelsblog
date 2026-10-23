@@ -30,7 +30,11 @@ const NOMINATIM_DELAY_MS = 1100
 const USER_AGENT = 'ScoreTravelsBlog backfill script (https://github.com/TxikiCruz/scoretravelsblog)'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const stripHtml = (html = '') => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+const stripHtml = (html = '') =>
+  html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 
 // Free tier: few requests per day and per minute, so several experiences go in each request
 const BATCH_SIZE = 10
@@ -86,8 +90,8 @@ async function propose() {
     .filter((name) => !REMOVED_CATEGORIES.includes(name))
   const byLowerName = new Map(categoryNames.map((name) => [name.toLowerCase(), name]))
   const existingCities = await Cities.find().lean()
-  const findCity = (name, countryCode) => existingCities.find((c) =>
-    c.name.toLowerCase() === name.toLowerCase() && c.countryCode === countryCode)
+  const findCity = (name, countryCode) =>
+    existingCities.find((c) => c.name.toLowerCase() === name.toLowerCase() && c.countryCode === countryCode)
 
   const previous = loadPreviousEntries()
   const experiences = await Experiences.find().select('title content category city').lean()
@@ -118,29 +122,37 @@ async function propose() {
   // 2. The rest, in batches
   const pending = entries.filter((e) => e.status === 'pending')
   const byId = new Map(experiences.map((exp) => [String(exp._id), exp]))
-  console.log(`${entries.length - pending.length} experiences resolved without Gemini, ${pending.length} pending (${Math.ceil(pending.length / BATCH_SIZE)} requests)\n`)
+  console.log(
+    `${entries.length - pending.length} experiences resolved without Gemini, ${pending.length} pending (${Math.ceil(pending.length / BATCH_SIZE)} requests)\n`
+  )
 
   for (let start = 0; start < pending.length; start += BATCH_SIZE) {
     const batch = pending.slice(start, start + BATCH_SIZE)
     const batchNumber = start / BATCH_SIZE + 1
     let results
     try {
-      const output = await withRetry(() => classifyExperiencesFlow({
-        categories: categoryNames,
-        experiences: batch.map((entry) => ({
-          id: entry._id,
-          title: entry.title,
-          content: stripHtml(byId.get(entry._id).content).slice(0, 700),
-          hint: entry.category ? '' : entry.currentCategory,
-        })),
-      }), `batch ${batchNumber}`)
+      const output = await withRetry(
+        () =>
+          classifyExperiencesFlow({
+            categories: categoryNames,
+            experiences: batch.map((entry) => ({
+              id: entry._id,
+              title: entry.title,
+              content: stripHtml(byId.get(entry._id).content).slice(0, 700),
+              hint: entry.category ? '' : entry.currentCategory,
+            })),
+          }),
+        `batch ${batchNumber}`
+      )
       results = new Map(output.results.map((r) => [r.id, r]))
     } catch (error) {
       saveProposal(entries)
       if (isDailyQuotaError(error)) {
         console.error(`\nGemini daily quota reached. Progress saved: run "propose" again tomorrow to continue.`)
       } else {
-        console.error(`\nBatch ${batchNumber} failed: ${error.message.slice(0, 150)}\nProgress saved: run "propose" again to continue.`)
+        console.error(
+          `\nBatch ${batchNumber} failed: ${error.message.slice(0, 150)}\nProgress saved: run "propose" again to continue.`
+        )
       }
       return
     }
@@ -151,28 +163,47 @@ async function propose() {
         entry.note = 'Gemini returned no answer for this experience: run propose again or fill it by hand'
         continue
       }
-      if (entry.categorySource === 'gemini') entry.category = byLowerName.get((result.category || '').toLowerCase()) || null
+      if (entry.categorySource === 'gemini')
+        entry.category = byLowerName.get((result.category || '').toLowerCase()) || null
       if (entry.needsCity && result.city && result.countryCode) {
         const countryCode = result.countryCode.toUpperCase()
         const known = findCity(result.city, countryCode)
         if (known) {
           entry.city = { existingId: String(known._id), name: known.name, country: known.country }
         } else {
-          const coords = await withRetry(() => geocode({ city: result.city, country: result.country, countryCode }), `geocode ${result.city}`)
-          entry.city = { name: result.city, country: result.country, countryCode, continent: result.continent, lat: coords?.lat ?? null, lng: coords?.lng ?? null }
+          const coords = await withRetry(
+            () => geocode({ city: result.city, country: result.country, countryCode }),
+            `geocode ${result.city}`
+          )
+          entry.city = {
+            name: result.city,
+            country: result.country,
+            countryCode,
+            continent: result.continent,
+            lat: coords?.lat ?? null,
+            lng: coords?.lng ?? null,
+          }
           if (!coords) entry.note = 'Place not found in OpenStreetMap: fill lat/lng or set skip'
         }
       }
       entry.status = entry.note ? 'review' : 'ready'
-      const cityText = entry.city ? `${entry.city.name}, ${entry.city.country}` : entry.needsCity ? '(no city)' : '(keeps city)'
-      console.log(`- ${entry.title}\n    category: ${entry.currentCategory || '-'} -> ${entry.category || '?'}   city: ${cityText}${entry.note ? `\n    NOTE: ${entry.note}` : ''}`)
+      const cityText = entry.city
+        ? `${entry.city.name}, ${entry.city.country}`
+        : entry.needsCity
+          ? '(no city)'
+          : '(keeps city)'
+      console.log(
+        `- ${entry.title}\n    category: ${entry.currentCategory || '-'} -> ${entry.category || '?'}   city: ${cityText}${entry.note ? `\n    NOTE: ${entry.note}` : ''}`
+      )
     }
     saveProposal(entries)
     if (start + BATCH_SIZE < pending.length) await sleep(BATCH_DELAY_MS)
   }
 
   const toReview = entries.filter((e) => e.status !== 'ready').length
-  console.log(`\nProposal written to ${path.relative(process.cwd(), PROPOSAL_FILE)} (${toReview} entries need review). Then run: node scripts/backfill-experiences.js apply`)
+  console.log(
+    `\nProposal written to ${path.relative(process.cwd(), PROPOSAL_FILE)} (${toReview} entries need review). Then run: node scripts/backfill-experiences.js apply`
+  )
 }
 
 async function apply() {
@@ -186,7 +217,8 @@ async function apply() {
   let created = 0
 
   const pending = entries.filter((e) => e.status === 'pending').length
-  if (pending) console.warn(`  ${pending} entries are still pending (run "propose" again); only their safe changes are applied`)
+  if (pending)
+    console.warn(`  ${pending} entries are still pending (run "propose" again); only their safe changes are applied`)
 
   for (const entry of entries) {
     if (entry.skip) continue
@@ -225,7 +257,9 @@ async function apply() {
   }
 
   const removed = await Categories.deleteMany({ name: { $in: removeCategories } })
-  console.log(`Updated ${updated} experiences, created ${created} cities, removed ${removed.deletedCount} categories (${removeCategories.join(', ')})`)
+  console.log(
+    `Updated ${updated} experiences, created ${created} cities, removed ${removed.deletedCount} categories (${removeCategories.join(', ')})`
+  )
 }
 
 async function main() {

@@ -2,117 +2,82 @@ const User = require('../models/usersModels')
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
 const { JWT_ALGORITHM } = require('../middleware/auth')
-const jwt_secret = process.env.JWT_SECRET
+const { jwtSecret } = require('../config')
+const { badRequest, unauthorized, notFound, conflict } = require('../utils/httpErrors')
 
 // Same message for unknown email and wrong password, to avoid user enumeration
 const INVALID_CREDENTIALS = 'Invalid email or password'
-
-const isDuplicateKey = (error) => error && error.code === 11000
+const IN_USE = 'Email or username already in use'
 
 // Never send password hashes to the client
 const toPublicUser = (user) => ({ _id: user._id, username: user.username, email: user.email, role: user.role })
 
+const ensureAvailable = async (email, username) => {
+  if (await User.exists({ $or: [{ email }, { username }] })) throw conflict(IN_USE)
+}
+
 const register = async (req, res) => {
   const { username, email, password } = req.body
-  try {
-    const existing = await User.findOne({ $or: [{ email }, { username }] })
-    if (existing) return res.status(409).json({ ok: false, message: 'Email or username already in use' })
-    const hash = await argon2.hash(password)
-    await User.create({ username, email, password: hash, role: 'user' })
-    res.status(201).json({ ok: true, message: 'Successful register' })
-  } catch (error) {
-    if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'Email or username already in use' })
-    console.error('Register failed:', error.message)
-    res.status(500).json({ ok: false, message: 'Registration failed' })
-  }
+  await ensureAvailable(email, username)
+  await User.create({ username, email, password: await argon2.hash(password), role: 'user' })
+  res.status(201).json({ ok: true, message: 'Successful register' })
 }
 
 const login = async (req, res) => {
   const { email, password } = req.body
-  try {
-    const user = await User.findOne({ email })
-    const match = user ? await argon2.verify(user.password, password) : false
-    if (!match) return res.status(401).json({ ok: false, message: INVALID_CREDENTIALS })
+  const user = await User.findOne({ email })
+  const match = user ? await argon2.verify(user.password, password) : false
+  if (!match) throw unauthorized(INVALID_CREDENTIALS)
 
-    const token = jwt.sign(
-      { _id: user._id, username: user.username, email: user.email, role: user.role },
-      jwt_secret,
-      { expiresIn: '1d', algorithm: JWT_ALGORITHM }
-    )
-    res.json({ ok: true, message: `Hi ${user.username}!`, token, username: user.username, email: user.email, role: user.role })
-  } catch (error) {
-    console.error('Login failed:', error.message)
-    res.status(500).json({ ok: false, message: 'Login failed' })
-  }
+  const token = jwt.sign({ _id: user._id, username: user.username, email: user.email, role: user.role }, jwtSecret, {
+    expiresIn: '1d',
+    algorithm: JWT_ALGORITHM,
+  })
+  res.json({
+    ok: true,
+    message: `Hi ${user.username}!`,
+    token,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  })
 }
 
 // The token was already verified by requireAuth
 const me = (req, res) => {
   const { _id, username, email, role } = req.user
-  return res.json({ ok: true, user: { _id, username, email, role } })
+  res.json({ ok: true, user: { _id, username, email, role } })
 }
 
 const findAllUsers = async (req, res) => {
-  try {
-    const us = await User.find().select('-password')
-    res.send(us)
-  }
-  catch (error) {
-    console.error('Fetch users failed:', error.message)
-    res.status(500).json({ ok: false, message: 'Error fetching users' })
-  }
+  res.send(await User.find().select('-password'))
 }
 
 const addNewUser = async (req, res) => {
   const { username, email, password, role } = req.body
-  try {
-    const existing = await User.findOne({ $or: [{ email }, { username }] })
-    if (existing) return res.status(409).json({ ok: false, message: 'Email or username already in use' })
-    const hash = await argon2.hash(password)
-    const done = await User.create({ username, email, password: hash, role })
-    res.status(201).json({ ok: true, user: toPublicUser(done) })
-  }
-  catch (error) {
-    if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'Email or username already in use' })
-    console.error('Create user failed:', error.message)
-    res.status(500).json({ ok: false, message: 'Error creating user' })
-  }
+  await ensureAvailable(email, username)
+  const done = await User.create({ username, email, password: await argon2.hash(password), role })
+  res.status(201).json({ ok: true, user: toPublicUser(done) })
 }
 
 const deleteUser = async (req, res) => {
-  const _id = req.params.id
-  if (String(_id) === String(req.user._id)) {
-    return res.status(400).json({ ok: false, message: 'You cannot delete your own account' })
-  }
-  try {
-    const removed = await User.deleteOne({ _id })
-    if (!removed.deletedCount) return res.status(404).json({ ok: false, message: 'User not found' })
-    res.send({ removed })
-  }
-  catch (error) {
-    console.error('Delete user failed:', error.message)
-    res.status(500).json({ ok: false, message: 'Error deleting user' })
-  }
+  if (String(req.params.id) === String(req.user._id)) throw badRequest('You cannot delete your own account')
+  const removed = await User.deleteOne({ _id: req.params.id })
+  if (!removed.deletedCount) throw notFound('User not found')
+  res.send({ removed })
 }
 
 const updateUser = async (req, res) => {
-  const _id = req.params.id
   const { username, role } = req.body
-  if (String(_id) === String(req.user._id) && role && role !== 'admin') {
-    return res.status(400).json({ ok: false, message: 'You cannot remove your own admin role' })
+  if (String(req.params.id) === String(req.user._id) && role && role !== 'admin') {
+    throw badRequest('You cannot remove your own admin role')
   }
-  try {
-    const updateData = {}
-    if (role) updateData.role = role
-    if (username) updateData.username = username
-    const updated = await User.updateOne({ _id }, updateData)
-    res.send({ updated })
-  }
-  catch (error) {
-    if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'Username already in use' })
-    console.error('Update user failed:', error.message)
-    res.status(500).json({ ok: false, message: 'Error updating user' })
-  }
+  const updateData = {}
+  if (role) updateData.role = role
+  if (username) updateData.username = username
+  const updated = await User.updateOne({ _id: req.params.id }, updateData)
+  if (!updated.matchedCount) throw notFound('User not found')
+  res.send({ updated })
 }
 
 module.exports = { register, login, me, findAllUsers, addNewUser, deleteUser, updateUser }

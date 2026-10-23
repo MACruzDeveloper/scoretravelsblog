@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import DOMPurify from 'dompurify'
 import { postData } from '@utils/utils'
 import { API } from '../../config'
@@ -109,7 +110,7 @@ const Experience = ({ user }: PropsExperience) => {
       }
     } catch (error) {
       console.log(error)
-      setMessage({ body: error instanceof Error && error.message ? error.message : 'Could not add your comment', classname: 'msg_error' })
+      setMessage({ body: getErrorMessage(error, 'Could not add your comment'), classname: 'msg_error' })
     }
   }
 

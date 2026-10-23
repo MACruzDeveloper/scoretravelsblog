@@ -1,185 +1,107 @@
-const experiences = require('../models/experiencesModel');
-const comments = require('../models/commentsModel');
-const { getExperienceImages, removeUnusedImages } = require('../services/imageService');
-const { listExperiences, getFacets, getTimeline } = require('../services/experienceQuery');
+const experiences = require('../models/experiencesModel')
+const comments = require('../models/commentsModel')
+const scores = require('../models/scoresModel')
+const categories = require('../models/categoriesModel')
+const { getExperienceImages, removeUnusedImages } = require('../services/imageService')
+const { listExperiences, getFacets, getTimeline } = require('../services/experienceQuery')
+const { badRequest, notFound } = require('../utils/httpErrors')
 
-const normalizeExperienceImages = (params) => {
-  const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
-  const hasImagePayload = Object.prototype.hasOwnProperty.call(params, 'image')
-
-  const rawImages = hasImagesPayload
-    ? Array.isArray(params.images)
-      ? params.images
-      : params.images
-        ? [params.images]
-        : []
-    : []
-
-  const images = rawImages
-    .filter((item) => typeof item === 'string' && item && item !== 'null')
-    .slice(0, 5)
-
-  const image = images.length
-    ? images[0]
-    : hasImagePayload && typeof params.image === 'string' && params.image && params.image !== 'null'
-      ? params.image
-      : ''
-
-  return { images, image, hasImagesPayload, hasImagePayload }
+// Stored spelling of a category ('ocio' -> 'Ocio'); '' for none. Unknown categories are rejected
+const resolveCategory = async (name) => {
+  if (!name) return ''
+  const category = await categories.findByName(name)
+  if (!category) throw badRequest(`Unknown category: ${name}`)
+  return category.name
 }
 
-class experiencesController {
-  // Paginated and filtered list: { items, total, page, limit, pages }
-  async findAllExperiences(req, res) {
-    try {
-      res.send(await listExperiences(req.query))
-    } catch (error) {
-      console.error('Fetch experiences failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error fetching experiences' })
-    }
-  }
+// The cover image is the first of the gallery; `image` alone is still accepted
+const coverOf = (images, image) => images[0] || image || ''
 
-  async findFacets(req, res) {
-    try {
-      res.send(await getFacets())
-    } catch (error) {
-      console.error('Fetch facets failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error fetching filters' })
-    }
-  }
-
-  async findTimeline(req, res) {
-    try {
-      res.send(await getTimeline())
-    } catch (error) {
-      console.error('Fetch timeline failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error fetching timeline' })
-    }
-  }
-
-  async findExperienceComments(req, res) {
-    try {
-      const list = await comments.find({ experience: req.params.id }).select('-userId').sort({ date: -1 })
-      res.send(list)
-    } catch (error) {
-      console.error('Fetch experience comments failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error fetching comments' })
-    }
-  }
-
-  async findExperience(req, res) {
-    let expId = req.params.id
-    try {
-      const exp = await experiences.findById(expId).select('-userId').populate('city')
-      if (!exp) return res.status(404).json({ ok: false, message: 'Experience not found' })
-      res.send(exp)
-    } catch (error) {
-      console.error('Fetch experience failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error fetching experience' })
-    }
-  }
-
-  async addNewExperience(req, res) {
-    let params = req.body
-    const { images, image } = normalizeExperienceImages(params)
-
-    try {
-      const done = await experiences.create({
-        // Author always comes from the token
-        user: req.user.username,
-        userId: req.user._id,
-        title: params.title,
-        image,
-        images,
-        category: params.category,
-        city: params.city,
-        content: params.content,
-        date: params.date || Date.now()
-      })
-      const populated = await done.populate('city')
-      res.send(populated)
-    } catch (error) {
-      console.error('Create experience failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error creating experience' })
-    }
-  }
-
-  async deleteExperience(req, res) {
-    const _id = req.params.id
-    try {
-      const existing = await experiences.findById(_id)
-      if (!existing) return res.status(404).json({ ok: false, message: 'Experience not found' })
-      const removed = await experiences.deleteOne({ _id })
-      // Images no other experience uses and that are not featured go away too
-      const removedImages = await removeUnusedImages(getExperienceImages(existing))
-      res.send({ removed, removedImages })
-    } catch (error) {
-      console.error('Delete experience failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error deleting experience' })
-    }
-  }
-
-  async updateExperience(req, res) {
-    let params = req.body
-    let currentExp
-    try {
-      currentExp = await experiences.findById(req.params.id)
-    } catch (error) {
-      console.error('Fetch experience failed:', error.message)
-      return res.status(500).json({ ok: false, message: 'Error updating experience' })
-    }
-    if (!currentExp) {
-      return res.status(404).json({ ok: false, message: 'Experience not found' })
-    }
-
-    const {
-      images: normalizedImages,
-      image: normalizedImage,
-      hasImagesPayload,
-      hasImagePayload
-    } = normalizeExperienceImages(params)
-
-    const existingImages = Array.isArray(currentExp.images)
-      ? currentExp.images.filter((item) => typeof item === 'string' && item)
-      : []
-
-    const images = hasImagesPayload
-      ? normalizedImages
-      : existingImages.length > 0
-        ? existingImages
-        : currentExp.image
-          ? [currentExp.image]
-          : []
-
-    const image = hasImagesPayload
-      ? normalizedImage
-      : hasImagePayload
-        ? normalizedImage
-        : currentExp.image || (images.length ? images[0] : '')
-
-    try {
-      await experiences.updateOne(
-        { _id: req.params.id },
-        {
-          image,
-          images,
-          title: params.title,
-          category: params.category,
-          city: params.city,
-          content: params.content,
-        }
-      )
-      const updated = await experiences.findById(req.params.id).select('-userId').populate('city')
-      // Images dropped in this edit are cleaned up if nothing else uses them
-      const kept = new Set(getExperienceImages({ image, images }))
-      const removedImages = await removeUnusedImages(getExperienceImages(currentExp).filter((name) => !kept.has(name)))
-      res.send({ updated, removedImages })
-    } catch (error) {
-      console.error('Update experience failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error updating experience' })
-    }
-  }
+// Paginated and filtered list: { items, total, page, limit, pages }
+const findAllExperiences = async (req, res) => {
+  res.send(await listExperiences(req.query))
 }
 
+const findFacets = async (req, res) => {
+  res.send(await getFacets())
+}
 
-module.exports = new experiencesController();
+const findTimeline = async (req, res) => {
+  res.send(await getTimeline())
+}
+
+const findExperience = async (req, res) => {
+  const exp = await experiences.findById(req.params.id).select('-userId').populate('city')
+  if (!exp) throw notFound('Experience not found')
+  res.send(exp)
+}
+
+const findExperienceComments = async (req, res) => {
+  res.send(await comments.find({ experience: req.params.id }).select('-userId').sort({ date: -1 }))
+}
+
+const addNewExperience = async (req, res) => {
+  const { title, content, city, date } = req.body
+  const images = req.body.images || []
+  const done = await experiences.create({
+    // Author always comes from the token
+    user: req.user.username,
+    userId: req.user._id,
+    title,
+    content,
+    city,
+    category: await resolveCategory(req.body.category),
+    images,
+    image: coverOf(images, req.body.image),
+    date: date || Date.now(),
+  })
+  res.send(await done.populate('city'))
+}
+
+const updateExperience = async (req, res) => {
+  const current = await experiences.findById(req.params.id)
+  if (!current) throw notFound('Experience not found')
+
+  const { title, content, city } = req.body
+  const update = { title, content, city }
+  if (req.body.category !== undefined) update.category = await resolveCategory(req.body.category)
+  if (req.body.images !== undefined) {
+    update.images = req.body.images
+    update.image = coverOf(req.body.images, req.body.image)
+  } else if (req.body.image !== undefined) {
+    update.image = req.body.image
+  }
+
+  await experiences.updateOne({ _id: current._id }, update)
+  const updated = await experiences.findById(current._id).select('-userId').populate('city')
+
+  // Images dropped in this edit are cleaned up if nothing else uses them
+  const kept = new Set(getExperienceImages(updated))
+  const removedImages = await removeUnusedImages(getExperienceImages(current).filter((name) => !kept.has(name)))
+  res.send({ updated, removedImages })
+}
+
+const deleteExperience = async (req, res) => {
+  const existing = await experiences.findById(req.params.id)
+  if (!existing) throw notFound('Experience not found')
+  const removed = await experiences.deleteOne({ _id: existing._id })
+  // Its comments and votes would be orphans
+  await Promise.all([
+    comments.deleteMany({ experience: existing._id }),
+    scores.deleteMany({ experience: existing._id }),
+  ])
+  // Images no other experience uses and that are not featured go away too
+  const removedImages = await removeUnusedImages(getExperienceImages(existing))
+  res.send({ removed, removedImages })
+}
+
+module.exports = {
+  findAllExperiences,
+  findFacets,
+  findTimeline,
+  findExperience,
+  findExperienceComments,
+  addNewExperience,
+  updateExperience,
+  deleteExperience,
+}

@@ -25,7 +25,8 @@ async function main() {
 
   const votedIds = await Scores.distinct('experience')
   const experiences = await Experiences.find({ _id: { $in: votedIds.filter((id) => mongoose.isValidObjectId(id)) } })
-    .select('title score votes').lean()
+    .select('title score votes')
+    .lean()
 
   for (const exp of experiences) {
     if (apply) {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import { deleteData, getData, patchData } from '@utils/utils'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
 import { URL, API } from '../../config'
@@ -78,7 +79,7 @@ const Images = () => {
       setMessage({ body: `Image removed!`, classname: 'msg_ok' })
     } catch (error) {
       console.log("error ==>", error)
-      setMessage({ body: error instanceof Error && error.message ? error.message : 'Could not remove the image', classname: 'msg_error' })
+      setMessage({ body: getErrorMessage(error, 'Could not remove the image'), classname: 'msg_error' })
     }
   }
 

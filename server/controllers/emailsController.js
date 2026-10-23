@@ -1,45 +1,44 @@
 const nodemailer = require('nodemailer')
+const { smtp } = require('../config')
+const { HttpError } = require('../utils/httpErrors')
 
-// SMTP transport (Brevo). Credentials come from .env
+// SMTP transport (Brevo). Credentials come from .env through config.js
 const transport = nodemailer.createTransport({
-	host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-	port: Number(process.env.SMTP_PORT) || 587,
-	secure: false,
-	auth: {
-		user: process.env.SMTP_USER,
-		pass: process.env.SMTP_PASS
-	}
+  host: smtp.host,
+  port: smtp.port,
+  secure: false,
+  auth: { user: smtp.user, pass: smtp.pass },
 })
 
-const sanitizeCrlf = (value) =>
-  typeof value === 'string' ? value.replace(/[\r\n]+/g, ' ') : ''
+const sanitizeCrlf = (value) => (typeof value === 'string' ? value.replace(/[\r\n]+/g, ' ') : '')
 
 const escapeHtml = (value) =>
   typeof value === 'string'
-    ? value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    ? value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
     : ''
 
+const DEFAULT_SUBJECT = 'This is a default subject'
+
 const send_email = async (req, res) => {
-	const { name, email, subject, message, website } = req.body
-	// Honeypot filled: answer as if it worked so bots don't retry
-	if (website) return res.json({ ok: true, message: 'email sent' })
-	const default_subject = 'This is a default subject'
-	const mailOptions = {
-		from: process.env.SMTP_FROM || process.env.SMTP_USER,
-		replyTo: sanitizeCrlf(email),
-		to: process.env.SMTP_TO || process.env.SMTP_FROM || process.env.SMTP_USER,
-		subject: "New message from " + sanitizeCrlf(name),
-		text: `${sanitizeCrlf(name)} <${sanitizeCrlf(email)}> wrote:\n\n${message}`,
-		html: '<p>' + escapeHtml(subject || default_subject) + '</p><p><pre>' + escapeHtml(message) + '</pre></p>'
-	}
-	try {
-		await transport.sendMail(mailOptions)
-		return res.json({ ok: true, message: 'email sent' })
-	}
-	catch (err) {
-		console.error('Email send failed:', err.code || err.message)
-		return res.status(500).json({ ok: false, message: 'Error sending email' })
-	}
+  const { name, email, subject, message, website } = req.body
+  // Honeypot filled: answer as if it worked so bots don't retry
+  if (website) return res.json({ ok: true, message: 'email sent' })
+
+  try {
+    await transport.sendMail({
+      from: smtp.from,
+      replyTo: sanitizeCrlf(email),
+      to: smtp.to,
+      subject: `New message from ${sanitizeCrlf(name)}`,
+      text: `${sanitizeCrlf(name)} <${sanitizeCrlf(email)}> wrote:\n\n${message}`,
+      html: `<p>${escapeHtml(subject || DEFAULT_SUBJECT)}</p><p><pre>${escapeHtml(message)}</pre></p>`,
+    })
+  } catch (error) {
+    // The SMTP error may contain server details: log it, answer a generic message
+    console.error('Email send failed:', error.code || error.message)
+    throw new HttpError(502, 'Error sending email')
+  }
+  res.json({ ok: true, message: 'email sent' })
 }
 
 module.exports = { send_email }

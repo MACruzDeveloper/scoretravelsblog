@@ -71,7 +71,9 @@ const getFacets = async () => {
       { $sort: { _id: -1 } },
     ]),
   ])
-  const cities = await Cities.find({ _id: { $in: cityIds } }).select('name').sort({ name: 1 })
+  const cities = await Cities.find({ _id: { $in: cityIds } })
+    .select('name')
+    .sort({ name: 1 })
   return {
     categories: categories.sort((a, b) => a.localeCompare(b)),
     cities,

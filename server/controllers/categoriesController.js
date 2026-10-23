@@ -1,69 +1,45 @@
 const categories = require('../models/categoriesModel')
+const experiences = require('../models/experiencesModel')
+const { notFound, conflict } = require('../utils/httpErrors')
 
-const isDuplicateKey = (error) => error && error.code === 11000
-
-class categoriesController {
-  async findAllCategories(req, res) {
-    try {
-      const cats = await categories.find()
-      res.send(cats)
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching categories' })
-    }
-  }
-
-  async addNewCategory(req, res) {
-    let params = req.body
-    try {
-      const done = await categories.create({name: params.name, description: params.description})
-      res.send(done)
-    }
-    catch (error) {
-      if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'The category already exists' })
-      console.error('Create category failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error creating category' })
-    }
-  }
-
-  async deleteCategory(req, res) {
-    const _id = req.params.id
-
-    try {
-      const removed = await categories.deleteOne({ _id })
-      if (!removed.deletedCount) return res.status(404).json({ ok: false, message: 'Category not found' })
-      res.send({ removed })
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error deleting category' })
-    }
-  }
-
-  async updateCategory(req, res) {
-    let params = req.body
-    try {
-      const updated = await categories.updateOne(
-        { _id: req.params.id }, { name: params.name, description: params.description }
-      )
-      res.send({ updated })
-    }
-    catch (error) {
-      if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'The category already exists' })
-      console.error('Update category failed:', error.message)
-      res.status(500).json({ ok: false, message: 'Error updating category' })
-    }
-  }
-
-  async findOneCategory(req, res) {
-    try {
-      const cat = await categories.findById(req.params.id)
-      if (!cat) return res.status(404).json({ ok: false, message: 'Category not found' })
-      res.send(cat)
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching category' })
-    }
-  }
+const findAllCategories = async (req, res) => {
+  res.send(await categories.find().sort({ name: 1 }).collation({ locale: 'en', strength: 2 }))
 }
 
-module.exports = new categoriesController()
+const findOneCategory = async (req, res) => {
+  const category = await categories.findById(req.params.id)
+  if (!category) throw notFound('Category not found')
+  res.send(category)
+}
+
+// Names are unique ignoring case (index on the model): a repeated one answers 409
+const addNewCategory = async (req, res) => {
+  const { name, description } = req.body
+  res.send(await categories.create({ name, description }))
+}
+
+// Renaming also renames the category in every experience that uses it
+const updateCategory = async (req, res) => {
+  const { name, description } = req.body
+  const category = await categories.findById(req.params.id)
+  if (!category) throw notFound('Category not found')
+  const oldName = category.name
+  category.name = name
+  category.description = description
+  await category.save()
+  const renamed =
+    oldName !== name ? (await experiences.updateMany({ category: oldName }, { category: name })).modifiedCount : 0
+  res.send({ updated: category, renamedInExperiences: renamed })
+}
+
+// A category in use cannot be deleted: experiences store its name
+const deleteCategory = async (req, res) => {
+  const category = await categories.findById(req.params.id)
+  if (!category) throw notFound('Category not found')
+  const inUse = await experiences.countDocuments({ category: category.name })
+  if (inUse) throw conflict(`Category is used by ${inUse} experience(s). Change them first`)
+  const removed = await categories.deleteOne({ _id: category._id })
+  res.send({ removed })
+}
+
+module.exports = { findAllCategories, findOneCategory, addNewCategory, updateCategory, deleteCategory }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext, ChangeEvent, useMemo } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import { postData, patchData, deleteData } from '@/utils/utils'
 import FormattedDate from '@/components/common/FormattedDate'
 import { sortBy } from '@/utils/collections'
@@ -49,6 +50,7 @@ const Experiences = () => {
       setMessage({ body: `Experience deleted!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
+      setMessage({ body: getErrorMessage(error, 'Could not delete the experience'), classname: 'msg_error' })
     }
   }
 
@@ -158,6 +160,7 @@ const Experiences = () => {
       setMessage({ body: 'Experience updated!', classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
+      setMessage({ body: getErrorMessage(error, 'Could not update the experience'), classname: 'msg_error' })
     }
   }
 

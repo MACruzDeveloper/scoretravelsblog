@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 
-const jwt_secret = process.env.JWT_SECRET
+const { jwtSecret: jwt_secret } = require('../config')
 // Pin the algorithm so tokens signed with anything else are rejected
 const JWT_ALGORITHM = 'HS256'
 

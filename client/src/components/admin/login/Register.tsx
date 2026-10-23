@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
+import { getErrorMessage } from '@/utils/errors'
 import { postData } from '@/utils/utils'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { API } from '../../../config'
@@ -46,7 +47,7 @@ const Register = ({ login }: PropsRegister) => {
     }
     catch (error) {
       console.log(error)
-      setMessage({ body: error instanceof Error && error.message ? error.message : 'Connection error, please try again', classname: 'msg_error' })
+      setMessage({ body: getErrorMessage(error, 'Connection error, please try again'), classname: 'msg_error' })
     }
   }
 
@@ -78,7 +79,7 @@ const Register = ({ login }: PropsRegister) => {
     }
     catch (error) {
       console.log(error)
-      setMessage({ body: error instanceof Error && error.message ? error.message : 'Connection error, please try again', classname: 'msg_error' })
+      setMessage({ body: getErrorMessage(error, 'Connection error, please try again'), classname: 'msg_error' })
     } finally {
       setIsRegistering(false)
     }

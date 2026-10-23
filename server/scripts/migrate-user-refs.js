@@ -45,7 +45,9 @@ async function migrate(Model, label, usersByEmail, usersByName) {
     updated++
   }
 
-  console.log(`${label}: ${docs.length} without userId, ${updated} matched to a user, ${orphans} without a matching user`)
+  console.log(
+    `${label}: ${docs.length} without userId, ${updated} matched to a user, ${orphans} without a matching user`
+  )
 }
 
 async function main() {

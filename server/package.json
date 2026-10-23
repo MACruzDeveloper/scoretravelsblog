@@ -12,7 +12,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "scores:recalculate": "node scripts/recalculate-scores.js",
     "backfill:propose": "node scripts/backfill-experiences.js propose",
-    "backfill:apply": "node scripts/backfill-experiences.js apply"
+    "backfill:apply": "node scripts/backfill-experiences.js apply",
+    "migrate:data-model": "node scripts/migrate-data-model.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -21,7 +25,7 @@
     "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
-    "express": "^4.22.3",
+    "express": "^5.3.0",
     "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
@@ -33,9 +37,14 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@genkit-ai/google-genai": "^1.43.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
     "genkit": "^1.43.0",
-    "nodemon": "^3.1.14"
+    "globals": "^17.13.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.10"
   },
   "engines": {
     "node": ">=22.12"

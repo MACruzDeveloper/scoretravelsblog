@@ -228,20 +228,26 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 ### Fase 3 — Arquitectura del backend (4-6 días) 🟡
 
-- [ ] Estructura `routes → validators → controllers → services → models`; `asyncHandler` o Express 5; error handler central con clases de error (`NotFound`, `Validation`…).
+- [x] Express 4 → 5 (captura los errores de los handlers `async`). Errores HTTP (`utils/httpErrors.js`: `badRequest`, `notFound`, `conflict`…) y manejador central (`middleware/errorHandler.js`) que además traduce duplicados (409), ids inválidos y validaciones de Mongoose (400). Controladores reescritos como funciones sin `try/catch` repetidos. Capas: `routes` (validación zod) → `controllers` → `services` (consultas, votos, imágenes) → `models`.
 - [x] API REST bajo `/api` (`routes/index.js`) con verbos correctos: `GET/POST /api/<recurso>`, `GET/PATCH/DELETE /api/<recurso>/:id`, `/api/auth/{register,login,me}`, `/api/contact`. El id va en la URL y se valida; las imágenes se borran por id (el nombre de fichero sale de la BD). Rutas `/api` desconocidas → 404 JSON. Resuelve B-15. (A-2)
 - [x] Paginación, búsqueda y filtros en servidor: `GET /api/experiences?page&limit&search&category&city&continent&minScore&year&month&hasImage&sort` → `{ items, total, page, limit, pages }`; `/api/experiences/facets` (opciones de los filtros), `/api/experiences/timeline` (mejor por año, en una agregación) y `/api/experiences/:id/comments`. Índices en `date`, `score`, `category`, `city`. (A-3)
 - [x] Cliente: cada pantalla pide solo lo que muestra (`api/experiences.ts` + `useApiQuery`, que descarta respuestas obsoletas y comparte peticiones iguales en curso). La galería carga más páginas con "Show more"; la búsqueda y la búsqueda por continente paginan en el servidor (`SearchResults`). Los stores de Zustand quedan solo para el admin.
 - [x] Las experiencias guardan `votes` (número de votos) junto a `score`; la página de detalle ya no descarga todos los votos. `GET /api/comments` y `GET /api/scores` (listas completas) pasan a ser solo de admin.
-- [ ] Ejecutar `npm run scores:recalculate -- --apply` en el servidor para rellenar `votes` en las experiencias con votos.
+- [x] `npm run scores:recalculate -- --apply` ejecutado (32 experiencias con votos).
 - [x] Bug previo: el enlace "Oceania" buscaba `australia` y nunca devolvía resultados.
 - [ ] Admin: paginar y ordenar las tablas en el servidor (hoy el admin descarga todas las páginas con `listAllExperiences`).
-- [ ] Modelo: `ObjectId` en referencias (categoría, usuario, experiencia), `timestamps`, índices, borrado en cascada o comprobación de uso. Script de migración de datos existentes. (B-4, A-5)
+- [x] Modelo de datos (B-4, A-5):
+  - Comentarios y votos referencian la experiencia con `ObjectId`; al borrar una experiencia se borran sus comentarios y votos.
+  - Categorías: se mantienen por nombre en las experiencias (menos invasivo y compatible con el script de limpieza), pero con integridad: nombre único sin distinguir mayúsculas, renombrar actualiza las experiencias, no se puede borrar una categoría en uso (409) y al guardar una experiencia la categoría debe existir (se guarda con su grafía oficial).
+  - `timestamps` (`createdAt`/`updatedAt`) en todos los modelos.
+  - Índices sincronizados con los modelos: fuera el índice antiguo `cities.name_1` (impedía ciudades homónimas en países distintos) y creado el índice único de `username`, que nunca se había llegado a crear.
+- [x] `npm run migrate:data-model -- --apply` ejecutado en Atlas.
+- [ ] Mañana: `npm run backfill:propose`, revisar el JSON y `npm run backfill:apply` (categorías antiguas y ciudades).
 - [x] Rutas `PATCH`/`DELETE /api/cities/:id` (el borrado comprueba que ninguna experiencia use la ciudad).
 - [x] Conexión a Mongo antes de `listen` (si falla, el proceso termina con un mensaje claro), `GET /api/health`, *graceful shutdown* con SIGTERM/SIGINT. (A-7)
-- [ ] Config centralizada y validada (`config.js` con zod sobre `process.env`). (A-7)
+- [x] `config.js`: única lectura de `process.env`, validada con zod al arrancar (el servidor no arranca e indica qué variable falla). (A-7)
 - [x] B-2 y B-3 corregidos en la Fase 1; `apiRoutes.ts` eliminado (el cliente usa `API` de `config.js`). (A-10)
-- [ ] ESLint + Prettier en server. (A-6)
+- [x] ESLint 9 + Prettier en el servidor (`npm run lint`, `npm run format`); todo el código formateado y sin avisos. (A-6)
 
 ### Fase 4 — Frontend: bugs, refactor y formularios (4-6 días) 🟡
 
