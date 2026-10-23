@@ -65,15 +65,34 @@ async function main() {
   const cityNames = cities.map((c) => c.name)
   const cityByName = new Map(cities.map((c) => [c.name, c._id]))
 
+  if (count > cityNames.length) {
+    console.warn(`NOTE: You asked for ${count} experiences but there are only ${cityNames.length} cities. The model will start repeating cities.`)
+  }
+
   console.log(`Generating ${count} mock experiences from ${categoryNames.length} categories and ${cityNames.length} cities...`)
 
   const generated = []
+  const usedCities = []
+  let remainingCities = [...cityNames]
   for (let i = 0; i < count; i++) {
     try {
+      // Only offer cities not yet used in this batch, forcing variety.
+      // If we run out (batch larger than city count), fall back to all cities.
+      const availableCities = remainingCities.length
+        ? remainingCities
+        : cityNames
+
       const result = await generateMockExperienceFlow({
         categories: categoryNames,
-        cityNames,
+        cityNames: availableCities,
       })
+
+      // Remember the chosen city and remove it from the pool for next iterations
+      const chosenCity = result.city
+      if (chosenCity && remainingCities.includes(chosenCity)) {
+        remainingCities = remainingCities.filter((c) => c !== chosenCity)
+      }
+      usedCities.push(chosenCity)
 
       // Map the chosen city name back to its ObjectId; fall back to a random city
       // if the model returned something off-list.
@@ -89,7 +108,7 @@ async function main() {
       }
 
       generated.push(experience)
-      console.log(`  [${i + 1}/${count}] "${result.title}" (${result.city}, ${result.category})`)
+      console.log(`  [${i + 1}/${count}] "${result.title}" (${result.city}, ${result.category}) [left: ${remainingCities.length}]`)
     } catch (err) {
       console.warn(`  [${i + 1}/${count}] failed: ${err.message}`)
     }

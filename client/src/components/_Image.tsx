@@ -12,6 +12,8 @@ const Image = props => {
           className="image"
           src={`${URL}/static/images/${props.item.filename}`}
           alt={tit}
+          loading="lazy"
+          decoding="async"
         />
       </div>
       <div className="tCol">

@@ -50,6 +50,7 @@
     "react-helmet-async": "^3.0.0",
     "sass": "^1.63.6",
     "sass-loader": "^13.3.2",
+    "terser": "^5.51.2",
     "typescript": "^5.0.2",
     "vite": "^4.3.9",
     "vitest": "^1.0.4",

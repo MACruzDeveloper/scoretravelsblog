@@ -51,7 +51,7 @@ Severidad: 🔴 crítico · 🟠 alto · 🟡 medio · 🟢 bajo/mejora. Entre c
 
 | ID | Sev. | Hallazgo | Dónde |
 |---|---|---|---|
-| S-1 | 🟢 ~~🔴~~ | **Credenciales de MongoDB Atlas en el historial de git** de un repositorio público (GitHub), junto a un `JWT_SECRET` trivial (commits `7a52b67`, `2da27f8`, `6910ab6`). **Mitigado (2026-10-23):** la contraseña actual de Atlas y el `JWT_SECRET` actual (64 caracteres) son distintos a los filtrados, y Atlas solo tiene un usuario de BD. En el historial siguen visibles el usuario y el host del cluster. Pendiente: restringir *Network Access* a IPs concretas y, opcionalmente, purgar el historial. [A02/A05] | historial git |
+| S-1 | 🟢 ~~🔴~~ | **Credenciales de MongoDB Atlas en el historial de git** de un repositorio público (GitHub), junto a un `JWT_SECRET` trivial (commits `7a52b67`, `2da27f8`, `6910ab6`). **Mitigado (2026-10-23):** la contraseña actual de Atlas y el `JWT_SECRET` actual (64 caracteres) son distintos a los filtrados, y Atlas solo tiene un usuario de BD. En el historial siguen visibles el usuario y el host del cluster. La IP del droplet ya está en *Network Access*, pero se mantiene `0.0.0.0/0` para poder desarrollar desde cualquier IP; se quitará al final (Fase 6). Opcional: purgar el historial. [A02/A05] | historial git |
 | S-2 | 🔴 | **DoS sin autenticar**: `POST /users/login` o `/users/register` con `{"email": {"$gt": ""}}` → `validator.isEmail()` lanza `TypeError` *fuera* del `try` → promesa rechazada no capturada por Express 4 → en Node ≥15 **el proceso se cae**. Verificado. [A04] | `usersController.js:12,34` |
 | S-3 | 🔴 | **Inyección NoSQL** en `addNewCity`: el filtro `{ name, countryCode }` viene del body sin validar tipo; `{"name":{"$ne":null}}` + `upsert` sobrescribe una ciudad cualquiera. Cualquier usuario registrado puede hacerlo. Mongoose 5 no tiene `sanitizeFilter`. Verificado que el operador pasa. [A03] | `citiesController.js:41-45` |
 | S-4 | 🟠 | **Registro abierto + permisos de `author` excesivos**: cualquiera puede registrarse y con `requireAuth` puede subir/borrar **cualquier** imagen, crear/modificar ciudades y cambiar el `score` de cualquier experiencia. [A01] | `imagesRoute.js:7-8,20`, `citiesRoute.js:9`, `experiencesRoute.js:11` |
@@ -178,7 +178,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 - [x] ~~Rotar la contraseña del usuario de MongoDB Atlas~~ — ya era distinta a la filtrada; un único usuario de BD. (S-1)
 - [x] ~~Rotar `JWT_SECRET`~~ — el actual es distinto al filtrado (64 caracteres).
-- [ ] Revisar *Network Access* en Atlas: que no haya `0.0.0.0/0`, solo la IP del droplet y la de desarrollo. (S-1)
+- [x] IP del droplet añadida a *Network Access* en Atlas. Quitar `0.0.0.0/0` queda pospuesto a la Fase 6. (S-1)
 - [ ] (Opcional) Purgar el historial con `git filter-repo` / BFG. Reescribe la historia y obliga a un force-push.
 - [x] `register`/`login`/`addNewUser` validan que los campos sean strings no vacíos antes de `validator.isEmail` → ya no se cae el servidor. (S-2)
 - [x] `process.on('unhandledRejection')` con log como red de seguridad temporal (la petición afectada se queda colgada; se arregla de verdad en Fase 3 con `asyncHandler`/Express 5).
@@ -246,6 +246,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [ ] About/portfolio: contenido externo (JSON/MD/BD), proyectos, CV, decidir idioma o i18n (A-14).
 - [ ] Chat IA sobre tu experiencia (Genkit) con rate limit, límites de tokens y prompt acotado.
 - [ ] Observabilidad (pino, Sentry) y backups de Mongo.
+- [ ] **Quitar `0.0.0.0/0` de *Network Access* en Atlas** (S-1). Antes hay que montar un Mongo local para desarrollo (`docker-compose`) o usar un cluster de desarrollo aparte, para no tener que actualizar la IP doméstica cada vez.
 
 ---
 

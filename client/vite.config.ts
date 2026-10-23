@@ -31,6 +31,30 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Optimize bundle size
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['react-moment', 'dompurify'],
+          'vendor-icons': ['react-icons'],
+          'vendor-map': ['leaflet', 'react-leaflet'],
+          'vendor-zustand': ['zustand'],
+        },
+      },
+    },
+    // Enable source maps for production (disable in final build)
+    sourcemap: false,
+    // Reduce CSS size
+    cssCodeSplit: true,
+  },
   server: {
     open: true,
     host: true

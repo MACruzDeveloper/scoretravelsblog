@@ -37,14 +37,20 @@ const generateMockExperienceFlow = ai.defineFlow(
       model: ai.model,
       output: { format: 'json', schema: mockExperienceOutputSchema },
       prompt: `
-Eres un creador de contenido de viajes. Genera una experiencia de viaje ficticia pero realista y creíble.
+You are a travel content creator. Write in ENGLISH.
 
-Debes elegir UNA ciudad de esta lista: ${citiesList}
-Debes elegir UNA categoría de esta lista: ${categoriesList}
+Generate a fictional but realistic and credible travel experience.
 
-Genera un título atractivo, una descripción (contenido) en español de 3-5 frases que describa la experiencia, y una puntuación (score) entre 1 y 5 (2 decimales como mucho) coherente con lo narrado.
+Choose ONE city from this list: ${citiesList}
+Choose ONE category from this list: ${categoriesList}
 
-Responde únicamente con JSON con esta forma exacta:
+Requirements:
+- Title: an attractive, specific title in English.
+- Content: a LONG, detailed description in English of about 200-280 words, split into 3-4 short paragraphs, describing places, food, atmosphere and practical tips.
+- Score: a number from 1 to 5 (at most 2 decimals) consistent with what you describe.
+- City and Category must be copied EXACTLY from the provided lists, with no extra text.
+
+Respond only with JSON of exactly this shape:
 {
   "title": "...",
   "content": "...",
@@ -52,8 +58,6 @@ Responde únicamente con JSON con esta forma exacta:
   "city": "...",
   "score": 4.5
 }
-
-IMPORTANTE: "city" y "category" deben ser copiadas EXACTAMENTE de las listas proporcionadas, sin añadir texto extra.
 `,
     })
 

@@ -190,6 +190,8 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
               muted
               loop
               playsInline
+              preload="auto"
+              {...{ fetchpriority: 'high' }}
               aria-label={getTitleForSlide()}
             />
           ) : (
