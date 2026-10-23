@@ -18,9 +18,8 @@ const morgan = require('morgan');
 app.use(morgan('dev'));
 
 // =============== BODY PARSER SETTINGS =====================
-const bodyParser = require('body-parser');
-app.use(bodyParser.json({ limit: '1mb' }));
-app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // =============== DATABASE CONNECTION =====================
 const mongoose = require('mongoose');
@@ -74,6 +73,12 @@ app.get('/*', function (req, res) {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
   res.status(500).json({ ok: false, message: 'Internal server error' });
+});
+
+// Express 4 does not catch rejected promises from async handlers.
+// Log them instead of letting Node crash the process.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason instanceof Error ? reason.message : reason);
 });
 
 // =============== START SERVER =====================

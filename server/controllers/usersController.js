@@ -2,12 +2,12 @@ const User = require('../models/usersModels')
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
 const validator = require('validator')
-const { isValidId } = require('../utils/validators')
+const { isValidId, isNonEmptyString } = require('../utils/validators')
 const jwt_secret = process.env.JWT_SECRET
 
 const register = async (req, res) => {
   const { username, email, password, password2 } = req.body
-  if (!username || !email || !password || !password2) return res.json({ ok: false, message: 'All field are required' })
+  if (![username, email, password, password2].every(isNonEmptyString)) return res.json({ ok: false, message: 'All field are required' })
   if (password !== password2) return res.json({ ok: false, message: 'Passwords must match' })
   if (!validator.isEmail(email)) return res.json({ ok: false, message: 'Please provide a valid email' })
 
@@ -30,7 +30,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body
-  if (!email || !password) return res.json({ ok: false, message: 'All field are required' })
+  if (!isNonEmptyString(email) || !isNonEmptyString(password)) return res.json({ ok: false, message: 'All field are required' })
   if (!validator.isEmail(email)) return res.json({ ok: false, message: 'Please provide a valid email' })
 
   try {
@@ -76,7 +76,7 @@ const findAllUsers = async (req, res) => {
 const addNewUser = async (req, res) => {
   let params = req.body
   try {
-    if (!params.username || !params.email || !params.password) {
+    if (![params.username, params.email, params.password].every(isNonEmptyString)) {
       return res.status(400).json({ ok: false, message: 'username, email and password are required' })
     }
     if (!validator.isEmail(params.email)) {
