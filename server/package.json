@@ -10,7 +10,9 @@
     "migrate:user-refs": "node scripts/migrate-user-refs.js",
     "migrate:roles": "node scripts/migrate-roles.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scores:recalculate": "node scripts/recalculate-scores.js"
+    "scores:recalculate": "node scripts/recalculate-scores.js",
+    "backfill:propose": "node scripts/backfill-experiences.js propose",
+    "backfill:apply": "node scripts/backfill-experiences.js apply"
   },
   "keywords": [],
   "author": "",

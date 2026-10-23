@@ -65,7 +65,67 @@ Respond only with JSON of exactly this shape:
   }
 )
 
+const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', 'oceania', 'south-america']
+
+const classifyExperiencesInputSchema = z.object({
+  categories: z.array(z.string()).min(1),
+  experiences: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    content: z.string(),
+    // Old category, often a country name, used as a location hint
+    hint: z.string().optional(),
+  })).min(1),
+})
+
+const classifyExperiencesOutputSchema = z.object({
+  results: z.array(z.object({
+    id: z.string(),
+    category: z.string(),
+    city: z.string().nullable(),
+    country: z.string().nullable(),
+    countryCode: z.string().nullable(),
+    continent: z.enum(CONTINENTS).nullable(),
+  })),
+})
+
+// Suggests a category from the given list and the main place of several existing
+// experiences in ONE request (the free tier allows very few requests per day).
+// Used by scripts/backfill-experiences.js; results are reviewed by hand.
+const classifyExperiencesFlow = ai.defineFlow(
+  {
+    name: 'classifyExperiences',
+    inputSchema: classifyExperiencesInputSchema,
+    outputSchema: classifyExperiencesOutputSchema,
+  },
+  async (input) => {
+    const posts = input.experiences.map((exp) =>
+      `### id: ${exp.id}\nTitle: ${exp.title}\nLocation hint: ${exp.hint || '-'}\nText: ${exp.content}`
+    ).join('\n\n')
+
+    const response = await ai.generate({
+      output: { format: 'json', schema: classifyExperiencesOutputSchema },
+      prompt: `
+You classify travel blog posts. Answer only with JSON: { "results": [ ... ] } with one item per post, keeping its id.
+
+For each post:
+1. "category": exactly ONE value from this list, copied exactly: ${input.categories.join(' | ')}
+   It describes the kind of trip (leisure, couple, solo, cultural, work...), not the place.
+2. "city": the main city, town, island or region the post is about, in English. null only if no place can be identified.
+3. "country": its country in English, "countryCode": ISO 3166-1 alpha-2 code (e.g. "ES").
+4. "continent": one of ${CONTINENTS.join(', ')}.
+
+Posts:
+
+${posts}
+`,
+    })
+    return response.output
+  }
+)
+
 module.exports = {
   ai,
   generateMockExperienceFlow,
+  classifyExperiencesFlow,
 }
