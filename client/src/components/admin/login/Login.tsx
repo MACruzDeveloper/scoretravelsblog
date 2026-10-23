@@ -48,7 +48,7 @@ const Login = ({ login }: PropsLogin) => {
     }
     catch (error) {
       console.log(error)
-      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
+      setMessage({ body: error instanceof Error && error.message ? error.message : 'Connection error, please try again', classname: 'msg_error' })
     } finally {
       setIsLoggingIn(false)
     }
@@ -61,8 +61,8 @@ const Login = ({ login }: PropsLogin) => {
       onSubmit={handleSubmit}
       className="form"
     >
-      <input type="text" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
-      <input type="password" name="password" className="form_control" placeholder="Write your password" onChange={handleChange} />
+      <input type="email" name="email" className="form_control" placeholder="Write your email" autoComplete="email" maxLength={254} required onChange={handleChange} />
+      <input type="password" name="password" className="form_control" placeholder="Write your password" autoComplete="current-password" maxLength={128} required onChange={handleChange} />
       <button className="btn" disabled={!values.email || !values.password}>login</button>
     </form>
 

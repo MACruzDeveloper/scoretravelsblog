@@ -1,80 +1,90 @@
 const path = require("path");
+const crypto = require("crypto");
 const sharp = require("sharp");
 const Images = require("../models/imagesModel");
 const fs = require("fs");
-const { isValidId } = require("../utils/validators");
+const { UPLOADS_DIR } = require("../utils/paths");
+
+// Resolve a stored filename inside the uploads folder, refusing anything that escapes it
+const resolveUpload = (filename) => {
+  const filePath = path.resolve(UPLOADS_DIR, path.basename(filename));
+  return filePath.startsWith(path.resolve(UPLOADS_DIR) + path.sep) ? filePath : null;
+};
 
 const upload_image = async (req, res) => {
   try {
     if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ error: 'No file uploaded' })
+      return res.status(400).json({ ok: false, message: 'No file uploaded' })
     }
 
-    const outputDir = path.join(__dirname, '..', '..', 'client', 'public', 'images')
-    fs.mkdirSync(outputDir, { recursive: true })
-    const originalName = path.parse(req.file.originalname).name
-    const filename = `${Date.now()}-${originalName}.avif`
-    const outputPath = path.join(outputDir, filename)
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+    // Generated name: never trust the client's original filename
+    const filename = `${Date.now()}-${crypto.randomUUID()}.avif`
+    const outputPath = path.join(UPLOADS_DIR, filename)
     const image = sharp(req.file.buffer)
     const metadata = await image.metadata()
 
     await image
+      .rotate()
       .avif({ quality: 70, effort: 6 })
       .toFile(outputPath)
 
+    const title = req.body.title || ''
     await Images.create({
-      pathname: outputPath,
       filename,
-      title: req.body.title || '',
+      title,
       width: metadata.width || null,
       height: metadata.height || null
     })
 
-    return res.status(200).json({ filename, title: req.body.title || '' })
+    return res.status(200).json({ filename, title })
   } catch (error) {
+    console.error('Upload failed:', error.message)
     return res.status(500).json({ ok: false, message: 'Upload failed' })
   }
 };
 
 const fetch_images = async (req, res) => {
   try {
-    const images = await Images.find({});
+    const images = await Images.find({}).select('-pathname');
     res.status(200).json({ images });
   } catch (error) {
+    console.error('Fetch images failed:', error.message)
     res.status(500).json({ ok: false, message: 'Error fetching images' })
   }
 };
 
 const delete_image = async (req, res) => {
   const { _id, filename } = req.params;
-  if (!isValidId(_id)) return res.status(400).json({ error: 'Invalid id' });
-  const safeName = path.basename(filename);
-  if (!/^[\w-]+\.avif$/.test(safeName)) {
-    return res.status(400).json({ error: 'Invalid filename' });
-  }
-  const filePath = path.join(__dirname, '..', '..', 'client', 'public', 'images', safeName);
+  const filePath = resolveUpload(filename);
+  if (!filePath) return res.status(400).json({ ok: false, message: 'Invalid filename' });
+
   try {
-    await fs.promises.unlink(filePath);
+    const image = await Images.findOne({ _id, filename });
+    if (!image) return res.status(404).json({ ok: false, message: 'Image not found' });
+
+    // A missing file on disk should not block removing the DB record
+    await fs.promises.unlink(filePath).catch((err) => {
+      if (err.code !== 'ENOENT') throw err
+    });
     const deleted = await Images.deleteOne({ _id });
     res.send({ deleted });
   } catch (error) {
+    console.error('Delete image failed:', error.message)
     res.status(500).json({ ok: false, message: 'Delete failed' });
   }
 };
 
 const update_image = async (req, res) => {
-  let params = req.body;
-  if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' });
-
-    try {
-      const updated = await Images.updateOne(
-        { _id: params._id }, {featured: params.featured}
-      );
-      res.send({ updated });
-    }
-    catch (error) {
-      res.status(500).send({ ok: false, message: 'Error updating image' });
-    };
+  const { _id, featured } = req.body;
+  try {
+    const updated = await Images.updateOne({ _id }, { featured });
+    res.send({ updated });
+  }
+  catch (error) {
+    console.error('Update image failed:', error.message)
+    res.status(500).json({ ok: false, message: 'Error updating image' });
+  }
 }
 
 module.exports = {

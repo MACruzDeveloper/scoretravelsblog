@@ -20,18 +20,20 @@ const escapeHtml = (value) =>
     : ''
 
 const send_email = async (req, res) => {
-	const { name, email, subject, message } = req.body
+	const { name, email, subject, message, website } = req.body
+	// Honeypot filled: answer as if it worked so bots don't retry
+	if (website) return res.json({ ok: true, message: 'email sent' })
 	const default_subject = 'This is a default subject'
 	const mailOptions = {
 		from: process.env.SMTP_FROM || process.env.SMTP_USER,
 		replyTo: sanitizeCrlf(email),
 		to: process.env.SMTP_TO || process.env.SMTP_FROM || process.env.SMTP_USER,
 		subject: "New message from " + sanitizeCrlf(name),
-		text: `${name} <${email}> wrote:\n\n${message}`,
+		text: `${sanitizeCrlf(name)} <${sanitizeCrlf(email)}> wrote:\n\n${message}`,
 		html: '<p>' + escapeHtml(subject || default_subject) + '</p><p><pre>' + escapeHtml(message) + '</pre></p>'
 	}
 	try {
-		const response = await transport.sendMail(mailOptions)
+		await transport.sendMail(mailOptions)
 		return res.json({ ok: true, message: 'email sent' })
 	}
 	catch (err) {

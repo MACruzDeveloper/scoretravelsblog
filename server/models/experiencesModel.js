@@ -3,6 +3,7 @@ const Schema = mongoose.Schema
 
 const experienceSchema = new mongoose.Schema ({
   user: { type: String },
+  userId: { type: Schema.Types.ObjectId, ref: 'users' },
   title: { type: String, required: true },
   city: { type: Schema.Types.ObjectId, ref: 'cities' },
   category: { type: String, ref: 'categories' },

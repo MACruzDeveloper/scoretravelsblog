@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken')
 
 const jwt_secret = process.env.JWT_SECRET
+// Pin the algorithm so tokens signed with anything else are rejected
+const JWT_ALGORITHM = 'HS256'
 
 const extractToken = (req) => {
   const header = req.headers.authorization || ''
@@ -14,7 +16,7 @@ const requireAuth = (req, res, next) => {
     return res.status(401).json({ ok: false, message: 'Authentication required' })
   }
   try {
-    const payload = jwt.verify(token, jwt_secret)
+    const payload = jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
     req.user = payload
     return next()
   } catch (error) {
@@ -29,4 +31,4 @@ const requireAdmin = (req, res, next) => {
   })
 }
 
-module.exports = { requireAuth, requireAdmin }
+module.exports = { requireAuth, requireAdmin, JWT_ALGORITHM }

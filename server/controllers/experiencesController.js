@@ -1,5 +1,4 @@
 const experiences = require('../models/experiencesModel');
-const { isValidId } = require('../utils/validators');
 
 const normalizeExperienceImages = (params) => {
   const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
@@ -29,7 +28,7 @@ const normalizeExperienceImages = (params) => {
 class experiencesController {
   async findAllExperiences(req, res) {
     try {
-      const exps = await experiences.find().populate('city')
+      const exps = await experiences.find().select('-userId').populate('city')
       res.send(exps)
     } catch (error) {
       res.status(500).json({ ok: false, message: 'Error fetching experiences' })
@@ -39,9 +38,11 @@ class experiencesController {
   async findExperience(req, res) {
     let expId = req.params.id
     try {
-      const exp = await experiences.findById(expId).populate('city')
+      const exp = await experiences.findById(expId).select('-userId').populate('city')
+      if (!exp) return res.status(404).json({ ok: false, message: 'Experience not found' })
       res.send(exp)
     } catch (error) {
+      console.error('Fetch experience failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error fetching experience' })
     }
   }
@@ -52,26 +53,27 @@ class experiencesController {
 
     try {
       const done = await experiences.create({
-        user: params.user,
+        // Author always comes from the token
+        user: req.user.username,
+        userId: req.user._id,
         title: params.title,
         image,
         images,
         category: params.category,
         city: params.city,
         content: params.content,
-        score: params.score,
         date: params.date || Date.now()
       })
-      const populated = await done.populate('city')
+      const populated = await done.populate('city').execPopulate()
       res.send(populated)
     } catch (error) {
+      console.error('Create experience failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error creating experience' })
     }
   }
 
   async deleteExperience(req, res) {
     let { _id } = req.body
-    if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
     try {
       const removed = await experiences.deleteOne({ _id })
       res.send({ removed })
@@ -82,8 +84,13 @@ class experiencesController {
 
   async updateExperience(req, res) {
     let params = req.body
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-    const currentExp = await experiences.findById(params._id)
+    let currentExp
+    try {
+      currentExp = await experiences.findById(params._id)
+    } catch (error) {
+      console.error('Fetch experience failed:', error.message)
+      return res.status(500).json({ ok: false, message: 'Error updating experience' })
+    }
     if (!currentExp) {
       return res.status(404).json({ ok: false, message: 'Experience not found' })
     }
@@ -117,36 +124,22 @@ class experiencesController {
       await experiences.updateOne(
         { _id: params._id },
         {
-          user: params.user,
           image,
           images,
           title: params.title,
           category: params.category,
           city: params.city,
           content: params.content,
-          score: params.score,
         }
       )
       const updated = await experiences.findById(params._id).populate('city')
       res.send({ updated })
     } catch (error) {
+      console.error('Update experience failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error updating experience' })
     }
   }
-
-  async updateScoreExperience(req, res) {
-    let params = req.body
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-    try {
-      const updated = await experiences.updateOne(
-        { _id: params._id },
-        { score: params.score }
-      )
-      res.send({ updated })
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error updating score' })
-    }
-  }
 }
+
 
 module.exports = new experiencesController();

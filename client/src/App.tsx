@@ -62,6 +62,8 @@ function App() {
     }
     catch (error) {
       console.log(error)
+      // 401: stale or invalid token
+      if (token) localStorage.removeItem('token')
       setIsLoggedIn(false)
     }
   }, [token])

@@ -46,7 +46,7 @@ const Register = ({ login }: PropsRegister) => {
     }
     catch (error) {
       console.log(error)
-      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
+      setMessage({ body: error instanceof Error && error.message ? error.message : 'Connection error, please try again', classname: 'msg_error' })
     }
   }
 
@@ -78,7 +78,7 @@ const Register = ({ login }: PropsRegister) => {
     }
     catch (error) {
       console.log(error)
-      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
+      setMessage({ body: error instanceof Error && error.message ? error.message : 'Connection error, please try again', classname: 'msg_error' })
     } finally {
       setIsRegistering(false)
     }
@@ -90,10 +90,10 @@ const Register = ({ login }: PropsRegister) => {
       onSubmit={handleSubmit}
       className='form'
     >
-      <input type="text" name="username" className="form_control" placeholder="Write your username" onChange={handleChange} />
-      <input type="email" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
-      <input type="password" name="password" className="form_control" placeholder="Write your password" onChange={handleChange} />
-      <input type="password" name="password2" className="form_control" placeholder="Confirm your password" onChange={handleChange} />
+      <input type="text" name="username" className="form_control" placeholder="Write your username" autoComplete="username" minLength={3} maxLength={30} pattern="[\p{L}\p{N}_.\-]+" title="3-30 letters, numbers, _ . -" required onChange={handleChange} />
+      <input type="email" name="email" className="form_control" placeholder="Write your email" autoComplete="email" maxLength={254} required onChange={handleChange} />
+      <input type="password" name="password" className="form_control" placeholder="Write your password (min. 8 characters)" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
+      <input type="password" name="password2" className="form_control" placeholder="Confirm your password" autoComplete="new-password" minLength={8} maxLength={128} required onChange={handleChange} />
       <button className="btn">Register</button>
     </form>
 

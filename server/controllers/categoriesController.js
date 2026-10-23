@@ -1,5 +1,6 @@
 const categories = require('../models/categoriesModel')
-const { isValidId, isNonEmptyString } = require('../utils/validators')
+
+const isDuplicateKey = (error) => error && error.code === 11000
 
 class categoriesController {
   async findAllCategories(req, res) {
@@ -19,13 +20,14 @@ class categoriesController {
       res.send(done)
     }
     catch (error) {
+      if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'The category already exists' })
+      console.error('Create category failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error creating category' })
     }
   }
 
   async deleteCategory(req, res) {
     let { name } = req.body
-    if (!isNonEmptyString(name)) return res.status(400).json({ ok: false, message: 'Invalid category name' })
 
     try {
       const removed = await categories.deleteOne({ name: name })
@@ -38,8 +40,6 @@ class categoriesController {
 
   async updateCategory(req, res) {
     let params = req.body
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-
     try {
       const updated = await categories.updateOne(
         { _id: params._id }, { name: params.name, description: params.description }
@@ -47,6 +47,8 @@ class categoriesController {
       res.send({ updated })
     }
     catch (error) {
+      if (isDuplicateKey(error)) return res.status(409).json({ ok: false, message: 'The category already exists' })
+      console.error('Update category failed:', error.message)
       res.status(500).json({ ok: false, message: 'Error updating category' })
     }
   }

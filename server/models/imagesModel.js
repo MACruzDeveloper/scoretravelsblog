@@ -6,10 +6,6 @@ const imagesSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
-  pathname: {
-    type: String,
-    required: true
-  },
   filename: {
     type: String,
     required: true

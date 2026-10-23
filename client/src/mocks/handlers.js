@@ -25,9 +25,5 @@ export const handlers = [
 
   http.get(`${URL}/admin/comments`, async () => {
     return HttpResponse.json([])
-  }),
-
-  http.post(`${URL}/admin/experiences/update_score`, async () => {
-    return HttpResponse.json({ success: true })
   })
 ]

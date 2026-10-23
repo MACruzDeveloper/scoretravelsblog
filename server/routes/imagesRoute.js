@@ -1,24 +1,36 @@
 const router = require("express").Router()
 const controller = require("../controllers/imagesController")
 const multer = require("multer")
-const { requireAuth } = require("../middleware/auth")
+const { requireAdmin } = require("../middleware/auth")
+const { validate } = require("../middleware/validate")
+const schemas = require("../utils/schemas")
 
 router.get("/fetch_images", controller.fetch_images)
-router.post("/update_image", requireAuth, controller.update_image)
-router.delete("/delete_image/:_id/:filename", requireAuth, controller.delete_image)
+router.post("/update_image", requireAdmin, validate(schemas.updateImage), controller.update_image)
+router.delete("/delete_image/:_id/:filename", requireAdmin, validate(schemas.deleteImageParams, 'params'), controller.delete_image)
 
 // UPLOAD IMAGES ROUTE AND RELATED FUNCTIONS
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Invalid file type. Allowed: JPEG, PNG, WebP, AVIF'));
+    else cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'file'));
   }
 }).single("file")
-router.post("/upload", requireAuth, upload, async (req, res) => {
-  return await controller.upload_image(req, res)
-})
+
+// Turn multer errors into 400 responses instead of falling through to the 500 handler
+const handleUpload = (req, res, next) => {
+  upload(req, res, (err) => {
+    if (!err) return next()
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'File too large. Max 10MB'
+      : 'Invalid file. Allowed: JPEG, PNG, WebP, AVIF'
+    return res.status(400).json({ ok: false, message })
+  })
+}
+
+router.post("/upload", requireAdmin, handleUpload, validate(schemas.uploadImage), controller.upload_image)
 
 module.exports = router

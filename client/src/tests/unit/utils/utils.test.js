@@ -27,8 +27,8 @@ describe('utils', () => {
     expect(getToken()).toBeNull()
     localStorage.setItem('token', JSON.stringify('token-value'))
     expect(getToken()).toBe('token-value')
-    expect(checkFileSize({ size: 5 * 1024 * 1024 })).toBe(true)
-    expect(checkFileSize({ size: 5 * 1024 * 1024 + 1 })).toBe(false)
+    expect(checkFileSize({ size: 10 * 1024 * 1024 })).toBe(true)
+    expect(checkFileSize({ size: 10 * 1024 * 1024 + 1 })).toBe(false)
   })
 
   it('uses the expected HTTP methods and parses successful responses', async () => {

@@ -1,21 +1,51 @@
-const express = require("express");
-const app = express();
-const port = process.env.port || 3040;
 require('dotenv').config();
+const express = require("express");
 const path = require('path');
+const app = express();
+const port = process.env.PORT || process.env.port || 3040;
+const isProduction = process.env.NODE_ENV === 'production';
+
+// =============== ENVIRONMENT CHECK =====================
+const missingEnv = ['JWT_SECRET', 'ATLAS_URL'].filter((key) => !process.env[key]);
+if (missingEnv.length) {
+  console.error(`ERROR: Missing required environment variables: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
+if (process.env.JWT_SECRET.length < 32) {
+  console.warn('WARNING: JWT_SECRET should be at least 32 characters long');
+}
+
+// Behind nginx or another reverse proxy, so rate limiting sees the real client IP
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
 
 // =============== SECURITY HEADERS =====================
 const helmet = require('helmet');
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
+      fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://*.basemaps.cartocdn.com', 'https://*.tile.openstreetmap.org', 'https://unpkg.com'],
+      connectSrc: ["'self'", 'https://nominatim.openstreetmap.org', 'https://restcountries.com'],
+      mediaSrc: ["'self'", 'blob:'],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'self'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      // Enable once the site is served over HTTPS
+      upgradeInsecureRequests: null,
+    },
+  },
   crossOriginEmbedderPolicy: false,
+  // The dev client (Vite on another port) loads images from this server
   crossOriginResourcePolicy: false,
-  crossOriginOpenerPolicy: false,
 }));
 
 // =============== LOGGING =====================
 const morgan = require('morgan');
-app.use(morgan('dev'));
+app.use(morgan(isProduction ? 'combined' : 'dev'));
 
 // =============== BODY PARSER SETTINGS =====================
 app.use(express.json({ limit: '1mb' }));
@@ -24,6 +54,7 @@ app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 // =============== DATABASE CONNECTION =====================
 const mongoose = require('mongoose');
 mongoose.set('useCreateIndex', true);
+mongoose.set('useFindAndModify', false);
 async function connecting() {
   try {
     await mongoose.connect(process.env.ATLAS_URL, { useUnifiedTopology: true, useNewUrlParser: true })
@@ -37,9 +68,19 @@ connecting()
 
 //================ CORS ================================
 const cors = require('cors');
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+app.use(cors({
+  // Requests without Origin (same origin, curl) are allowed; cross origin only from the list
+  origin: (origin, callback) => callback(null, !origin || allowedOrigins.includes(origin)),
+}));
 
 // =============== ROUTES ==============================
+const { apiLimiter } = require('./middleware/rateLimit');
+app.use(['/users', '/admin', '/images', '/emails'], apiLimiter);
+
 app.use('/users', require('./routes/usersRoute'));
 app.use('/admin/categories', require('./routes/categoriesRoute'));
 app.use('/admin/cities', require('./routes/citiesRoute'));
@@ -49,21 +90,21 @@ app.use('/admin/scores', require('./routes/scoresRoute'));
 app.use('/images', require('./routes/imagesRoute'));
 app.use('/emails', require('./routes/emailsRoutes.js'))
 
-app.use('/static', express.static(path.join(__dirname, '../client/public'), {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.avif')) {
-      res.setHeader('Content-Type', 'image/avif');
-    }
+const setAvifHeader = (res, filePath) => {
+  if (filePath.endsWith('.avif')) {
+    res.setHeader('Content-Type', 'image/avif');
   }
-}));
+};
 
-app.use(express.static(path.join(__dirname, '../client/dist'), {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.avif')) {
-      res.setHeader('Content-Type', 'image/avif');
-    }
-  }
-}));
+// Uploaded images (outside the client folder, see utils/paths.js)
+const { UPLOADS_DIR } = require('./utils/paths');
+app.use('/static/images', express.static(UPLOADS_DIR, { setHeaders: setAvifHeader }));
+
+app.use('/static', express.static(path.join(__dirname, '../client/public'), { setHeaders: setAvifHeader }));
+// Missing static files are a real 404, not the SPA index.html
+app.use('/static', (req, res) => res.status(404).end());
+
+app.use(express.static(path.join(__dirname, '../client/dist'), { setHeaders: setAvifHeader }));
 
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
@@ -71,6 +112,10 @@ app.get('/*', function (req, res) {
 
 // =============== GLOBAL ERROR HANDLER =====================
 app.use((err, req, res, next) => {
+  // Client errors such as malformed JSON or a too large body
+  if (err.status && err.status < 500) {
+    return res.status(err.status).json({ ok: false, message: 'Invalid request' });
+  }
   console.error('Unhandled error:', err.message);
   res.status(500).json({ ok: false, message: 'Internal server error' });
 });

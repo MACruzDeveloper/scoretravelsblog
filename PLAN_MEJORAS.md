@@ -89,6 +89,7 @@ Severidad: 🔴 crítico · 🟠 alto · 🟡 medio · 🟢 bajo/mejora. Entre c
 | B-12 | 🟡 | `nginx-scoretravelsblog.conf`: los `location` de regex para `.js/.css/imágenes/fuentes` **no tienen `proxy_pass`** → nginx los busca en su `root` y devuelve 404; `/admin/api/` no existe; el bloque de Google Fonts no tiene sentido (un `location` no puede casar con otra URL); `proxy_cache_valid` sin `proxy_cache`; `Cache-Control: public` en API. | `_doc/nginx-scoretravelsblog.conf` |
 | B-13 | 🟢 | `AdminLayout` y `About` usan `setTimeout` sin limpiar al desmontar. Carousel: la variable `slideStop` funciona al revés de lo que dice su nombre. | `AdminLayout.tsx:17`, `About.tsx:104`, `Carousel.tsx:124` |
 | B-14 | 🟢 | `robots.txt` con typo (`User=agent`) y fuera de `public/` (no se sirve); `sitemap.txt` vacío. | `client/robots.txt` |
+| B-15 | 🟠 | **Rutas del cliente y de la API colisionan**: `/admin/experiences`, `/admin/categories`, etc. son páginas de React *y* endpoints GET del API. Con el build servido por Express, recargar `/admin/experiences` en el navegador devuelve el JSON del API en lugar de la página. Se resuelve con el prefijo `/api` (A-2, Fase 3). | `server/index.js`, `App.tsx` |
 
 ### 2.3 Arquitectura y code smells
 
@@ -187,19 +188,26 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 ### Fase 1 — Seguridad (2-4 días) 🔴🟠
 
-- [ ] Validación de tipos en todos los inputs del servidor (middleware zod por ruta). Prioridad: `addNewCity` (S-3), users, scores, comments.
-- [ ] Tomar la identidad **siempre** de `req.user` (comentarios, scores, experiencias). Guardar `userId` (ObjectId) y mostrar `username`, **nunca el email**. (S-5, S-11)
-- [ ] Revisar matriz de permisos: imágenes y ciudades → `requireAdmin`; `update_score` → eliminar endpoint público. Decidir si el registro debe estar abierto (para comentar/votar sí, pero con rol `user`, no `author`). (S-4)
-- [ ] Score en servidor: índice único `{experience, user}`, `score` entero 1-5, recalcular media en servidor al votar; quitar el POST de `Score.tsx`. (S-6, A-4)
-- [ ] `express-rate-limit` en `/users/login`, `/users/register`, `/emails/send_email` y global suave. (S-7)
-- [ ] HTTPS: dominio + certbot (ver `_doc/HTTPS_SETUP.md`), `URL` del cliente desde `VITE_API_URL`, `app.set('trust proxy', 1)`. (S-8)
-- [ ] Mensaje genérico de login ("Credenciales inválidas") y códigos HTTP correctos (400/401/403/404/409). (S-10)
-- [ ] `User.find().select('-password')` y DTOs de salida. (S-11)
-- [ ] `jwt.verify(token, secret, { algorithms: ['HS256'] })`, fallar al arrancar si falta `JWT_SECRET`. Valorar cookie `httpOnly; Secure; SameSite=Strict` en lugar de `localStorage`. (S-12)
-- [ ] CORS con lista de orígenes; activar CSP en Helmet (permitir tiles de OSM, Google Fonts, Nominatim). (S-13)
-- [ ] Contact: validación servidor, longitudes, honeypot, texto legal. (S-15)
-- [ ] Imágenes: nombre generado (`randomUUID().avif`), guardar solo `filename`, carpeta `uploads/` fuera de `client/`, borrar ficheros al borrar experiencia. (S-16)
-- [ ] Logging: `morgan('combined')` en prod, log de errores en `catch`, auditoría de acciones admin. (S-17)
+- [x] Validación zod en todas las rutas del servidor (`middleware/validate.js`, `utils/schemas.js`). Los campos desconocidos se descartan, así que el cliente no puede colar `user` o `role`. (S-3, S-14)
+- [x] Identidad **siempre** desde `req.user` en comentarios, votos y experiencias; se guarda `userId` y se muestra `username`. `userId` no se expone en las respuestas. (S-5, S-11)
+- [x] Migración `scripts/migrate-user-refs.js --apply` ejecutada en Atlas (2026-10-23): emails de comentarios y votos antiguos sustituidos por el nombre de usuario. (S-11)
+- [x] Permisos: imágenes y ciudades → `requireAdmin`; endpoint `update_score` eliminado. (S-4)
+- [ ] Decidir si los usuarios registrados deben llamarse `user` en vez de `author` y si el registro sigue abierto (hoy solo pueden comentar y votar). (S-4)
+- [x] Score en servidor: un voto por usuario y experiencia (índice único parcial `{experience, userId}`; votar otra vez actualiza), entero 1-5, media recalculada en `services/scoreService.js`. `Score.tsx` solo muestra. El admin ya no puede fijar el score a mano. (S-6, A-4)
+- [x] `express-rate-limit`: login 10/15 min, registro 5/h, contacto 5/h, comentarios y votos 60/15 min, global 1000/15 min. (S-7)
+- [x] `URL` del cliente desde `VITE_API_URL` (por defecto, el mismo origen); `trust proxy` configurable con `TRUST_PROXY`. (S-8)
+- [ ] HTTPS real con dominio + certbot cuando haya despliegue (ver `_doc/HTTPS_SETUP.md`) y activar `upgradeInsecureRequests` en la CSP. (S-8)
+- [x] Mensaje genérico de login, códigos HTTP correctos (400/401/403/404/409) y los formularios de login/registro muestran el error del servidor. (S-10)
+- [x] `select('-password')` en usuarios. Un admin no puede borrarse ni quitarse el rol a sí mismo. (S-11)
+- [x] `jwt.verify` con `algorithms: ['HS256']`; el servidor no arranca sin `JWT_SECRET` o `ATLAS_URL`. (S-12)
+- [ ] Valorar cookie `httpOnly; Secure; SameSite=Strict` en lugar de `localStorage` (requiere protección CSRF; mejor junto a HTTPS). (S-12)
+- [x] CORS con lista de orígenes (`CORS_ORIGINS`) y CSP activa en Helmet. (S-13)
+- [x] Contact: validación en servidor, longitudes, honeypot (`website`). (S-15)
+- [ ] Contact: texto legal / política de privacidad enlazada en el checkbox. (S-15)
+- [x] Imágenes: nombre generado, solo se guarda `filename`, carpeta `server/uploads/images` fuera de git (configurable con `UPLOADS_DIR`), errores de multer como 400, borrado tolerante a ficheros ausentes, 404 real para `/static` inexistente. (S-16)
+- [ ] Borrar imágenes huérfanas al borrar una experiencia (comprobar antes que no las use otra experiencia ni la galería). (S-16)
+- [x] Logging: `morgan('combined')` en producción y `console.error` en los `catch` de los controladores. (S-17)
+- [ ] Auditoría de acciones admin (quién borró/editó qué). (S-17)
 
 ### Fase 2 — Actualización de dependencias (2-3 días) 🟠
 

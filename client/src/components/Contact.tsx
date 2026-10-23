@@ -13,13 +13,15 @@ const Contact = () => {
     const nameInput = event.target.elements.name
     const emailInput = event.target.elements.email
     const messageInput = event.target.elements.message
+    const websiteInput = event.target.elements.website
     const subject = "Here is the message: "
 
     const data = { 
       name: nameInput.value, 
       email: emailInput.value, 
       message: messageInput.value, 
-      subject: subject 
+      subject: subject,
+      website: websiteInput.value
     }
 
     if (validateEmail(data.email)) {
@@ -52,15 +54,21 @@ const Contact = () => {
 
         <form className="form form_contact" onSubmit={handleSubmit}>
           <div className="form_group">
-            <input type="text" className="form_control" placeholder="*What is your name?" name="name" required />
+            <input type="text" className="form_control" placeholder="*What is your name?" name="name" maxLength={100} required />
           </div>
 
           <div className="form_group">
-            <input type="email" className="form_control" placeholder="*Your contact email?" name="email" required />
+            <input type="email" className="form_control" placeholder="*Your contact email?" name="email" maxLength={254} required />
           </div>
 
           <div className="form_group">
-            <textarea className="form_control" placeholder="*Please write your message" name="message" rows={3} required />
+            <textarea className="form_control" placeholder="*Please write your message" name="message" rows={3} maxLength={5000} required />
+          </div>
+
+          {/* Honeypot: hidden from people, bots tend to fill it */}
+          <div className="form_group" aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}>
+            <label htmlFor="cb_website">Website</label>
+            <input type="text" id="cb_website" name="website" tabIndex={-1} autoComplete="off" />
           </div>
 
           <div className="form_group">

@@ -38,12 +38,12 @@ const Stars = ({ exp }: PropsStars) => {
     setIsSending(true)
     try {
       let url = `${URL}/admin/scores/add`
-      await postData(url, { experience: exp, user: user, score: i+1 })
+      await postData(url, { experience: exp, score: i+1 })
       await fetchScores(true)
       setMessage({ body: `Score added!`, classname: 'msg_ok' })
     } catch (error) {
       console.log(error)
-      setMessage({ body: 'Could not add your score', classname: 'msg_error' })
+      setMessage({ body: error instanceof Error && error.message ? error.message : 'Could not add your score', classname: 'msg_error' })
     } finally {
       setIsSending(false)
     }

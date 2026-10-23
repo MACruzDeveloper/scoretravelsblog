@@ -51,7 +51,7 @@ const ImageUpload = ({
     for (const file of files) {
       if (!checkFileSize(file)) {
         console.log('Error: file too much big')
-        setMessage({ body: `File too big. Max 5MB`, classname: 'msg_error' })
+        setMessage({ body: `File too big. Max 10MB`, classname: 'msg_error' })
         setSelectedFile(null)
         continue
       }
@@ -115,7 +115,7 @@ const ImageUpload = ({
       ref={fileInputRef}
       type="file"
       name="image"
-      accept="image/png,image/gif,image/jpeg,image/avif"
+      accept="image/png,image/jpeg,image/webp,image/avif"
       multiple={allowMultiple}
       onChange={onChangeHandlerFile}
     />

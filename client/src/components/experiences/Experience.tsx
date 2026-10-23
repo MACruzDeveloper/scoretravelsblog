@@ -120,10 +120,14 @@ const Experience = ({ user }: PropsExperience) => {
 
   const handleSubmitComment = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!user) {
+      setMessage({ body: 'You must be logged in to comment', classname: 'msg_error' })
+      return
+    }
     try {
       const url = `${URL}/admin/comments/add`
-      if (comment) {
-        await postData(url, { user: user, experience: exp, content: comment })
+      if (comment.trim()) {
+        await postData(url, { experience: exp, content: comment.trim() })
         // Re-fetch comments after adding
         const res = await getData(`${URL}/admin/comments`)
         const tempComm = []
@@ -140,6 +144,7 @@ const Experience = ({ user }: PropsExperience) => {
       }
     } catch (error) {
       console.log(error)
+      setMessage({ body: error instanceof Error && error.message ? error.message : 'Could not add your comment', classname: 'msg_error' })
     }
   }
 
@@ -190,7 +195,7 @@ const Experience = ({ user }: PropsExperience) => {
             <h3 className="sidebar_title">Write a comment</h3>
 
             <form className="form form_comments" onSubmit={handleSubmitComment}>
-              <textarea className="form_control" placeholder="Write your comment" onChange={handleChangeComment} />
+              <textarea className="form_control" placeholder="Write your comment" value={comment} maxLength={1000} onChange={handleChangeComment} />
               <button className="btn">Add comment</button>
             </form>
           </div>
