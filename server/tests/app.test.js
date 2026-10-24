@@ -1,4 +1,4 @@
-const { describe, it, before, after } = require('node:test')
+const { describe, it, before, after, mock } = require('node:test')
 const assert = require('node:assert/strict')
 const { setup, teardown } = require('./helpers')
 
@@ -60,5 +60,34 @@ describe('contact form', () => {
       .post('/api/contact')
       .send({ name: 'Bot', email: 'bot@test.dev', message: 'hi', website: 'spam.example' })
     assert.equal(res.status, 200)
+  })
+})
+
+describe('request ids', () => {
+  it('sends an id with every response and keeps a valid incoming one', async () => {
+    const generated = await request.get('/api/health')
+    assert.match(generated.headers['x-request-id'], /^[\w-]{36}$/)
+
+    const kept = await request.get('/api/health').set('X-Request-Id', 'from-nginx-123')
+    assert.equal(kept.headers['x-request-id'], 'from-nginx-123')
+
+    const replaced = await request.get('/api/health').set('X-Request-Id', 'bad id with spaces')
+    assert.notEqual(replaced.headers['x-request-id'], 'bad id with spaces')
+  })
+
+  it('hides unexpected errors but returns the id to find them in the logs', async () => {
+    const Experiences = require('../models/experiencesModel')
+    const find = mock.method(Experiences, 'find', () => {
+      throw new Error('database exploded')
+    })
+    try {
+      const res = await request.get('/sitemap.xml')
+      assert.equal(res.status, 500)
+      assert.equal(res.body.message, 'Internal server error')
+      assert.equal(res.body.requestId, res.headers['x-request-id'])
+      assert.doesNotMatch(res.text, /exploded/)
+    } finally {
+      find.mock.restore()
+    }
   })
 })

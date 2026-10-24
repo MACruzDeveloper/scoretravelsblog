@@ -311,7 +311,7 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 - [ ] Accesibilidad y `prefers-reduced-motion`.
 - [ ] About/portfolio: contenido externo (JSON/MD/BD), proyectos, CV, decidir idioma o i18n (A-14).
 - [ ] Chat IA sobre tu experiencia (Genkit) con rate limit, límites de tokens y prompt acotado.
-- [ ] Observabilidad (pino, Sentry) y backups de Mongo.
+- [x] Observabilidad y backups: logs con pino + pino-http (sustituye a morgan), ID por petición (`X-Request-Id`, devuelto en los 500), stack de los errores 500, eventos de conexión de Mongo y `uncaughtException`; `npm run backup` (mongodump + imágenes, con rotación) documentado con cron en `docs/deployment.md`. Sentry descartado por ahora (no hace falta con el volumen actual).
 - [ ] **Quitar `0.0.0.0/0` de *Network Access* en Atlas** (S-1). Antes hay que montar un Mongo local para desarrollo (`docker-compose`) o usar un cluster de desarrollo aparte, para no tener que actualizar la IP doméstica cada vez.
 
 ---

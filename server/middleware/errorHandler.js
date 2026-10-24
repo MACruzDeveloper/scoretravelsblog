@@ -26,8 +26,9 @@ const errorHandler = (err, req, res, next) => {
     return res.status(err.status).json({ ok: false, message: 'Invalid request' })
   }
 
-  console.error(`${req.method} ${req.originalUrl} failed:`, err.message)
-  return res.status(500).json({ ok: false, message: 'Internal server error' })
+  // Full error with its stack, tied to the request log line by the request id
+  req.log.error({ err }, `${req.method} ${req.originalUrl} failed: ${err.message}`)
+  return res.status(500).json({ ok: false, message: 'Internal server error', requestId: req.id })
 }
 
 module.exports = errorHandler

@@ -3,6 +3,7 @@ const path = require('path')
 const Images = require('../models/imagesModel')
 const Experiences = require('../models/experiencesModel')
 const { uploadsDir: UPLOADS_DIR } = require('../config')
+const logger = require('../logger')
 
 // Resolve a stored filename inside the uploads folder, refusing anything that escapes it
 const resolveUpload = (filename) => {
@@ -42,7 +43,7 @@ const removeUnusedImages = async (filenames) => {
       if (record) await Images.deleteOne({ _id: record._id })
       removed.push(filename)
     } catch (error) {
-      console.error(`Image cleanup failed for ${filename}:`, error.message)
+      logger.warn({ err: error, filename }, 'Image cleanup failed')
     }
   }
   return removed

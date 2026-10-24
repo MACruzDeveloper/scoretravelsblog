@@ -125,24 +125,46 @@ Si el despliegue incluye una migración de datos (`npm run migrate:*`), hay que 
 
 ## 7. Copias de seguridad
 
-Hay dos cosas que guardar: la base de datos y la carpeta de imágenes (`server/uploads`, o la ruta de `UPLOADS_DIR`). Las imágenes no están en git.
+Hay dos cosas que guardar: la base de datos y la carpeta de imágenes (`server/uploads`, o la ruta de `UPLOADS_DIR`). Las imágenes no están en git y el plan gratuito de Atlas no incluye copias automáticas.
+
+El script [`server/scripts/backup.sh`](../server/scripts/backup.sh) hace las dos copias y borra las de más de 14 días (`KEEP_DAYS`). Lee `ATLAS_URL` y `UPLOADS_DIR` de `server/.env` y necesita `mongodb-database-tools`:
 
 ```bash
-# Base de datos (necesita mongodb-database-tools)
-mongodump --uri "$ATLAS_URL" --gzip --archive=backup-$(date +%F).gz
-
-# Imágenes
-tar czf uploads-$(date +%F).tgz -C ~/scoretravelsblog/server uploads
+sudo apt install -y mongodb-database-tools   # o desde https://www.mongodb.com/try/download/database-tools
+cd ~/scoretravelsblog/server && npm run backup   # copia a ~/backups/scoretravelsblog
 ```
 
-Se puede programar con `cron` y copiar los archivos fuera del servidor (p. ej. DigitalOcean Spaces). El plan gratuito de Atlas no incluye copias automáticas.
+Para hacerlo cada noche a las 3:00, con `crontab -e`:
 
-## 8. Buscadores y redes sociales
+```
+0 3 * * * /home/<usuario>/scoretravelsblog/server/scripts/backup.sh >> /home/<usuario>/backups/backup.log 2>&1
+```
+
+Conviene copiar también la carpeta de copias fuera del servidor (p. ej. DigitalOcean Spaces con `rclone`). Para restaurar:
+
+```bash
+mongorestore --uri "$ATLAS_URL" --gzip --archive=db-<fecha>.gz --drop
+tar xzf uploads-<fecha>.tgz -C ~/scoretravelsblog/server/uploads
+```
+
+## 8. Logs
+
+El servidor escribe una línea JSON por petición y por error, que systemd guarda en el journal:
+
+```bash
+journalctl -u scoretravelsblog -f                          # en directo
+journalctl -u scoretravelsblog --since today -p warning    # solo avisos y errores
+journalctl -u scoretravelsblog | grep <request-id>         # una petición concreta
+```
+
+Los errores 500 devuelven al navegador un `requestId`, el mismo que la cabecera `X-Request-Id`, para encontrar el error completo en el log. Las cabeceras de autenticación y las contraseñas nunca se escriben. `LOG_LEVEL=debug` da más detalle.
+
+## 9. Buscadores y redes sociales
 
 - Dar de alta el dominio en [Google Search Console](https://search.google.com/search-console) y enviar `https://midominio.com/sitemap.xml`.
 - Comprobar la vista previa de una experiencia con el [depurador de Facebook](https://developers.facebook.com/tools/debug/) o pegando el enlace en WhatsApp.
 
-## 9. Comprobar el rendimiento
+## 10. Comprobar el rendimiento
 
 - [PageSpeed Insights](https://pagespeed.web.dev/) o Lighthouse en Chrome DevTools: objetivo LCP < 2,5 s y CLS < 0,1.
 - En DevTools → Network, comprobar que `/assets/*` llega con `immutable`, que `index.html` llega con `no-cache` y que la respuesta va comprimida (`content-encoding: gzip`).

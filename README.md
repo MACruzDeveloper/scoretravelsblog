@@ -30,6 +30,7 @@ En producción el servidor sirve también el cliente compilado (`client/dist`) y
 - Seguridad: helmet (CSP), lista blanca de CORS, rate limiting, comprobación de subidas (tipo, tamaño) y conversión a AVIF con sharp.
 - Las experiencias tienen autor y estado de moderación (`pending`, `published`, `rejected`); el admin recibe un email con cada envío nuevo.
 - SEO: el servidor escribe en `index.html` el título, la descripción y la imagen de cada experiencia (para las vistas previas en redes sociales) y genera `robots.txt` y `sitemap.xml`.
+- Logs estructurados con pino: JSON en producción y texto legible en desarrollo. Cada petición lleva un ID (cabecera `X-Request-Id`, que también se devuelve en los errores 500) para encontrarla en los logs.
 - La configuración se valida al arrancar (`config.js`), así que si falta una variable falla enseguida.
 
 ## Requisitos
@@ -69,6 +70,7 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `TRUST_PROXY` | no | Número de proxies inversos delante de la app (p. ej. `1` detrás de nginx) |
 | `UPLOADS_DIR` | no | Carpeta de imágenes subidas, `server/uploads/images` por defecto |
 | `CLIENT_DIST_DIR` | no | Cliente compilado que se sirve, `client/dist` por defecto |
+| `LOG_LEVEL` | no | Nivel de log: `trace`, `debug`, `info` (por defecto), `warn`, `error`, `fatal` o `silent` |
 | `SITE_URL` | no | Dirección pública (p. ej. `https://midominio.com`) para el sitemap y las vistas previas en redes; por defecto, el host de la petición |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_TO` | no | Emails del formulario de contacto y de moderación |
 | `GEMINI_API_KEY` | no | Solo la usan los scripts de seed y backfill |
@@ -103,6 +105,7 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `npm run seed` | Genera experiencias de prueba con Gemini (`npm run seed -- 10 --user=admin`) |
 | `npm run scores:recalculate` | Recalcula la media de cada experiencia a partir de las puntuaciones |
 | `npm run backfill:propose` / `npm run backfill:apply` | Propone con Gemini categorías y ciudades para experiencias antiguas y aplica la propuesta revisada |
+| `npm run backup` | Copia de seguridad de la base de datos y las imágenes, con rotación (ver `docs/deployment.md`) |
 | `npm run migrate:*` | Migraciones de datos puntuales, ya ejecutadas en producción |
 
 ## Tests y CI

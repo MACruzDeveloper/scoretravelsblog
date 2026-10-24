@@ -43,9 +43,34 @@ app.use(
 )
 
 // =============== LOGGING =====================
-const morgan = require('morgan')
-// Quiet during tests
-if (!config.isTest) app.use(morgan(config.isProduction ? 'combined' : 'dev'))
+// One log line per request, with an id that is also sent back in the X-Request-Id header
+// and in 500 responses, so a user report can be matched with its log line
+const { randomUUID } = require('crypto')
+const logger = require('./logger')
+const REQUEST_ID = /^[\w-]{1,64}$/
+app.use(
+  require('pino-http')({
+    logger,
+    genReqId: (req, res) => {
+      const incoming = req.headers['x-request-id']
+      const id = typeof incoming === 'string' && REQUEST_ID.test(incoming) ? incoming : randomUUID()
+      res.setHeader('X-Request-Id', id)
+      return id
+    },
+    // Health checks and static files would only add noise
+    autoLogging: { ignore: (req) => req.url === '/api/health' || /^\/(static|assets)\//.test(req.url) },
+    customLogLevel: (req, res, err) =>
+      err || res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info',
+    customSuccessMessage: (req, res, responseTime) =>
+      `${req.method} ${req.originalUrl || req.url} ${res.statusCode} ${Math.round(responseTime)}ms`,
+    customErrorMessage: (req, res) => `${req.method} ${req.originalUrl || req.url} ${res.statusCode}`,
+    // Short entries: the message already has method, URL and status
+    serializers: {
+      req: (req) => ({ id: req.id, method: req.method, url: req.url, ip: req.raw?.ip ?? req.remoteAddress }),
+      res: (res) => ({ statusCode: res.statusCode }),
+    },
+  })
+)
 
 // =============== BODY PARSER SETTINGS =====================
 app.use(express.json({ limit: '1mb' }))

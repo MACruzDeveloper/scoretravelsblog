@@ -1,5 +1,6 @@
 const { sendMail } = require('../services/mailer')
 const { escapeHtml } = require('../utils/html')
+const logger = require('../logger')
 const { HttpError } = require('../utils/httpErrors')
 
 const sanitizeCrlf = (value) => (typeof value === 'string' ? value.replace(/[\r\n]+/g, ' ') : '')
@@ -20,7 +21,7 @@ const send_email = async (req, res) => {
     })
   } catch (error) {
     // The SMTP error may contain server details: log it, answer a generic message
-    console.error('Email send failed:', error.code || error.message)
+    logger.error({ err: error }, 'Email send failed')
     throw new HttpError(502, 'Error sending email')
   }
   res.json({ ok: true, message: 'email sent' })

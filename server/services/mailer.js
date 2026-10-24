@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer')
 const { smtp } = require('../config')
 const { escapeHtml } = require('../utils/html')
+const logger = require('../logger')
 
 // SMTP transport (Brevo). Credentials come from .env through config.js
 const transport = nodemailer.createTransport({
@@ -26,7 +27,7 @@ const notifyPendingReview = async (experience, { edited = false } = {}) => {
       html: `<p><strong>${escapeHtml(experience.user)}</strong> ${action} <strong>${escapeHtml(experience.title)}</strong>.</p><p>Review it in the admin panel (Moderation).</p>`,
     })
   } catch (error) {
-    console.error('Review notification failed:', error.code || error.message)
+    logger.error({ err: error }, 'Review notification failed')
   }
 }
 

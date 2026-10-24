@@ -34,6 +34,8 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => value || path.join(__dirname, '..', 'client', 'dist')),
+  // trace, debug, info, warn, error, fatal or silent. Defaults to info (silent in tests)
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']).optional(),
   // Public address of the site for the sitemap and social previews; defaults to the request host
   SITE_URL: z
     .url()
@@ -74,6 +76,7 @@ module.exports = {
   uploadsDir: env.UPLOADS_DIR,
   clientDistDir: env.CLIENT_DIST_DIR,
   siteUrl: env.SITE_URL,
+  logLevel: env.LOG_LEVEL || (env.NODE_ENV === 'test' ? 'silent' : 'info'),
   smtp: {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
