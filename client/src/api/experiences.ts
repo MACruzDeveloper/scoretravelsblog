@@ -72,7 +72,7 @@ export const getTimeline = (signal?: AbortSignal) =>
 export const listAllExperiences = async (params: Pick<ExperienceListParams, 'scope' | 'status'> = {}): Promise<Experience[]> => {
   const all: Experience[] = []
   let page = 1
-  let pages = 1
+  let pages: number
   do {
     const result = await listExperiences({ ...params, page, limit: 100 })
     all.push(...result.items)

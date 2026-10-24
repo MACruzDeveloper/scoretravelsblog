@@ -219,7 +219,9 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Client: `npm audit` → **0 vulnerabilidades**. ESLint: 0 errores (antes 30), 49 avisos (casi todos `any`).
 - [x] `.nvmrc` (22.12) y `engines` en ambos `package.json`; CI usa `.nvmrc`.
 - [ ] Actualizar Node local a la última 22.x LTS (o 24): `jsdom` 28 necesita Node > 22.12, por eso está fijado en 26.
-- [ ] React 19 + react-leaflet 5 (cuando haya tiempo para probar el mapa a fondo).
+- [ ] React 19 + react-leaflet 5 (cuando haya tiempo para probar el mapa a fondo). Van juntos con `react-dom` y `@types/react*`; Dependabot los ignora hasta entonces.
+- [ ] TypeScript 7 cuando `typescript-eslint` lo soporte (Dependabot lo ignora hasta entonces).
+- [x] Dependabot contra `develop`, con grupos (Actions, ESLint, React, menores y parches). Aplicadas a mano: Actions (`checkout` 7, `setup-node` 7, `cache` 6, `upload-artifact` 7), ESLint 10 y `@eslint/js` 10 en cliente y servidor, `@hookform/resolvers` 6.
 - [ ] Migrar Sass de `@import` y funciones globales a `@use`/módulos (los avisos están silenciados en `vite.config.ts`).
 - [ ] Activar las reglas del React Compiler de `eslint-plugin-react-hooks` 7 cuando se aborde la Fase 4.
 - [x] Regresiones tras la actualización, corregidas: fuentes Catamaran sin empaquetar (rutas `url()` con alias `@/assets/fonts`), dos reglas reordenadas por Sass (declaraciones antes de los `@include`), `build.cssTarget` para que Lightning CSS mantenga sintaxis compatible con Safari 14+.

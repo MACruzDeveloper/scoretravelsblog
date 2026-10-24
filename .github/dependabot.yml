@@ -1,22 +1,51 @@
-# Weekly pull requests with dependency updates
+# Dependency update pull requests, opened against develop (main only receives develop)
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /client
+    target-branch: develop
     schedule:
       interval: weekly
     groups:
       # Minor and patch updates in one PR per week
       minor-and-patch:
         update-types: [minor, patch]
+      # Packages that must move together
+      eslint:
+        patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'eslint-plugin-*']
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom', 'react-leaflet']
+    ignore:
+      # Planned migrations, done by hand (see PLAN_MEJORAS.md)
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: '@types/react'
+        update-types: [version-update:semver-major]
+      - dependency-name: '@types/react-dom'
+        update-types: [version-update:semver-major]
+      - dependency-name: react-leaflet
+        update-types: [version-update:semver-major]
+      # typescript-eslint does not support TypeScript 7 yet
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /server
+    target-branch: develop
     schedule:
       interval: weekly
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+      eslint:
+        patterns: ['eslint', '@eslint/*', 'eslint-config-*', 'eslint-plugin-*']
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: monthly
+    groups:
+      # Every action update in a single PR
+      actions:
+        patterns: ['*']
