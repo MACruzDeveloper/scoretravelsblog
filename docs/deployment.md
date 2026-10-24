@@ -41,6 +41,7 @@ NODE_ENV=production
 ATLAS_URL=...
 JWT_SECRET=...            # 64 caracteres aleatorios: openssl rand -hex 32
 CORS_ORIGINS=https://midominio.com
+SITE_URL=https://midominio.com
 TRUST_PROXY=1             # una capa de proxy (nginx)
 ```
 
@@ -136,7 +137,12 @@ tar czf uploads-$(date +%F).tgz -C ~/scoretravelsblog/server uploads
 
 Se puede programar con `cron` y copiar los archivos fuera del servidor (p. ej. DigitalOcean Spaces). El plan gratuito de Atlas no incluye copias automáticas.
 
-## 8. Comprobar el rendimiento
+## 8. Buscadores y redes sociales
+
+- Dar de alta el dominio en [Google Search Console](https://search.google.com/search-console) y enviar `https://midominio.com/sitemap.xml`.
+- Comprobar la vista previa de una experiencia con el [depurador de Facebook](https://developers.facebook.com/tools/debug/) o pegando el enlace en WhatsApp.
+
+## 9. Comprobar el rendimiento
 
 - [PageSpeed Insights](https://pagespeed.web.dev/) o Lighthouse en Chrome DevTools: objetivo LCP < 2,5 s y CLS < 0,1.
 - En DevTools → Network, comprobar que `/assets/*` llega con `immutable`, que `index.html` llega con `no-cache` y que la respuesta va comprimida (`content-encoding: gzip`).

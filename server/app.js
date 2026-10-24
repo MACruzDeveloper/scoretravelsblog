@@ -77,12 +77,17 @@ app.use('/static', express.static(path.join(__dirname, '../client/public'), { se
 // Missing static files are a real 404, not the SPA index.html
 app.use('/static', (req, res) => res.status(404).end())
 
-app.use(express.static(config.clientDistDir, { setHeaders: setAvifHeader }))
+// =============== SEO ==============================
+const seo = require('./controllers/seoController')
+app.get('/robots.txt', seo.robots)
+app.get('/sitemap.xml', seo.sitemap)
+app.get('/experience/:id', seo.experiencePage)
+
+// index: false so "/" also goes through the SPA handler below
+app.use(express.static(config.clientDistDir, { setHeaders: setAvifHeader, index: false }))
 
 // Any other path is a client route: serve the SPA
-app.get('/{*splat}', function (req, res) {
-  res.sendFile(path.join(config.clientDistDir, 'index.html'))
-})
+app.get('/{*splat}', seo.indexPage)
 
 // =============== GLOBAL ERROR HANDLER =====================
 // Express 5 forwards errors thrown in async handlers here

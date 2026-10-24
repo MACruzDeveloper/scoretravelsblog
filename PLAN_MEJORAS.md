@@ -306,7 +306,8 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 - [x] Revisar lo aprovechable de `_doc/` e incorporarlo a `docs/`: HTTPS, nginx, systemd, copias de seguridad y comprobaciones de rendimiento en `docs/deployment.md`. `TESTING_PLAN.md` y `PROJECT_REVIEW.md` quedan obsoletos (los sustituyen los tests reales, el README y este plan).
 - [ ] SEO: meta y Open Graph por experiencia, sitemap, robots; valorar prerender/SSR.
   - [x] Cliente: componente `Seo` (título, descripción, canonical, Open Graph, `noindex` en admin, login, registro, búsquedas, 404 y experiencias no publicadas).
-  - [ ] Servidor: inyectar las meta de cada experiencia en `index.html` (los bots de redes sociales no ejecutan JS), `robots.txt` y `sitemap.xml` dinámico.
+  - [x] Servidor: inyecta las meta de cada experiencia publicada en `index.html` (los bots de redes sociales no ejecutan JS), `robots.txt` y `sitemap.xml` dinámico (`controllers/seoController.js`, `SITE_URL`).
+  - [ ] Valorar prerender/SSR si Google indexa mal el contenido (de momento no hace falta: Google ejecuta JS).
 - [ ] Accesibilidad y `prefers-reduced-motion`.
 - [ ] About/portfolio: contenido externo (JSON/MD/BD), proyectos, CV, decidir idioma o i18n (A-14).
 - [ ] Chat IA sobre tu experiencia (Genkit) con rate limit, límites de tokens y prompt acotado.

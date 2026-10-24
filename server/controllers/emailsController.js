@@ -1,4 +1,5 @@
-const { sendMail, escapeHtml } = require('../services/mailer')
+const { sendMail } = require('../services/mailer')
+const { escapeHtml } = require('../utils/html')
 const { HttpError } = require('../utils/httpErrors')
 
 const sanitizeCrlf = (value) => (typeof value === 'string' ? value.replace(/[\r\n]+/g, ' ') : '')

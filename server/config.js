@@ -34,6 +34,11 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => value || path.join(__dirname, '..', 'client', 'dist')),
+  // Public address of the site for the sitemap and social previews; defaults to the request host
+  SITE_URL: z
+    .url()
+    .optional()
+    .transform((value) => value?.replace(/\/+$/, '')),
   SMTP_HOST: z.string().default('smtp-relay.brevo.com'),
   SMTP_PORT: z.coerce.number().int().default(587),
   SMTP_USER: z.string().optional(),
@@ -68,6 +73,7 @@ module.exports = {
   trustProxy: env.TRUST_PROXY,
   uploadsDir: env.UPLOADS_DIR,
   clientDistDir: env.CLIENT_DIST_DIR,
+  siteUrl: env.SITE_URL,
   smtp: {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,

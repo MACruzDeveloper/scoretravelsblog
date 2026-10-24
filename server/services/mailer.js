@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer')
 const { smtp } = require('../config')
+const { escapeHtml } = require('../utils/html')
 
 // SMTP transport (Brevo). Credentials come from .env through config.js
 const transport = nodemailer.createTransport({
@@ -10,11 +11,6 @@ const transport = nodemailer.createTransport({
 })
 
 const sendMail = (options) => transport.sendMail({ from: smtp.from, to: smtp.to, ...options })
-
-const escapeHtml = (value) =>
-  typeof value === 'string'
-    ? value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
-    : ''
 
 /**
  * Tells the admin (SMTP_TO) that an experience waits for review.
@@ -34,4 +30,4 @@ const notifyPendingReview = async (experience, { edited = false } = {}) => {
   }
 }
 
-module.exports = { sendMail, escapeHtml, notifyPendingReview }
+module.exports = { sendMail, notifyPendingReview }
