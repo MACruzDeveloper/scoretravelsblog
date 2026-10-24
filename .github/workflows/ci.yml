@@ -25,6 +25,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: client/package-lock.json
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -44,6 +46,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: server/package-lock.json
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
       # MongoDB binary used by mongodb-memory-server in the tests
       - uses: actions/cache@v4
         with:
@@ -66,6 +70,8 @@ jobs:
           cache-dependency-path: |
             client/package-lock.json
             server/package-lock.json
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
       - uses: actions/cache@v4
         with:
           path: ~/.cache/mongodb-binaries
@@ -94,6 +100,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
       - run: npm audit --omit=dev --audit-level=high
         working-directory: client
       - run: npm audit --omit=dev --audit-level=high

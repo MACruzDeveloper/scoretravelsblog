@@ -6,7 +6,7 @@ const { isValidId } = require('./validators')
 const objectId = z.string().refine(isValidId, 'Invalid id')
 const text = (max) => z.string().trim().min(1).max(max)
 const optionalText = (max) => z.string().trim().max(max).optional()
-const email = z.string().trim().email().max(254)
+const email = z.string().trim().pipe(z.email()).pipe(z.string().max(254))
 const password = z.string().min(8, 'Password must be at least 8 characters').max(128)
 const username = z
   .string()
