@@ -1,0 +1,28 @@
+{
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "about": {
+    "seoTitle": "Sobre mí",
+    "seoDescription": "Mi carrera profesional como un viaje por carretera: formación, experiencia y proyectos.",
+    "road": "Carretera interactiva con hitos de mi carrera",
+    "goTo": "Ir al hito de {{year}}: {{title}}",
+    "previous": "Hito anterior",
+    "next": "Hito siguiente",
+    "types": {
+      "education": "Formación",
+      "work": "Experiencia laboral",
+      "freelance": "Freelance"
+    },
+    "hint": "Arrastra la carretera, usa las flechas ‹ › o Ctrl + rueda para avanzar",
+    "hintMac": "Arrastra la carretera, usa las flechas ‹ › o ⌘ + rueda para avanzar",
+    "present": "actualidad",
+    "count": "{{current}} de {{total}}",
+    "link": "Ver proyecto",
+    "milestones": "Hitos de mi carrera",
+    "links": "Enlaces",
+    "hintTouch": "Desliza la carretera o usa las flechas ‹ › para avanzar"
+  }
+}

@@ -253,7 +253,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 
 - [x] Bugs B-5, B-6 y B-8 (resueltos en fases anteriores), B-9 (el admin espera a verificar la sesión y solo lo ven los admins; el enlace "Admin" del menú también), B-10 (el registro devuelve la sesión; sin esperas artificiales de 2 s; tras el login, admin → `/admin`, resto → `/`), B-11 (fuera las precargas de fuentes a `/src`), B-13 (`setTimeout` del admin con limpieza; variable del carrusel renombrada).
 - [x] B-7: la factoría de stores comparte la petición en curso y, con recargas solapadas, se queda con la respuesta más reciente.
-- [ ] B-1 (teclado del About): **al final, junto con el resto de la página About**.
+- [x] B-1 (teclado del About): las flechas solo actúan con el foco en la carretera (ver About en la Fase 6).
 - [x] Rutas del admin anidadas con `<Outlet/>`; todas las páginas salvo la Home se cargan bajo demanda (`React.lazy`): el JS inicial de la app pasa de 104 KB a 46 KB. (A-8)
 - [x] API tipada por recurso (`api/auth`, `categories`, `cities`, `comments`, `contact`, `experiences`, `images`, `scores`, `users`) con los tipos de dominio en `api/types.ts`; ningún componente construye URLs del API. `utils.js` y `config.js` pasados a TypeScript (helpers HTTP genéricos en el tipo de respuesta). (A-8, A-10)
 - [x] `strictNullChecks` activado sin errores. Helpers `cityOf`/`coverOf` en lugar de comprobaciones repetidas. ESLint: de 82 problemas iniciales a 19 avisos, todos en las tablas del admin (se van con el paso 3).
@@ -309,7 +309,16 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
   - [x] Servidor: inyecta las meta de cada experiencia publicada en `index.html` (los bots de redes sociales no ejecutan JS), `robots.txt` y `sitemap.xml` dinámico (`controllers/seoController.js`, `SITE_URL`).
   - [ ] Valorar prerender/SSR si Google indexa mal el contenido (de momento no hace falta: Google ejecuta JS).
 - [ ] Accesibilidad y `prefers-reduced-motion`.
-- [ ] About/portfolio: contenido externo (JSON/MD/BD), proyectos, CV, decidir idioma o i18n (A-14).
+- [ ] About/portfolio: la carrera como una carretera con hitos (formación, trabajo, proyectos). Por ahora solo la carretera; más secciones después.
+  - Problemas de partida: el scroll vertical de la página mueve el coche (sección de `190vh` con panel `sticky`), mucho fondo negro, la tarjeta se superpone con la carretera y el coche, los puntos se reparten en `100vw` (no escala con muchos años), el año interpolado no coincide con los puntos, B-1, B-13 y animaciones infinitas sin `prefers-reduced-motion`.
+  - [x] 1. i18n (A-14): `i18next` + `react-i18next` solo en el chunk del About, español por defecto, selector ES/EN recordado en `localStorage`. Hitos en `src/data/career.ts` (año, tipo, título y descripción en los dos idiomas, organización, lugar, tecnologías, enlace).
+  - [x] Contenido real: 17 hitos (2001 – hoy) sacados del PDF del perfil de LinkedIn, en español e inglés, con fechas de inicio y fin, tipo (formación, trabajo, freelance), lugar y tecnologías. Las certificaciones no tienen fecha y quedan fuera de momento.
+  - [x] 2. Estructura que cabe en pantalla (`100svh` menos la cabecera): intro, escenario y tarjeta debajo de la carretera. Fuera el `190vh` y el `sticky`.
+  - [x] 3. Carretera con scroll horizontal propio y `scroll-snap`: coche fijo en el centro y la carretera se desplaza; el hito bajo el coche es el activo.
+  - [x] 4. Navegación: gestos horizontales nativos, arrastre con ratón, Ctrl/⌘ + rueda como en el mapa, botones ‹ ›, minimapa de años y flechas solo con el foco en la carretera (B-1).
+  - [x] 5. Detalles: el coche gira al ir hacia atrás, ruedas solo en movimiento, icono y color por tipo, `prefers-reduced-motion`, móvil, limpieza de timers (B-13).
+  - [x] 6. Tests unitarios (navegación, teclado solo con foco, Ctrl + rueda, idioma, fechas) y comprobación en Chromium real (arrastre, rueda, teclado, giro del coche). B-1 cerrado.
+  - [ ] Pendiente de decidir: certificaciones, más secciones (proyectos, habilidades, contacto).
 - [ ] Chat IA sobre tu experiencia (Genkit) con rate limit, límites de tokens y prompt acotado.
 - [x] Observabilidad y backups: logs con pino + pino-http (sustituye a morgan), ID por petición (`X-Request-Id`, devuelto en los 500), stack de los errores 500, eventos de conexión de Mongo y `uncaughtException`; `npm run backup` (mongodump + imágenes, con rotación) documentado con cron en `docs/deployment.md`. Sentry descartado por ahora (no hace falta con el volumen actual).
 - [ ] **Quitar `0.0.0.0/0` de *Network Access* en Atlas** (S-1). Antes hay que montar un Mongo local para desarrollo (`docker-compose`) o usar un cluster de desarrollo aparte, para no tener que actualizar la IP doméstica cada vez.
