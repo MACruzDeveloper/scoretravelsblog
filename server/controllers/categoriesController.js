@@ -1,66 +1,45 @@
 const categories = require('../models/categoriesModel')
-const { isValidId, isNonEmptyString } = require('../utils/validators')
+const experiences = require('../models/experiencesModel')
+const { notFound, conflict } = require('../utils/httpErrors')
 
-class categoriesController {
-  async findAllCategories(req, res) {
-    try {
-      const cats = await categories.find()
-      res.send(cats)
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching categories' })
-    }
-  }
-
-  async addNewCategory(req, res) {
-    let params = req.body
-    try {
-      const done = await categories.create({name: params.name, description: params.description})
-      res.send(done)
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error creating category' })
-    }
-  }
-
-  async deleteCategory(req, res) {
-    let { name } = req.body
-    if (!isNonEmptyString(name)) return res.status(400).json({ ok: false, message: 'Invalid category name' })
-
-    try {
-      const removed = await categories.deleteOne({ name: name })
-      res.send({ removed })
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error deleting category' })
-    }
-  }
-
-  async updateCategory(req, res) {
-    let params = req.body
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-
-    try {
-      const updated = await categories.updateOne(
-        { _id: params._id }, { name: params.name, description: params.description }
-      )
-      res.send({ updated })
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error updating category' })
-    }
-  }
-
-  async findOneCategory(req, res) {
-    try {
-      const cat = await categories.findOne({ name: req.params.category })
-      if (!cat) return res.status(404).json({ ok: false, message: 'Category not found' })
-      res.send(cat)
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching category' })
-    }
-  }
+const findAllCategories = async (req, res) => {
+  res.send(await categories.find().sort({ name: 1 }).collation({ locale: 'en', strength: 2 }))
 }
 
-module.exports = new categoriesController()
+const findOneCategory = async (req, res) => {
+  const category = await categories.findById(req.params.id)
+  if (!category) throw notFound('Category not found')
+  res.send(category)
+}
+
+// Names are unique ignoring case (index on the model): a repeated one answers 409
+const addNewCategory = async (req, res) => {
+  const { name, description } = req.body
+  res.send(await categories.create({ name, description }))
+}
+
+// Renaming also renames the category in every experience that uses it
+const updateCategory = async (req, res) => {
+  const { name, description } = req.body
+  const category = await categories.findById(req.params.id)
+  if (!category) throw notFound('Category not found')
+  const oldName = category.name
+  category.name = name
+  category.description = description
+  await category.save()
+  const renamed =
+    oldName !== name ? (await experiences.updateMany({ category: oldName }, { category: name })).modifiedCount : 0
+  res.send({ updated: category, renamedInExperiences: renamed })
+}
+
+// A category in use cannot be deleted: experiences store its name
+const deleteCategory = async (req, res) => {
+  const category = await categories.findById(req.params.id)
+  if (!category) throw notFound('Category not found')
+  const inUse = await experiences.countDocuments({ category: category.name })
+  if (inUse) throw conflict(`Category is used by ${inUse} experience(s). Change them first`)
+  const removed = await categories.deleteOne({ _id: category._id })
+  res.send({ removed })
+}
+
+module.exports = { findAllCategories, findOneCategory, addNewCategory, updateCategory, deleteCategory }

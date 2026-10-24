@@ -1,85 +1,58 @@
-const path = require("path");
-const sharp = require("sharp");
-const Images = require("../models/imagesModel");
-const fs = require("fs");
-const { isValidId } = require("../utils/validators");
+const path = require('path')
+const crypto = require('crypto')
+const fs = require('fs')
+const sharp = require('sharp')
+const Images = require('../models/imagesModel')
+const { uploadsDir } = require('../config')
+const { resolveUpload, unlinkUpload, countExperiencesUsing } = require('../services/imageService')
+const { badRequest, notFound, conflict } = require('../utils/httpErrors')
 
 const upload_image = async (req, res) => {
-  try {
-    if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ error: 'No file uploaded' })
-    }
+  if (!req.file || !req.file.buffer) throw badRequest('No file uploaded')
 
-    const outputDir = path.join(__dirname, '..', '..', 'client', 'public', 'images')
-    fs.mkdirSync(outputDir, { recursive: true })
-    const originalName = path.parse(req.file.originalname).name
-    const filename = `${Date.now()}-${originalName}.avif`
-    const outputPath = path.join(outputDir, filename)
-    const image = sharp(req.file.buffer)
-    const metadata = await image.metadata()
+  fs.mkdirSync(uploadsDir, { recursive: true })
+  // Generated name: never trust the client's original filename
+  const filename = `${Date.now()}-${crypto.randomUUID()}.avif`
+  const image = sharp(req.file.buffer)
+  const metadata = await image.metadata()
+  await image.rotate().avif({ quality: 70, effort: 6 }).toFile(path.join(uploadsDir, filename))
 
-    await image
-      .avif({ quality: 70, effort: 6 })
-      .toFile(outputPath)
-
-    await Images.create({
-      pathname: outputPath,
-      filename,
-      title: req.body.title || '',
-      width: metadata.width || null,
-      height: metadata.height || null
-    })
-
-    return res.status(200).json({ filename, title: req.body.title || '' })
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: 'Upload failed' })
-  }
-};
-
-const fetch_images = async (req, res) => {
-  try {
-    const images = await Images.find({});
-    res.status(200).json({ images });
-  } catch (error) {
-    res.status(500).json({ ok: false, message: 'Error fetching images' })
-  }
-};
-
-const delete_image = async (req, res) => {
-  const { _id, filename } = req.params;
-  if (!isValidId(_id)) return res.status(400).json({ error: 'Invalid id' });
-  const safeName = path.basename(filename);
-  if (!/^[\w-]+\.avif$/.test(safeName)) {
-    return res.status(400).json({ error: 'Invalid filename' });
-  }
-  const filePath = path.join(__dirname, '..', '..', 'client', 'public', 'images', safeName);
-  try {
-    await fs.promises.unlink(filePath);
-    const deleted = await Images.deleteOne({ _id });
-    res.send({ deleted });
-  } catch (error) {
-    res.status(500).json({ ok: false, message: 'Delete failed' });
-  }
-};
-
-const update_image = async (req, res) => {
-  let params = req.body;
-  if (!isValidId(params._id)) return res.status(400).send({ error: 'Invalid id' });
-
-    try {
-      const updated = await Images.updateOne(
-        { _id: params._id }, {featured: params.featured}
-      );
-      res.send({ updated });
-    }
-    catch (error) {
-      res.status(500).send({ ok: false, message: 'Error updating image' });
-    };
+  const title = req.body.title || ''
+  await Images.create({
+    filename,
+    title,
+    userId: req.user._id,
+    width: metadata.width || null,
+    height: metadata.height || null,
+  })
+  res.json({ filename, title })
 }
 
-module.exports = {
-  upload_image,
-  fetch_images,
-  delete_image,
-  update_image
-};
+const fetch_images = async (req, res) => {
+  // Newest first (ObjectIds grow with creation time)
+  const images = await Images.find({}).select('-pathname').sort({ _id: -1 })
+  res.json({ images })
+}
+
+// The filename comes from the database record, never from the URL
+const delete_image = async (req, res) => {
+  const image = await Images.findById(req.params.id)
+  if (!image) throw notFound('Image not found')
+  const filePath = resolveUpload(image.filename)
+  if (!filePath) throw badRequest('Invalid filename')
+
+  const usedBy = await countExperiencesUsing(image.filename)
+  if (usedBy) throw conflict(`Image is used by ${usedBy} experience(s). Remove it from them first`)
+
+  await unlinkUpload(filePath)
+  const deleted = await Images.deleteOne({ _id: image._id })
+  res.send({ deleted })
+}
+
+const update_image = async (req, res) => {
+  const updated = await Images.updateOne({ _id: req.params.id }, { featured: req.body.featured })
+  if (!updated.matchedCount) throw notFound('Image not found')
+  res.send({ updated })
+}
+
+module.exports = { upload_image, fetch_images, delete_image, update_image }

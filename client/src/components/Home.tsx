@@ -1,8 +1,8 @@
 
-import { lazy, Suspense, useEffect } from 'react'
-import { useExperienceStore } from '@/store/experienceStore'
+import { lazy, Suspense } from 'react'
 import Spinner from './common/Spinner'
 import Carousel from '@/components/Carousel'
+import Seo from '@/components/common/Seo'
 
 const LastExperiences = lazy(() => import('@/components/experiences/LastExperiences.js'))
 const Timeline = lazy(() => import('@/components/Timeline.js'))
@@ -10,13 +10,8 @@ const BestExperiences = lazy(() => import('@/components/experiences/BestExperien
 const MapExperiences = lazy(() => import('@/components/MapExperiences.js'))
 
 const Home = () => {
-  const fetchExperiences = useExperienceStore(state => state.fetchExperiences)
-
-  useEffect(() => {
-    fetchExperiences()
-  }, [fetchExperiences])
-
   return <div className="page home">
+    <Seo />
     <Carousel hasVideo />
 
     <div className="block">

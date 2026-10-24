@@ -13,7 +13,7 @@ const PAGE_LABELS: Record<string, string> = {
 }
 
 const Breadcrumbs = ({ page }: ParamsBreadcrumbs) => {
-  const { titleExperience }: any = useContext(MyGlobalContext)
+  const { titleExperience } = useContext(MyGlobalContext)
   const pageLabel = PAGE_LABELS[page] ?? page
 
   return <div className="breadcrumbs">

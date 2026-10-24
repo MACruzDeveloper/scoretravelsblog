@@ -1,31 +1,34 @@
-import { useEffect } from 'react'
-import { sortBy } from 'lodash'
+import { useEffect, forwardRef, SelectHTMLAttributes } from 'react'
+import { sortBy } from '@/utils/collections'
 import { useCategoriesStore } from '@/store/categoriesStore'
 
-export type PropsSelectCategories = {
-  handleChange: any
-  selected?: string
-}
+type PropsSelectCategories = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'>
 
-const SelectCategories = ({ handleChange, selected }: PropsSelectCategories) => {
-  const { cats, loading, error, fetchCats } = useCategoriesStore()
-  const sortedCats = sortBy(cats, [cat => cat.name.toLowerCase()])
+/**
+ * Category select. Works controlled (value + onChange) and with react-hook-form (register).
+ * The empty option means "no category".
+ */
+const SelectCategories = forwardRef<HTMLSelectElement, PropsSelectCategories>(
+  ({ className = 'form_control', ...props }, ref) => {
+    const { items: cats, loading, error, fetch } = useCategoriesStore()
+    const sortedCats = sortBy(cats, (cat) => cat.name.toLowerCase())
 
-  useEffect(() => {
-    fetchCats()
-  }, [fetchCats])
+    useEffect(() => {
+      fetch()
+    }, [fetch])
 
-  return <select name="category" className="form_control" onChange={handleChange} defaultValue={selected}>
-    <option>{selected || "*Category"}</option>
-    {
-      !loading && sortedCats?.length > 0 && sortedCats.map((ele) => {
-        return <option key={ele._id} value={ele.name}>
-          {ele.name}
-        </option>
-      })
-    }
-    {error}
-  </select>
-}
+    return <>
+      <select name="category" aria-label="Category" {...props} ref={ref} className={className}>
+        <option value="">{loading ? 'Loading categories…' : '*Category'}</option>
+        {sortedCats.map((category) => (
+          <option key={category._id} value={category.name}>{category.name}</option>
+        ))}
+      </select>
+      {error && <p className="form_error">{error}</p>}
+    </>
+  }
+)
+
+SelectCategories.displayName = 'SelectCategories'
 
 export default SelectCategories

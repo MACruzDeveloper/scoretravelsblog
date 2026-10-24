@@ -1,19 +1,19 @@
 import { useState, useContext } from 'react'
-import { postData } from '@utils/utils'
+import { useMessage } from '@/hooks/useMessage'
+import { vote } from '@/api/scores'
 import { MdStar, MdStarBorder } from 'react-icons/md'
-import { URL } from '../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
-import { useScoresStore } from '@/store/scoresStore'
 import Msgbox from './common/Msgbox'
 
 type PropsStars = {
   exp: string
+  // Receives the new average and vote count returned by the server
+  onScored?: (score: number | null, votes: number) => void
 }
 
-const Stars = ({ exp }: PropsStars) => {
+const Stars = ({ exp, onScored }: PropsStars) => {
   const { user } = useContext(MyGlobalContext)
-  const { fetchScores } = useScoresStore()
-  const [message, setMessage] = useState({ body: '', classname: '' })
+  const { message, showOk, showError, showWarning } = useMessage()
   const [starHover, setStarHover] = useState(-1)
   const [isSending, setIsSending] = useState(false)
   const stars = []
@@ -31,19 +31,17 @@ const Stars = ({ exp }: PropsStars) => {
     if (isSending) return
 
     if (!user) {
-      setMessage({ body: 'You must be logged in to score', classname: 'msg_error' })
+      showWarning('You must be logged in to score')
       return
     }
 
     setIsSending(true)
     try {
-      let url = `${URL}/admin/scores/add`
-      await postData(url, { experience: exp, user: user, score: i+1 })
-      await fetchScores(true)
-      setMessage({ body: `Score added!`, classname: 'msg_ok' })
+      const result = await vote(exp, i + 1)
+      onScored?.(result.experienceScore, result.votes)
+      showOk('Score added!')
     } catch (error) {
-      console.log(error)
-      setMessage({ body: 'Could not add your score', classname: 'msg_error' })
+      showError(error, 'Could not add your score')
     } finally {
       setIsSending(false)
     }
@@ -59,11 +57,12 @@ const Stars = ({ exp }: PropsStars) => {
           onMouseEnter={() => onHandleHover(i)}
           onMouseLeave={() => onHandleHover(-1)}
           onClick={() => onClickScore(i)}
+          aria-label={`Score ${i + 1} out of 5`}
         >{starHover === i ? <MdStar /> : <MdStarBorder />}</button>
       })
     }
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

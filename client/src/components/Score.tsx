@@ -1,48 +1,16 @@
-import { useState, useEffect } from 'react'
-import { postData } from '@/utils/utils'
-import { URL } from '../config'
-import type { ScoreType } from '@/store/scoresStore'
-
 type PropsScore = {
-  scores: Array<ScoreType>
-  exp: string
+  score?: number | null
+  votes?: number
 }
 
-const Score = ({ scores, exp }: PropsScore) => {
-  const [hasScore, setHasScore] = useState(false)
+// Display only: the server keeps score (average) and votes (count) in sync
+const Score = ({ score, votes = 0 }: PropsScore) => {
+  if (score == null) return null
 
-  const expScores = scores.filter(ele => exp === ele.experience && typeof ele.score === 'number' && ele.score > 0)
+  const display = Math.round(score * 10) / 10
+  const title = votes ? `${votes} ${votes === 1 ? 'vote' : 'votes'}` : undefined
 
-  useEffect(() => {
-    const matching = scores.filter(ele => exp === ele.experience && typeof ele.score === 'number' && ele.score > 0)
-
-    if (matching.length === 0) {
-      setHasScore(false)
-      return
-    }
-
-    const avg = matching.reduce((acc, ele) => acc + ele.score, 0) / matching.length
-    const rounded = Math.round(avg * 10) / 10
-    setHasScore(true)
-
-    ;(async () => {
-      try {
-        await postData(`${URL}/admin/experiences/update_score`, {
-          _id: exp,
-          score: rounded
-        })
-      } catch (error) {
-        console.log(error)
-      }
-    })()
-  }, [scores, exp])
-
-  if (!hasScore || expScores.length === 0) return null
-
-  const avg = expScores.reduce((acc, ele) => acc + ele.score, 0) / expScores.length
-  const display = Math.round(avg * 10) / 10
-
-  return <p className="score">
+  return <p className="score" title={title}>
     {display}<span>/5</span>
   </p>
 }

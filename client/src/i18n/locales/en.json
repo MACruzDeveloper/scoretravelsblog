@@ -1,0 +1,28 @@
+{
+  "language": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English"
+  },
+  "about": {
+    "seoTitle": "About me",
+    "seoDescription": "My career as a road trip: education, work experience and projects.",
+    "road": "Interactive road with my career milestones",
+    "goTo": "Go to the {{year}} milestone: {{title}}",
+    "previous": "Previous milestone",
+    "next": "Next milestone",
+    "types": {
+      "education": "Education",
+      "work": "Work experience",
+      "freelance": "Freelance"
+    },
+    "hint": "Drag the road, use the ‹ › arrows or Ctrl + scroll to move",
+    "hintMac": "Drag the road, use the ‹ › arrows or ⌘ + scroll to move",
+    "present": "present",
+    "count": "{{current}} of {{total}}",
+    "link": "View project",
+    "milestones": "My career milestones",
+    "links": "Links",
+    "hintTouch": "Swipe the road or use the ‹ › arrows to move"
+  }
+}

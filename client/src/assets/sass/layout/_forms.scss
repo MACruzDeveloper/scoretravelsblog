@@ -306,3 +306,43 @@ input[type="range"] {
     }
   }
 }
+// Password field with a show/hide button inside it
+.password_field {
+  position: relative;
+  margin-bottom: 1rem;
+
+  // The wrapper owns the spacing so the button stays centered on the input
+  input.form_control {
+    margin-bottom: 0;
+    padding-right: 4.5rem;
+  }
+}
+
+.password_toggle {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  display: flex;
+  padding: .4rem;
+  font-size: 2rem;
+  color: $color4;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: $color1;
+  }
+}
+
+// Validation message under a field
+.form_error {
+  margin: .4rem 0 1rem;
+  font-size: 1.3rem;
+  text-align: left;
+  color: $colorRed;
+}
+
+.form_control[aria-invalid="true"] {
+  border-color: $colorRed;
+}

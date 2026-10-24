@@ -1,57 +1,33 @@
-import { useState, useEffect, useMemo } from 'react'
-import { sortBy } from "lodash"
-import { useExperienceStore, City } from '@store/experienceStore'
-import Card, { PropsCard } from '@common/Card'
+import { useState, useEffect } from 'react'
+import Card from '@common/Card'
 import Pagination from '@common/Pagination'
 import Filters from '@common/Filters'
 import { useExperienceFilters } from '@/hooks/useExperienceFilters'
+import { useApiQuery } from '@/hooks/useApiQuery'
+import { listExperiences, getExperienceFacets, toQueryString } from '@/api/experiences'
+import Seo from '@/components/common/Seo'
+
+const ITEMS_PER_PAGE = 9
 
 const AllExperiences = () => {
-  const { experiences, loading, error, fetchExperiences } = useExperienceStore()
-
-  useEffect(() => {
-    fetchExperiences()
-  }, [fetchExperiences])
-
-  const { filters, setFilter, resetFilters, hasActiveFilters, filtered } =
-    useExperienceFilters(experiences)
-
-  // Derivados para los selects de Filters
-  const categories = useMemo(() =>
-    [...new Set(experiences.map(e => e.category).filter(Boolean))].sort()
-  , [experiences])
-
-  const cities = useMemo(() => {
-    const seen = new Set()
-    return experiences
-      .map(e => typeof e.city === 'object' ? e.city : null)
-      .filter((c): c is City => !!c && !seen.has(c._id) && !!seen.add(c._id))
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [experiences])
-
-  const availableYears = useMemo(() =>
-    [...new Set(experiences.map(e => e.date ? new Date(e.date).getFullYear().toString() : ''))].filter(Boolean).sort().reverse()
-  , [experiences])
-
-  // Paginación sobre el array ya filtrado
+  const { filters, setFilter, resetFilters, hasActiveFilters, params } = useExperienceFilters()
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 9
 
-  // Reset a página 1 cuando cambian los filtros
+  // Back to the first page whenever the filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [filters])
+  }, [params])
 
-  const sortedFiltered = useMemo(() =>
-    sortBy(filtered, ['date']).reverse()
-  , [filtered])
+  const query = { ...params, page: currentPage, limit: ITEMS_PER_PAGE, sort: '-date' as const }
+  const { data, loading, error } = useApiQuery(`experiences:all${toQueryString(query)}`, () => listExperiences(query))
+  const { data: facets } = useApiQuery('experiences:facets', () => getExperienceFacets())
 
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentExps = sortedFiltered.slice(indexOfFirstItem, indexOfLastItem)
+  const experiences = data?.items ?? []
+  const total = data?.total ?? 0
 
   return (
     <div className="page experiences">
+      <Seo title="All experiences" description="Every travel experience shared on ScoreTravelsBlog, with filters by category, continent, score and date." />
       <div className="container">
         <div className="wrapper">
           <div className="top">
@@ -64,13 +40,13 @@ const AllExperiences = () => {
               setFilter={setFilter}
               resetFilters={resetFilters}
               hasActiveFilters={hasActiveFilters}
-              categories={categories}
-              cities={cities}
-              availableYears={availableYears}
+              categories={facets?.categories ?? []}
+              cities={facets?.cities ?? []}
+              availableYears={facets?.years ?? []}
             />
 
             <div className="flex">
-              {!loading && currentExps.map((ele: PropsCard) => (
+              {!loading && experiences.map((ele) => (
                 <Card
                   key={`exp-${ele._id}`}
                   category={ele.category}
@@ -89,11 +65,11 @@ const AllExperiences = () => {
 
           <div className="msg_error" role="alert">{error}</div>
 
-          {sortedFiltered.length > itemsPerPage && (
+          {total > ITEMS_PER_PAGE && (
             <Pagination
-              itemsPerPage={itemsPerPage}
+              itemsPerPage={ITEMS_PER_PAGE}
               currentPage={currentPage}
-              totalItems={sortedFiltered.length}  // total del filtrado, no del original
+              totalItems={total}
               paginate={setCurrentPage}
             />
           )}

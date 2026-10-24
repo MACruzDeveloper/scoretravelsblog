@@ -1,37 +1,23 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import MapScrollGuard from './MapScrollGuard'
 import { useBestExperiences } from '../hooks/useExperienceHooks'
 import { getIconForContinent, MAP_TILE_LAYER } from '@utils/mapThemes'
-import { Experience } from '@/store/experienceStore'
+import type { Experience } from '@/api/types'
+import { cityOf } from '@/utils/experience'
 
 const MapExperiences = () => {
   const { bestExperiences } = useBestExperiences()
 
-  // Helper to check if experience has valid geolocation
-  const hasValidCoordinates = (exp: Experience): boolean => {
-    if (exp.city && typeof exp.city === 'object' && 'lat' in exp.city && 'lng' in exp.city) {
-      return !!exp.city.lat && !!exp.city.lng
-    }
-    return !!(exp.lat && exp.lng)
-  }
-
-  // Get coordinates from experience
+  // Coordinates come from the experience's city
   const getCoordinates = (exp: Experience): [number, number] | null => {
-    if (exp.city && typeof exp.city === 'object' && 'lat' in exp.city && 'lng' in exp.city) {
-      return [exp.city.lat, exp.city.lng]
-    }
-    if (exp.lat && exp.lng) {
-      return [exp.lat, exp.lng]
-    }
-    return null
+    const city = cityOf(exp)
+    return city && city.lat != null && city.lng != null ? [city.lat, city.lng] : null
   }
 
-  // Get continent from experience for icon customization
-  const getContinent = (exp: Experience): string => {
-    if (exp.city && typeof exp.city === 'object' && 'continent' in exp.city) {
-      return exp.city.continent
-    }
-    return 'unknown'
-  }
+  const hasValidCoordinates = (exp: Experience): boolean => getCoordinates(exp) !== null
+
+  // Continent of the city, for the marker icon
+  const getContinent = (exp: Experience): string => cityOf(exp)?.continent ?? 'unknown'
 
   return (
     <div className="map">
@@ -40,7 +26,8 @@ const MapExperiences = () => {
         zoom={2}
         minZoom={2}
         maxZoom={9}
-        scrollWheelZoom={true}
+        // Wheel zoom only with Ctrl/⌘ held (MapScrollGuard)
+        scrollWheelZoom={false}
         maxBounds={[[-89, -180], [89, 180]]}
         maxBoundsViscosity={0.9}
         worldCopyJump={true}
@@ -52,6 +39,7 @@ const MapExperiences = () => {
           maxZoom={MAP_TILE_LAYER.maxZoom}
           errorTileUrl="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapScrollGuard />
         {bestExperiences
           .filter(exp => hasValidCoordinates(exp))
           .map(exp => {

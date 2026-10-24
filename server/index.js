@@ -1,82 +1,47 @@
-const express = require("express");
-const app = express();
-const port = process.env.port || 3040;
-require('dotenv').config();
-const path = require('path');
+// Loads and validates server/.env; exits with a clear message if something is wrong
+const config = require('./config')
+const logger = require('./logger')
+const app = require('./app')
 
-// =============== SECURITY HEADERS =====================
-const helmet = require('helmet');
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: false,
-  crossOriginOpenerPolicy: false,
-}));
-
-// =============== LOGGING =====================
-const morgan = require('morgan');
-app.use(morgan('dev'));
-
-// =============== BODY PARSER SETTINGS =====================
-const bodyParser = require('body-parser');
-app.use(bodyParser.json({ limit: '1mb' }));
-app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }));
-
-// =============== DATABASE CONNECTION =====================
-const mongoose = require('mongoose');
-mongoose.set('useCreateIndex', true);
-async function connecting() {
-  try {
-    await mongoose.connect(process.env.ATLAS_URL, { useUnifiedTopology: true, useNewUrlParser: true })
-    console.log('Connected to the DB')
-  } catch (error) {
-    console.log(error);
-    console.log('ERROR: Seems like your DB is not running, please start it up !!!');
-  }
-}
-connecting()
-
-//================ CORS ================================
-const cors = require('cors');
-app.use(cors());
-
-// =============== ROUTES ==============================
-app.use('/users', require('./routes/usersRoute'));
-app.use('/admin/categories', require('./routes/categoriesRoute'));
-app.use('/admin/cities', require('./routes/citiesRoute'));
-app.use('/admin/experiences', require('./routes/experiencesRoute'));
-app.use('/admin/comments', require('./routes/commentsRoute'));
-app.use('/admin/scores', require('./routes/scoresRoute'));
-app.use('/images', require('./routes/imagesRoute'));
-app.use('/emails', require('./routes/emailsRoutes.js'))
-
-app.use('/static', express.static(path.join(__dirname, '../client/public'), {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.avif')) {
-      res.setHeader('Content-Type', 'image/avif');
-    }
-  }
-}));
-
-app.use(express.static(path.join(__dirname, '../client/dist'), {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.avif')) {
-      res.setHeader('Content-Type', 'image/avif');
-    }
-  }
-}));
-
-app.get('/*', function (req, res) {
-  res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
-});
-
-// =============== GLOBAL ERROR HANDLER =====================
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message);
-  res.status(500).json({ ok: false, message: 'Internal server error' });
-});
+// Safety nets for errors outside a request (should not happen)
+process.on('unhandledRejection', (reason) => {
+  logger.error({ err: reason }, 'Unhandled rejection')
+})
+// After an uncaught exception the process state is unknown: log it and let systemd restart it
+process.on('uncaughtException', (error) => {
+  logger.fatal({ err: error }, 'Uncaught exception')
+  process.exit(1)
+})
 
 // =============== START SERVER =====================
-app.listen(port, () =>
-  console.log(`server listening on port ${port}`
-));
+// Connect to the database first so no request is served without it
+const mongoose = require('mongoose')
+
+// Mongoose reconnects on its own; the logs show when the database drops and comes back
+mongoose.connection.on('disconnected', () => logger.warn('Database disconnected'))
+mongoose.connection.on('reconnected', () => logger.info('Database reconnected'))
+
+async function start() {
+  try {
+    await mongoose.connect(config.mongoUrl)
+    logger.info('Connected to the database')
+  } catch (error) {
+    logger.fatal({ err: error }, 'Could not connect to the database')
+    process.exit(1)
+  }
+
+  const server = app.listen(config.port, () => logger.info(`Server listening on port ${config.port}`))
+
+  // Graceful shutdown: stop accepting requests, then close the DB connection
+  const shutdown = (signal) => {
+    logger.info(`${signal} received, shutting down`)
+    server.close(async () => {
+      await mongoose.disconnect()
+      process.exit(0)
+    })
+  }
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
+}
+
+start()

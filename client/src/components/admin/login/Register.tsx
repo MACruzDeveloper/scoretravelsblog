@@ -1,105 +1,70 @@
-import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
-import { postData } from '@/utils/utils'
-import { useNavigate } from 'react-router-dom'
-import { URL } from '../../../config'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { register as apiRegister } from '@/api/auth'
+import { useMessage } from '@/hooks/useMessage'
+import { registerSchema, RegisterForm } from '@/schemas'
 import Msgbox from '@/components/common/Msgbox'
+import FieldError from '@/components/common/FieldError'
+import PasswordInput from '@/components/common/PasswordInput'
+import type { LoginSession } from '@/App'
+import Seo from '@/components/common/Seo'
 
 type PropsRegister = {
-  login: (token: string, role: string, username: string, email: string) => void
+  login: (session: LoginSession) => void
 }
 
 const Register = ({ login }: PropsRegister) => {
   const navigate = useNavigate()
-  const [values, setValues] = useState({ 
-    username: '',
-    email: '', 
-    password: '', 
-    password2: '' 
+  const { message, showError } = useMessage()
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { username: '', email: '', password: '', password2: '' },
   })
-  const [message, setMessage] = useState({ body: '', classname: '' })
-  const [isRegistering, setIsRegistering] = useState(false)
-  const timerRef = useRef<number>()
 
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const target = e.currentTarget
-    if (target) setValues({ ...values, [target.name]: target.value })
-  }
-
-  const loginRegister = async () => {
+  const onSubmit = async (values: RegisterForm) => {
     try {
-      const response = await postData(`${URL}/users/login`, {
-        username: values.username,
-        email: values.email,
-        password: values.password
-      })
-
-      if (response.data.ok) {
-        timerRef.current = window.setTimeout(() => {
-          login(response.data.token, response.data.role, response.data.username, response.data.email)
-          navigate('/admin/')
-        }, 2000)
-      } else {
-        setMessage({ body: response.data.message || 'Login failed', classname: 'msg_error' })
-      }
-    }
-    catch (error) {
-      console.log(error)
-      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
+      // The server signs the new user in and returns the session
+      login(await apiRegister(values))
+      navigate('/')
+    } catch (error) {
+      showError(error, 'Connection error, please try again')
     }
   }
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (isRegistering) return
-    setIsRegistering(true)
-    try {
-      const response = await postData(`${URL}/users/register`, {
-        username: values.username,
-        email: values.email,
-        password: values.password,
-        password2: values.password2
-      })
-
-      if (response.data.ok) {
-        setMessage({
-          body: response.data.message,
-          classname: 'msg_ok'
-        })
-
-        await loginRegister()
-      } else {
-        setMessage({
-          body: response.data.message,
-          classname: 'msg_error'
-        })
-      }
-    }
-    catch (error) {
-      console.log(error)
-      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
-    } finally {
-      setIsRegistering(false)
-    }
-  }
   return <div className="page login">
+    <Seo title="Register" noindex />
     <h2 className="title">Register</h2>
 
-    <form
-      onSubmit={handleSubmit}
-      className='form'
-    >
-      <input type="text" name="username" className="form_control" placeholder="Write your username" onChange={handleChange} />
-      <input type="email" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
-      <input type="password" name="password" className="form_control" placeholder="Write your password" onChange={handleChange} />
-      <input type="password" name="password2" className="form_control" placeholder="Confirm your password" onChange={handleChange} />
-      <button className="btn">Register</button>
+    <form onSubmit={handleSubmit(onSubmit)} className="form" noValidate>
+      <input type="text" className="form_control" placeholder="Write your username" aria-label="Username" autoComplete="username"
+        maxLength={30} aria-describedby="register-hint" aria-invalid={Boolean(errors.username)} {...register('username')} />
+      <FieldError error={errors.username} />
+
+      <input type="email" className="form_control" placeholder="Write your email" aria-label="Email" autoComplete="email"
+        maxLength={254} aria-invalid={Boolean(errors.email)} {...register('email')} />
+      <FieldError error={errors.email} />
+
+      <PasswordInput placeholder="Write your password" aria-label="Password" autoComplete="new-password" maxLength={128}
+        aria-describedby="register-hint" aria-invalid={Boolean(errors.password)} {...register('password')} />
+      <FieldError error={errors.password} />
+
+      <PasswordInput placeholder="Confirm your password" aria-label="Confirm password" autoComplete="new-password" maxLength={128}
+        aria-invalid={Boolean(errors.password2)} {...register('password2')} />
+      <FieldError error={errors.password2} />
+
+      {/* Same rules the server checks */}
+      <ul id="register-hint" className="form_hint">
+        <li>Username: 3 to 30 characters, only letters, numbers and <code>_ . -</code></li>
+        <li>Password: at least 8 characters</li>
+        <li>Both passwords must match</li>
+      </ul>
+      <button className="btn" disabled={isSubmitting}>Register</button>
+      <p className="form_legal">By registering you accept the <NavLink to="/privacy">privacy policy</NavLink>.</p>
     </form>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
-
 }
 
 export default Register

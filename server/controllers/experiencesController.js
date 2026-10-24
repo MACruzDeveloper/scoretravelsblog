@@ -1,152 +1,147 @@
-const experiences = require('../models/experiencesModel');
-const { isValidId } = require('../utils/validators');
+const experiences = require('../models/experiencesModel')
+const comments = require('../models/commentsModel')
+const scores = require('../models/scoresModel')
+const categories = require('../models/categoriesModel')
+const { getExperienceImages, removeUnusedImages } = require('../services/imageService')
+const { listExperiences, getFacets, getTimeline } = require('../services/experienceQuery')
+const { notifyPendingReview } = require('../services/mailer')
+const { isOwnerOrAdmin } = require('../middleware/auth')
+const { badRequest, unauthorized, forbidden, notFound } = require('../utils/httpErrors')
 
-const normalizeExperienceImages = (params) => {
-  const hasImagesPayload = Object.prototype.hasOwnProperty.call(params, 'images')
-  const hasImagePayload = Object.prototype.hasOwnProperty.call(params, 'image')
-
-  const rawImages = hasImagesPayload
-    ? Array.isArray(params.images)
-      ? params.images
-      : params.images
-        ? [params.images]
-        : []
-    : []
-
-  const images = rawImages
-    .filter((item) => typeof item === 'string' && item && item !== 'null')
-    .slice(0, 5)
-
-  const image = images.length
-    ? images[0]
-    : hasImagePayload && typeof params.image === 'string' && params.image && params.image !== 'null'
-      ? params.image
-      : ''
-
-  return { images, image, hasImagesPayload, hasImagePayload }
+// Stored spelling of a category ('ocio' -> 'Ocio'); '' for none. Unknown categories are rejected
+const resolveCategory = async (name) => {
+  if (!name) return ''
+  const category = await categories.findByName(name)
+  if (!category) throw badRequest(`Unknown category: ${name}`)
+  return category.name
 }
 
-class experiencesController {
-  async findAllExperiences(req, res) {
-    try {
-      const exps = await experiences.find().populate('city')
-      res.send(exps)
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching experiences' })
-    }
-  }
+// The cover image is the first of the gallery; `image` alone is still accepted
+const coverOf = (images, image) => images[0] || image || ''
 
-  async findExperience(req, res) {
-    let expId = req.params.id
-    try {
-      const exp = await experiences.findById(expId).populate('city')
-      res.send(exp)
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching experience' })
-    }
-  }
+const isAdmin = (user) => user?.role === 'admin'
 
-  async addNewExperience(req, res) {
-    let params = req.body
-    const { images, image } = normalizeExperienceImages(params)
-
-    try {
-      const done = await experiences.create({
-        user: params.user,
-        title: params.title,
-        image,
-        images,
-        category: params.category,
-        city: params.city,
-        content: params.content,
-        score: params.score,
-        date: params.date || Date.now()
-      })
-      const populated = await done.populate('city')
-      res.send(populated)
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error creating experience' })
-    }
-  }
-
-  async deleteExperience(req, res) {
-    let { _id } = req.body
-    if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-    try {
-      const removed = await experiences.deleteOne({ _id })
-      res.send({ removed })
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error deleting experience' })
-    }
-  }
-
-  async updateExperience(req, res) {
-    let params = req.body
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-    const currentExp = await experiences.findById(params._id)
-    if (!currentExp) {
-      return res.status(404).json({ ok: false, message: 'Experience not found' })
-    }
-
-    const {
-      images: normalizedImages,
-      image: normalizedImage,
-      hasImagesPayload,
-      hasImagePayload
-    } = normalizeExperienceImages(params)
-
-    const existingImages = Array.isArray(currentExp.images)
-      ? currentExp.images.filter((item) => typeof item === 'string' && item)
-      : []
-
-    const images = hasImagesPayload
-      ? normalizedImages
-      : existingImages.length > 0
-        ? existingImages
-        : currentExp.image
-          ? [currentExp.image]
-          : []
-
-    const image = hasImagesPayload
-      ? normalizedImage
-      : hasImagePayload
-        ? normalizedImage
-        : currentExp.image || (images.length ? images[0] : '')
-
-    try {
-      await experiences.updateOne(
-        { _id: params._id },
-        {
-          user: params.user,
-          image,
-          images,
-          title: params.title,
-          category: params.category,
-          city: params.city,
-          content: params.content,
-          score: params.score,
-        }
-      )
-      const updated = await experiences.findById(params._id).populate('city')
-      res.send({ updated })
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error updating experience' })
-    }
-  }
-
-  async updateScoreExperience(req, res) {
-    let params = req.body
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' })
-    try {
-      const updated = await experiences.updateOne(
-        { _id: params._id },
-        { score: params.score }
-      )
-      res.send({ updated })
-    } catch (error) {
-      res.status(500).json({ ok: false, message: 'Error updating score' })
-    }
-  }
+// Loads an experience the current user may change (its author or an admin)
+const findEditable = async (req) => {
+  const experience = await experiences.findById(req.params.id)
+  if (!experience) throw notFound('Experience not found')
+  if (!isOwnerOrAdmin(req.user, experience)) throw forbidden('You can only change your own experiences')
+  return experience
 }
 
-module.exports = new experiencesController();
+// Paginated and filtered list: { items, total, page, limit, pages }
+const findAllExperiences = async (req, res) => {
+  const { scope } = req.query
+  if (scope === 'mine' && !req.user) throw unauthorized()
+  if (scope === 'all' && !isAdmin(req.user)) throw forbidden('Admin access required')
+  res.send(await listExperiences(req.query, req.user))
+}
+
+const findFacets = async (req, res) => {
+  res.send(await getFacets())
+}
+
+const findTimeline = async (req, res) => {
+  res.send(await getTimeline())
+}
+
+// Unpublished experiences are only visible to their author and admins
+const findExperience = async (req, res) => {
+  const exp = await experiences.findById(req.params.id).populate('city')
+  if (!exp || (exp.status !== 'published' && !isOwnerOrAdmin(req.user, exp))) {
+    throw notFound('Experience not found')
+  }
+  const { userId, ...publicFields } = exp.toObject()
+  res.send(publicFields)
+}
+
+const findExperienceComments = async (req, res) => {
+  res.send(await comments.find({ experience: req.params.id }).select('-userId').sort({ date: -1 }))
+}
+
+// Users' experiences wait for review; admins publish directly
+const addNewExperience = async (req, res) => {
+  const { title, content, city, date } = req.body
+  const images = req.body.images || []
+  const published = isAdmin(req.user)
+  const done = await experiences.create({
+    // Author always comes from the token
+    user: req.user.username,
+    userId: req.user._id,
+    title,
+    content,
+    city,
+    category: await resolveCategory(req.body.category),
+    images,
+    image: coverOf(images, req.body.image),
+    date: date || Date.now(),
+    status: published ? 'published' : 'pending',
+  })
+  if (!published) await notifyPendingReview(done)
+  res.send(await done.populate('city'))
+}
+
+// An edit by a user sends the experience back to review
+const updateExperience = async (req, res) => {
+  const current = await findEditable(req)
+
+  const { title, content, city } = req.body
+  const update = { title, content, city }
+  if (req.body.category !== undefined) update.category = await resolveCategory(req.body.category)
+  if (req.body.images !== undefined) {
+    update.images = req.body.images
+    update.image = coverOf(req.body.images, req.body.image)
+  } else if (req.body.image !== undefined) {
+    update.image = req.body.image
+  }
+  const backToReview = !isAdmin(req.user)
+  if (backToReview) Object.assign(update, { status: 'pending', rejectionReason: '' })
+
+  await experiences.updateOne({ _id: current._id }, update)
+  const updated = await experiences.findById(current._id).select('-userId').populate('city')
+  if (backToReview) await notifyPendingReview(updated, { edited: true })
+
+  // Images dropped in this edit are cleaned up if nothing else uses them
+  const kept = new Set(getExperienceImages(updated))
+  const removedImages = await removeUnusedImages(getExperienceImages(current).filter((name) => !kept.has(name)))
+  res.send({ updated, removedImages })
+}
+
+const deleteExperience = async (req, res) => {
+  const existing = await findEditable(req)
+  const removed = await experiences.deleteOne({ _id: existing._id })
+  // Its comments and votes would be orphans
+  await Promise.all([
+    comments.deleteMany({ experience: existing._id }),
+    scores.deleteMany({ experience: existing._id }),
+  ])
+  // Images no other experience uses and that are not featured go away too
+  const removedImages = await removeUnusedImages(getExperienceImages(existing))
+  res.send({ removed, removedImages })
+}
+
+// Admin decision: publish or reject (with an optional reason shown to the author)
+const reviewExperience = async (req, res) => {
+  const { status, reason } = req.body
+  const updated = await experiences
+    .findByIdAndUpdate(
+      req.params.id,
+      { status, rejectionReason: status === 'rejected' ? reason || '' : '', reviewedAt: new Date() },
+      { returnDocument: 'after' }
+    )
+    .select('-userId')
+  if (!updated) throw notFound('Experience not found')
+  res.send({ updated })
+}
+
+module.exports = {
+  findAllExperiences,
+  findFacets,
+  findTimeline,
+  findExperience,
+  findExperienceComments,
+  addNewExperience,
+  updateExperience,
+  deleteExperience,
+  reviewExperience,
+}

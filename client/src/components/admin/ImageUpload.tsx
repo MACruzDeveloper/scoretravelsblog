@@ -1,7 +1,9 @@
 import { useState, useRef, ChangeEvent, FormEvent } from 'react'
-import { checkFileSize, getToken } from '@utils/utils'
+import { checkFileSize } from '@utils/utils'
+import { uploadImage as uploadImageApi } from '@/api/images'
 import { URL } from '../../config'
-import Msgbox, { ParamsMsgBox } from '@common/Msgbox'
+import Msgbox from '@common/Msgbox'
+import { useMessage } from '@/hooks/useMessage'
 
 type propsImageUpload = {
   setSelectedFilename?: (c: string) => void
@@ -28,7 +30,7 @@ const ImageUpload = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [loaded, setLoaded] = useState(0)
   const [loadingFile, setLoadingFile] = useState(false)
-  const [message, setMessage] = useState<ParamsMsgBox>({ body: '', classname: '' })
+  const { message, showOk, showError, showWarning } = useMessage()
   const [valueInputAdd, setValueInputAdd] = useState('')
 
   const handleChangeTitle = (e: FormEvent<HTMLInputElement>) => {
@@ -42,7 +44,7 @@ const ImageUpload = ({
 
     const files = Array.from(target.files)
     if (allowMultiple && currentImages.length + files.length > maxImages) {
-      setMessage({ body: `You can upload up to ${maxImages} images`, classname: 'msg_error' })
+      showWarning(`You can upload up to ${maxImages} images`)
       target.value = ''
       return
     }
@@ -50,8 +52,7 @@ const ImageUpload = ({
     setLoaded(0)
     for (const file of files) {
       if (!checkFileSize(file)) {
-        console.log('Error: file too much big')
-        setMessage({ body: `File too big. Max 5MB`, classname: 'msg_error' })
+        showWarning('File too big. Max 10MB')
         setSelectedFile(null)
         continue
       }
@@ -68,28 +69,10 @@ const ImageUpload = ({
   }
 
   const uploadImage = async (file: File) => {
-    const data = new FormData()
-    data.append('file', file)
-    data.append('title', valueInputAdd || '')
     setLoadingFile(true)
 
     try {
-      const token = getToken()
-      const response = await fetch(`${URL}/images/upload`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: data,
-      })
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || response.statusText)
-      }
-      const res = await response.json()
-      const filename = res.filename || res.file?.filename
-      if (!filename) {
-        throw new Error('Upload response missing filename')
-      }
-      console.log('upload success', filename, 'title=', valueInputAdd)
+      const { filename } = await uploadImageApi(file, valueInputAdd || '')
       if (addSelectedFilename) {
         addSelectedFilename(filename)
       }
@@ -100,13 +83,12 @@ const ImageUpload = ({
       setValueInputAdd('')
       setLoadingFile(false)
       setLoaded(100)
-      setMessage({ body: `Image uploaded!`, classname: 'msg_ok' })
+      showOk('Image uploaded!')
       await fetch_images?.()
-    } catch (err) {
-      console.log(err)
+    } catch (error) {
       setLoadingFile(false)
       setLoaded(0)
-      setMessage({ body: `${err instanceof Error ? err.message : 'Upload failed'}`, classname: 'msg_error' })
+      showError(error, 'Upload failed')
     }
   }
 
@@ -115,7 +97,7 @@ const ImageUpload = ({
       ref={fileInputRef}
       type="file"
       name="image"
-      accept="image/png,image/gif,image/jpeg,image/avif"
+      accept="image/png,image/jpeg,image/webp,image/avif"
       multiple={allowMultiple}
       onChange={onChangeHandlerFile}
     />
@@ -164,7 +146,7 @@ const ImageUpload = ({
       </div>
     )}
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

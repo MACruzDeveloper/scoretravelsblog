@@ -1,59 +1,52 @@
-import { useState, useEffect, useContext, ChangeEvent, FormEvent } from 'react'
+import { useState, useEffect, useContext } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMessage } from '@/hooks/useMessage'
+import { commentSchema, CommentForm } from '@/schemas'
+import FieldError from '@/components/common/FieldError'
 import DOMPurify from 'dompurify'
-import { getData, postData } from '@utils/utils'
-import { useScoresStore } from '../../store/scoresStore'
-import { URL } from '../../config'
+import { getExperience, getExperienceComments } from '@/api/experiences'
+import { addComment } from '@/api/comments'
+import { cityOf, coverOf } from '@/utils/experience'
+import { URL } from '@/config'
+import Seo from '@/components/common/Seo'
+import { summarize } from '@/utils/seo'
+import type { Comment, Experience as ExperienceType } from '@/api/types'
 import { useParams } from 'react-router-dom'
-import Moment from 'react-moment'
+import FormattedDate from '@/components/common/FormattedDate'
 import CommentsByExp from '../CommentsByExp'
 import Score from '../Score'
 import Stars from '../Stars'
 import Msgbox from '../common/Msgbox'
 import Spinner from '../common/Spinner'
 import Carousel from '../Carousel'
+import thumb from '@images/thumb.png'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 
 type PropsExperience = {
   user: string
 }
 
-type SingleExperience = {
-  _id: string
-  user?: string
-  title: string
-  category?: string
-  date: Date
-  image?: string
-  images?: string[]
-  content?: string
-  score?: number
-  city?: {
-    name: string
-    country: string
-    countryCode: string
-    continent: string
-    lat: number
-    lng: number
-  }
-}
-
 const Experience = ({ user }: PropsExperience) => {
-  const { exp } = useParams()
-  const [experience, setExperience] = useState<SingleExperience>()
+  // The route always provides it; '' keeps the types simple
+  const { exp = '' } = useParams()
+  const [experience, setExperience] = useState<ExperienceType>()
   const [expLoading, setExpLoading] = useState(true)
-  const [comments, setComments] = useState([])
-  const [comment, setComment] = useState('')
-  const [message, setMessage] = useState({ body: '', classname: '' })
+  const [comments, setComments] = useState<Comment[]>([])
+  const { message, showOk, showError, showWarning } = useMessage()
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<CommentForm>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { content: '' },
+  })
 
   // get experience from id param
   useEffect(() => {
     const fetchExperience = async () => {
       setExpLoading(true)
       try {
-        const res = await getData(`${URL}/admin/experiences/${exp}`)
-        setExperience(res.data)
+        setExperience(await getExperience(exp))
       } catch (err) {
-        console.log(err)
+        console.error(err)
         setExperience(undefined)
       } finally {
         setExpLoading(false)
@@ -63,7 +56,8 @@ const Experience = ({ user }: PropsExperience) => {
   }, [exp])
 
   // To read html code from data api
-  const getDataParsed = (data: string) => {
+  // Content may contain HTML: sanitized before rendering
+  const getDataParsed = (data = '') => {
     const theObj = { __html: DOMPurify.sanitize(data) }
     return <span dangerouslySetInnerHTML={theObj} />
   }
@@ -77,86 +71,74 @@ const Experience = ({ user }: PropsExperience) => {
     }
   }, [experience?.title, setTitleExperience])
 
-  // fetch scores
-  const { scores, error, fetchScores } = useScoresStore()
+  // Gallery images, or the single legacy `image`
+  const galleryImages = experience?.images?.filter(Boolean) ?? []
+  const experienceImages = galleryImages.length > 0 ? galleryImages : experience?.image ? [experience.image] : []
 
-  useEffect(() => {
-    fetchScores()
-  }, [fetchScores])
-
-  const validExperienceImages = experience?.images?.filter((src): src is string => typeof src === 'string' && src && src !== 'null') || []
-  const fallbackImage = experience?.image && experience.image !== 'null' ? experience.image : undefined
-  const experienceImages = validExperienceImages.length > 0
-    ? validExperienceImages
-    : fallbackImage
-      ? [fallbackImage]
-      : []
-
-  // comments
-  useEffect(() => {
-    const getCommentsByExp = async () => {
-      const url = `${URL}/admin/comments`
-      try {
-        const res = await getData(url)
-        const data = res.data
-        const tempComm = []
-        for (const ele of data) {
-          if (exp === ele.experience) {
-            tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
-          }
-        }
-        setComments(tempComm)
-      } catch (error) {
-        console.log(error)
-      }
+  // Only the comments of this experience, newest first
+  const loadComments = async () => {
+    try {
+      setComments(await getExperienceComments(exp))
+    } catch (error) {
+      console.error(error)
     }
-    getCommentsByExp()
+  }
+
+  useEffect(() => {
+    loadComments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exp])
 
-  const handleChangeComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    const target = e.currentTarget
-    if (target) setComment(e.target.value)
+  // The server answers a vote with the new average and vote count
+  const handleScored = (score: number | null, votes: number) => {
+    setExperience((prev) => prev && { ...prev, score, votes })
   }
 
-  const handleSubmitComment = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const onSubmitComment = async ({ content }: CommentForm) => {
+    if (!user) return showWarning('You must be logged in to comment')
     try {
-      const url = `${URL}/admin/comments/add`
-      if (comment) {
-        await postData(url, { user: user, experience: exp, content: comment })
-        // Re-fetch comments after adding
-        const res = await getData(`${URL}/admin/comments`)
-        const tempComm = []
-        for (const ele of res.data) {
-          if (exp === ele.experience) {
-            tempComm.push({ _id: ele._id, experience: ele.experience, user: ele.user, date: ele.date, content: ele.content })
-          }
-        }
-        setComments(tempComm)
-        setComment('')
-        setMessage({ body: `Comment added!`, classname: 'msg_ok' })
-      } else {
-        setMessage({ body: 'Write a comment', classname: 'msg_error' })
-      }
+      await addComment(exp, content)
+      await loadComments()
+      reset({ content: '' })
+      showOk('Comment added!')
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not add your comment')
     }
   }
 
+  const cover = experience && coverOf(experience)
+
   return <div className="page experience">
+    {experience
+      ? <Seo
+        title={experience.title}
+        description={summarize(experience.content) || undefined}
+        image={cover ? `${URL}/static/images/${cover}` : undefined}
+        type="article"
+        noindex={!!experience.status && experience.status !== 'published'}
+      />
+      : !expLoading && <Seo title="Experience not found" noindex />}
     <div className="container">
       <div className="wrapper flex">
         <div className="content_page">
           {expLoading ? <Spinner />
             : experience ?
               <>
+                {/* Only the author and admins can open an unpublished experience */}
+                {experience.status && experience.status !== 'published' &&
+                  <p className={`status status_${experience.status} status_banner`}>
+                    {experience.status === 'pending'
+                      ? 'Pending review: only you and the administrators can see it'
+                      : `Rejected${experience.rejectionReason ? `: ${experience.rejectionReason}` : ''}. Edit it to send it for review again`}
+                  </p>
+                }
                 <div className="content_top">
                   <h3 className="content_title">{experience.title}</h3>
-                  <Score exp={exp} scores={scores} />
+                  <Score score={experience.score} votes={experience.votes} />
                 </div>
 
-                {experienceImages.length > 0 &&
-                  <Carousel
+                {experienceImages.length > 0
+                  ? <Carousel
                     images={experienceImages}
                     showTitle={false}
                     title={experience.title}
@@ -164,17 +146,19 @@ const Experience = ({ user }: PropsExperience) => {
                     autoplay={false}
                     interval={4000}
                   />
+                  // Same default image as the cards when there are no photos
+                  : <img className="content_image" src={thumb} alt={experience.title} />
                 }
 
                 <p className="content_info">
                   <span>
-                    <span className="cat">{experience.city && typeof experience.city === 'object' ? experience.city.name : ''} </span>
-                    <span className="cat">({experience.city && typeof experience.city === 'object' ? experience.city.country : ''})</span>
+                    <span className="cat">{cityOf(experience)?.name} </span>
+                    <span className="cat">({cityOf(experience)?.country})</span>
                     <span> · </span>
                     {/* <span className="cat">{experience.category}</span> */}
                   </span>
                   <span className="date">
-                    <Moment format="YYYY/MM/DD">{experience.date}</Moment>
+                    <FormattedDate date={experience.date} />
                   </span>
                 </p>
 
@@ -182,27 +166,29 @@ const Experience = ({ user }: PropsExperience) => {
               </>
               : <p className="msg error">Experience not found</p>
           }
-          {error}
         </div>
 
-        <div className="sidebar">
+        {/* Comments and votes are only possible once the experience is published */}
+        {(!experience?.status || experience.status === 'published') && <div className="sidebar">
           <div className="sidebar_comments">
             <h3 className="sidebar_title">Write a comment</h3>
 
-            <form className="form form_comments" onSubmit={handleSubmitComment}>
-              <textarea className="form_control" placeholder="Write your comment" onChange={handleChangeComment} />
-              <button className="btn">Add comment</button>
+            <form className="form form_comments" onSubmit={handleSubmit(onSubmitComment)} noValidate>
+              <textarea className="form_control" placeholder="Write your comment" aria-label="Comment" maxLength={1000}
+                aria-invalid={Boolean(errors.content)} {...register('content')} />
+              <FieldError error={errors.content} />
+              <button className="btn" disabled={isSubmitting}>Add comment</button>
             </form>
           </div>
 
           <div className="sidebar_scores">
             <h3 className="sidebar_title">Score the experience <span>(1/5)</span></h3>
 
-            <Stars exp={exp} />
+            <Stars exp={exp} onScored={handleScored} />
           </div>
 
-          <Msgbox body={message.body} classname={message.classname} />
-        </div>
+          <Msgbox {...message} />
+        </div>}
       </div>
 
       <CommentsByExp comments={comments} />

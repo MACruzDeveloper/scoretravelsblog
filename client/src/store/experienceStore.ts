@@ -1,57 +1,9 @@
-import { create } from 'zustand'
-import { getData } from '@utils/utils'
+import { createListStore } from './createListStore'
+import { listAllExperiences, ExperienceScope } from '@/api/experiences'
+import type { Experience } from '@/api/types'
 
-import { URL } from '../config'
-
-export interface City {
-  _id: string
-  name: string
-  country: string
-  countryCode: string
-  continent: string
-  lat: number
-  lng: number
-}
-
-export interface Experience {
-  _id: string
-  user?: string,
-  title: string,
-  category?: string,
-  city?: City | string,
-  date?: Date,
-  year?: number,
-  image?: string,
-  images?: string[],
-  content?: string,
-  score?: number,
-  lat?: number,
-  lng?: number
-}
-
-interface ExperienceState {
-  experiences: Experience[]
-  loading: boolean
-  error: string | undefined
-  hasFetched: boolean
-  fetchExperiences: (force?: boolean) => Promise<void>
-}
-
-export const useExperienceStore = create<ExperienceState>((set, get) => ({
-  experiences: [],
-  loading: false,
-  error: undefined,
-  hasFetched: false,
-  fetchExperiences: async (force = false) => {
-    const { hasFetched } = get()
-    if (hasFetched && !force) return // Avoid duplicate fetches unless forced
-
-    set({ loading: true })
-    try {
-      const response = await getData(`${URL}/admin/experiences`)
-      set({ experiences: response.data, loading: false, error: undefined, hasFetched: true })
-    } catch (error: any) {
-      set({ error: error.message, loading: false })
-    }
-  }
-}))
+// Admin table: the user's own experiences ('mine') or every experience ('all')
+export const useExperienceStore = createListStore<Experience, ExperienceScope>(
+  (scope) => listAllExperiences({ scope }),
+  'experiences'
+)

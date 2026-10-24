@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom'
 import SearchByContinent from '../search/SearchByContinent'
 
 const Footer = () => {
@@ -9,7 +10,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="container">
         <div className="flex">
-          <p>© ScoreTravelsBlog</p>
+          <p>© ScoreTravelsBlog · <NavLink to="/privacy">Privacy policy</NavLink></p>
         </div>
       </div>
     </footer>

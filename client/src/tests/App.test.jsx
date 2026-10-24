@@ -7,7 +7,7 @@ import { vi } from 'vitest'
 import { server } from "../mocks/server.js"
 import Header from '@common/Header.tsx'
 import AllExperiences from '../components/experiences/AllExperiences.tsx'
-import { URL } from '../config.js'
+import { API } from '../config.js'
 
 // test if there is an accessible heading
 test("App contains a main heading", () => {
@@ -32,7 +32,7 @@ test("App contains a main heading", () => {
 // test if error message appears when server error
 test("handle error for AllExperiences component", async () => {
   server.resetHandlers(
-    http.get(`${URL}/admin/experiences`, () => {
+    http.get(`${API}/experiences`, () => {
       return new HttpResponse(null, { status: 500 })
     })
   )

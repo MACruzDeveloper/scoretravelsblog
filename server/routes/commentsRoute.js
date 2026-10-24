@@ -1,11 +1,16 @@
-const express     = require('express'), 
-    router        = express.Router(),
-    controller    = require('../controllers/commentsController');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const router = require('express').Router()
+const controller = require('../controllers/commentsController')
+const { requireAuth, requireAdmin } = require('../middleware/auth')
+const { validate } = require('../middleware/validate')
+const { writeLimiter } = require('../middleware/rateLimit')
+const schemas = require('../utils/schemas')
 
-router.get('/', controller.findAllComments);
-router.post('/add', requireAuth, controller.addNewComment);
-router.post('/delete', requireAdmin, controller.deleteComment);
-router.post('/update', requireAdmin, controller.updateComment);
+const byId = validate(schemas.idParam, 'params')
 
-module.exports = router;
+// Full list for moderation; the public page uses /api/experiences/:id/comments
+router.get('/', requireAdmin, controller.findAllComments)
+router.post('/', requireAuth, writeLimiter, validate(schemas.addComment), controller.addNewComment)
+router.patch('/:id', requireAdmin, byId, validate(schemas.updateComment), controller.updateComment)
+router.delete('/:id', requireAdmin, byId, controller.deleteComment)
+
+module.exports = router

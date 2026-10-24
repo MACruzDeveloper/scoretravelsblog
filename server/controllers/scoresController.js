@@ -1,54 +1,40 @@
-const scores = require('../models/scoresModel');
-const { isValidId } = require('../utils/validators');
+const scores = require('../models/scoresModel')
+const experiences = require('../models/experiencesModel')
+const { recalculateExperienceScore } = require('../services/scoreService')
+const { notFound } = require('../utils/httpErrors')
 
-class scoresController {
-  async findAllScores(req, res) {
-    try {
-      const sc = await scores.find();
-      res.send(sc);
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error fetching scores' })
-    }
-  }
-
-  async addNewScore(req, res) {
-    let params = req.body;
-    try {
-      const done = await scores.create({experience: params.experience, user: params.user, score: params.score});
-      res.send(done);
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error creating score' })
-    }
-  }
-
-  async deleteScore(req, res) {
-    let { _id } = req.body;
-    if (!isValidId(_id)) return res.status(400).json({ ok: false, message: 'Invalid id' });
-    try {
-      const removed = await scores.deleteOne({ _id: _id });
-      res.send({ removed });
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error deleting score' })
-    }
-  }
-
-  async updateScore(req, res) {
-    let params = req.body;
-    if (!isValidId(params._id)) return res.status(400).json({ ok: false, message: 'Invalid id' });
-
-    try {
-      const updated = await scores.updateOne(
-        { _id: params._id }, {experience: params.experience, user: params.user, score: params.score}
-      );
-      res.send({ updated });
-    }
-    catch (error) {
-      res.status(500).json({ ok: false, message: 'Error updating score' })
-    }
-  }
+// Full list for the admin
+const findAllScores = async (req, res) => {
+  res.send(await scores.find().select('-userId'))
 }
 
-module.exports = new scoresController();
+// One vote per user: voting again updates the previous vote
+const addNewScore = async (req, res) => {
+  const { experience, score } = req.body
+  if (!(await experiences.exists({ _id: experience, status: 'published' }))) throw notFound('Experience not found')
+  const done = await scores.findOneAndUpdate(
+    { experience, userId: req.user._id },
+    { experience, userId: req.user._id, user: req.user.username, score },
+    { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true }
+  )
+  const summary = await recalculateExperienceScore(experience)
+  res.send({ ok: true, score: done.score, experienceScore: summary.score, votes: summary.count })
+}
+
+const deleteScore = async (req, res) => {
+  const existing = await scores.findById(req.params.id)
+  if (!existing) throw notFound('Score not found')
+  const removed = await scores.deleteOne({ _id: existing._id })
+  await recalculateExperienceScore(existing.experience)
+  res.send({ removed })
+}
+
+const updateScore = async (req, res) => {
+  const existing = await scores.findById(req.params.id)
+  if (!existing) throw notFound('Score not found')
+  const updated = await scores.updateOne({ _id: existing._id }, { score: req.body.score }, { runValidators: true })
+  await recalculateExperienceScore(existing.experience)
+  res.send({ updated })
+}
+
+module.exports = { findAllScores, addNewScore, deleteScore, updateScore }

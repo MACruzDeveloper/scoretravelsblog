@@ -1,72 +1,55 @@
-import { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
-import { postData } from '@utils/utils'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { URL } from '../../../config'
+import { login as apiLogin } from '@/api/auth'
+import { useMessage } from '@/hooks/useMessage'
+import { loginSchema, LoginForm } from '@/schemas'
 import Msgbox from '@common/Msgbox'
+import FieldError from '@common/FieldError'
+import PasswordInput from '@common/PasswordInput'
+import type { LoginSession } from '@/App'
+import Seo from '@/components/common/Seo'
 
 type PropsLogin = {
-  login: (token: string, role: string, username?: string, email?: string) => void
+  login: (session: LoginSession) => void
 }
 
 const Login = ({ login }: PropsLogin) => {
   const navigate = useNavigate()
-  const [message, setMessage] = useState({ body: '', classname: '' })
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-  const timerRef = useRef<number>()
-
-  const [values, setValues] = useState({
-    email: '',
-    password: ''
+  const { message, showError } = useMessage()
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
   })
 
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const target = e.currentTarget
-    if (target) setValues({ ...values, [target.name]: target.value })
-  }
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (isLoggingIn) return
-    setIsLoggingIn(true)
+  const onSubmit = async ({ email, password }: LoginForm) => {
     try {
-      const response = await postData(`${URL}/users/login`, {
-        email: values.email,
-        password: values.password
-      })
-
-      if (response.data.ok) {
-        setMessage({ body: response.data.message, classname: 'msg_ok' })
-        timerRef.current = window.setTimeout(() => {
-          login(response.data.token, response.data.role, response.data.username, response.data.email)
-          navigate('/admin/')
-        }, 2000)
-      } else {
-        setMessage({ body: response.data.message || 'Login failed', classname: 'msg_error' })
-      }
-    }
-    catch (error) {
-      console.log(error)
-      setMessage({ body: 'Connection error, please try again', classname: 'msg_error' })
-    } finally {
-      setIsLoggingIn(false)
+      const session = await apiLogin(email, password)
+      login(session)
+      // Admins go to the panel; users to the home (they reach their experiences from the menu)
+      navigate(session.role === 'admin' ? '/admin' : '/')
+    } catch (error) {
+      showError(error, 'Connection error, please try again')
     }
   }
 
   return <div className="page login">
+    <Seo title="Sign in" noindex />
     <h2 className="title">Login</h2>
 
-    <form
-      onSubmit={handleSubmit}
-      className="form"
-    >
-      <input type="text" name="email" className="form_control" placeholder="Write your email" onChange={handleChange} />
-      <input type="password" name="password" className="form_control" placeholder="Write your password" onChange={handleChange} />
-      <button className="btn" disabled={!values.email || !values.password}>login</button>
+    <form onSubmit={handleSubmit(onSubmit)} className="form" noValidate>
+      <input type="email" className="form_control" placeholder="Write your email" aria-label="Email" autoComplete="email"
+        maxLength={254} aria-invalid={Boolean(errors.email)} {...register('email')} />
+      <FieldError error={errors.email} />
+
+      <PasswordInput placeholder="Write your password" aria-label="Password" autoComplete="current-password"
+        maxLength={128} aria-invalid={Boolean(errors.password)} {...register('password')} />
+      <FieldError error={errors.password} />
+
+      <button className="btn" disabled={isSubmitting}>login</button>
     </form>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

@@ -12,11 +12,11 @@ $arrow-size: 2.1rem;
   }
 
   &_wrapper {
-    @include customScrollbar("horizontal");
-
     max-width: ($item-size + ($arrow-size*2))*5;
     overflow-x: auto;
     margin: 0 auto;
+
+    @include customScrollbar("horizontal");
   }
 
   &_top {

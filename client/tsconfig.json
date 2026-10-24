@@ -5,6 +5,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom/vitest"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -29,7 +30,7 @@
 
     /* Linting */
     "strict": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
@@ -48,6 +49,6 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/utils/utils.js", "src/**/_*"],
+  "exclude": ["src/**/_*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

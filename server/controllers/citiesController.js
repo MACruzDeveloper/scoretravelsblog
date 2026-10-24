@@ -1,84 +1,45 @@
 const City = require('../models/citiesModel')
 const Experience = require('../models/experiencesModel')
-const { isValidId } = require('../utils/validators')
+const { notFound, conflict } = require('../utils/httpErrors')
 
-class citiesController {
-
-  async findAllCities(req, res) {
-    try {
-      const cities = await City.find().sort({ name: 1 })
-      res.send(cities)
-    } catch (error) {
-      res.status(500).send({ ok: false, message: 'Error fetching cities' })
-    }
-  }
-
-  async findCitiesByContinent(req, res) {
-    try {
-      const cities = await City.find({ 
-        continent: req.params.continent 
-      }).sort({ country: 1, name: 1 })
-      res.send(cities)
-    } catch (error) {
-      res.status(500).send({ ok: false, message: 'Error fetching cities' })
-    }
-  }
-
-  async findCitiesByCountry(req, res) {
-    try {
-      const cities = await City.find({ 
-        country: req.params.country 
-      }).sort({ name: 1 })
-      res.send(cities)
-    } catch (error) {
-      res.status(500).send({ ok: false, message: 'Error fetching cities' })
-    }
-  }
-
-  async addNewCity(req, res) {
-    const { name, country, countryCode, continent, lat, lng } = req.body
-    try {
-      const city = await City.findOneAndUpdate(
-        { name, countryCode },
-        { name, country, countryCode, continent, lat, lng },
-        { upsert: true, new: true, runValidators: true }
-      )
-      res.send({ city })
-    } catch (error) {
-      res.status(500).send({ ok: false, message: 'Error adding city' })
-    }
-  }
-
-  async updateCity(req, res) {
-    const { _id, name, country, countryCode, continent, lat, lng } = req.body
-    if (!isValidId(_id)) return res.status(400).send({ ok: false, message: 'Invalid id' })
-    try {
-      const updated = await City.findByIdAndUpdate(
-        _id,
-        { name, country, countryCode, continent, lat, lng },
-        { new: true, runValidators: true }
-      )
-      res.send({ updated })
-    } catch (error) {
-      res.status(500).send({ ok: false, message: 'Error updating city' })
-    }
-  }
-
-  async deleteCity(req, res) {
-    if (!isValidId(req.params.id)) return res.status(400).send({ ok: false, message: 'Invalid id' })
-    try {
-      const inUse = await Experience.findOne({ city: req.params.id })
-      if (inUse) {
-        return res.status(400).send({ 
-          ok: false, message: 'City cannot be deleted because it has associated experiences' 
-        })
-      }
-      const removed = await City.deleteOne({ _id: req.params.id })
-      res.send({ removed })
-    } catch (error) {
-      res.status(500).send({ ok: false, message: 'Error deleting city' })
-    }
-  }
+const findAllCities = async (req, res) => {
+  res.send(await City.find().sort({ name: 1 }))
 }
 
-module.exports = new citiesController()
+const findCitiesByContinent = async (req, res) => {
+  res.send(await City.find({ continent: req.params.continent }).sort({ country: 1, name: 1 }))
+}
+
+const findCitiesByCountry = async (req, res) => {
+  res.send(await City.find({ country: req.params.country }).sort({ name: 1 }))
+}
+
+// Upsert: the same name + country code returns the existing city
+const addNewCity = async (req, res) => {
+  const { name, country, countryCode, continent, lat, lng } = req.body
+  const city = await City.findOneAndUpdate(
+    { name, countryCode },
+    { name, country, countryCode, continent, lat, lng },
+    { upsert: true, returnDocument: 'after', runValidators: true }
+  )
+  res.send({ city })
+}
+
+const updateCity = async (req, res) => {
+  const updated = await City.findByIdAndUpdate(req.params.id, req.body, {
+    returnDocument: 'after',
+    runValidators: true,
+  })
+  if (!updated) throw notFound('City not found')
+  res.send({ updated })
+}
+
+const deleteCity = async (req, res) => {
+  const inUse = await Experience.exists({ city: req.params.id })
+  if (inUse) throw conflict('City cannot be deleted because it has associated experiences')
+  const removed = await City.deleteOne({ _id: req.params.id })
+  if (!removed.deletedCount) throw notFound('City not found')
+  res.send({ removed })
+}
+
+module.exports = { findAllCities, findCitiesByContinent, findCitiesByCountry, addNewCity, updateCity, deleteCity }

@@ -36,8 +36,8 @@
 
     &.sup {
       display: block;
-      @include full_width_escape();
       background-color: $colorTableHeader;
+      @include full_width_escape();
 
       > .tCol {
         display: block;

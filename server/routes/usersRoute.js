@@ -1,13 +1,15 @@
 const router = require('express').Router()
 const controller = require('../controllers/usersController')
 const { requireAdmin } = require('../middleware/auth')
+const { validate } = require('../middleware/validate')
+const schemas = require('../utils/schemas')
 
-router.get('/', requireAdmin, controller.findAllUsers)
-router.post('/register', controller.register)
-router.post('/login', controller.login)
-router.post('/verify_token', controller.verify_token)
-router.post('/add', requireAdmin, controller.addNewUser)
-router.post('/delete', requireAdmin, controller.deleteUser)
-router.post('/update', requireAdmin, controller.updateUser)
+const byId = validate(schemas.idParam, 'params')
+
+router.use(requireAdmin)
+router.get('/', controller.findAllUsers)
+router.post('/', validate(schemas.addUser), controller.addNewUser)
+router.patch('/:id', byId, validate(schemas.updateUser), controller.updateUser)
+router.delete('/:id', byId, controller.deleteUser)
 
 module.exports = router

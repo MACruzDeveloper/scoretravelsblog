@@ -13,9 +13,9 @@ type PropsNavbar = {
 }
 
 const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
-  const refNav = useRef()
-  const refNavAdmin = useRef()
-  const { username } = useContext(MyGlobalContext)
+  const refNav = useRef<HTMLDivElement>(null)
+  const refNavAdmin = useRef<HTMLDivElement>(null)
+  const { username, role } = useContext(MyGlobalContext)
   const [isOpenNav, setIsOpenNav] = useState(false)
   const [isOpenNavAdmin, setIsOpenNavAdmin] = useState(false)
   const [message, setMessage] = useState({ body: '', classname: '' })
@@ -54,11 +54,11 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
   }
 
   useOutsideClick(refNav, () => {
-    isOpenNav && setIsOpenNav(false)
+    if (isOpenNav) setIsOpenNav(false)
   })
 
   useOutsideClick(refNavAdmin, () => {
-    isOpenNavAdmin && setIsOpenNavAdmin(false)
+    if (isOpenNavAdmin) setIsOpenNavAdmin(false)
   })
 
   return <nav className="navbar">
@@ -70,7 +70,7 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
         <li><NavLink to="/gallery">Gallery</NavLink></li>
         <li><NavLink to="/contact">Contact</NavLink></li>
         {
-          isLoggedIn && <li><NavLink to="/admin/experiences">Admin</NavLink></li>
+          isLoggedIn && <li><NavLink to="/admin">{role === 'admin' ? 'Admin' : 'My experiences'}</NavLink></li>
         }
       </ul>
     </div>
@@ -79,7 +79,14 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
       <SearchForm />
 
       <div ref={refNavAdmin} className="navbar_login">
-        <button className={`btn_icon btn_login ${isLoggedIn && 'flex'}`} onClick={openNavAdmin} aria-label="login">
+        {/* The accessible name matches the visible text ("Sign In") */}
+        <button
+          className={`btn_icon btn_login ${isLoggedIn ? 'flex' : ''}`}
+          onClick={openNavAdmin}
+          aria-label={isLoggedIn ? 'Account menu' : 'Sign in'}
+          aria-haspopup="true"
+          aria-expanded={isOpenNavAdmin}
+        >
           {
             !isLoggedIn && !isMobile && 'Sign In'
           }
@@ -119,7 +126,7 @@ const Navbar = ({ isLoggedIn, logout }: PropsNavbar) => {
       </div>
     </div>
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </nav>
 }
 

@@ -1,68 +1,55 @@
-import { renderHook } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { renderHook, waitFor } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/mocks/server'
+import { paginated } from '@/mocks/handlers'
+import { API } from '@/config'
 import {
   useBestExperiences,
   useLastExperiences,
   useTimelineExperiences,
 } from '@hooks/useExperienceHooks'
-import { useExperienceStore } from '@store/experienceStore'
 
-const experiences = [
-  { _id: 'old', title: 'Old', date: new Date('2022-01-01'), score: 3 },
-  { _id: 'recent', title: 'Recent', date: new Date('2024-01-01'), score: 4 },
-  { _id: 'best', title: 'Best', date: new Date('2023-01-01'), score: 5 },
-  { _id: 'middle', title: 'Middle', date: new Date('2021-01-01'), score: 2 },
-]
-
-afterEach(() => {
-  useExperienceStore.setState({
-    experiences: [],
-    loading: false,
-    error: undefined,
-    hasFetched: false,
-  })
-})
+// Answers the list endpoint and records the query string it received
+const mockList = (items: object[]) => {
+  const requests: URLSearchParams[] = []
+  server.use(
+    http.get(`${API}/experiences`, ({ request }) => {
+      requests.push(new URL(request.url).searchParams)
+      return HttpResponse.json(paginated(items))
+    })
+  )
+  return requests
+}
 
 describe('useExperienceHooks', () => {
-  it('returns the three most recent experiences', () => {
-    useExperienceStore.setState({ experiences })
-
+  it('asks the server for the three most recent experiences', async () => {
+    const requests = mockList([{ _id: 'recent', title: 'Recent' }])
     const { result } = renderHook(() => useLastExperiences())
 
-    expect(result.current.lastExperiences.map(({ _id }) => _id)).toEqual([
-      'recent',
-      'best',
-      'old',
-    ])
+    await waitFor(() => expect(result.current.lastExperiences).toHaveLength(1))
+    expect(requests[0].get('sort')).toBe('-date')
+    expect(requests[0].get('limit')).toBe('3')
   })
 
-  it('returns the three highest scored experiences', () => {
-    useExperienceStore.setState({ experiences })
-
+  it('asks the server for the three highest scored experiences', async () => {
+    const requests = mockList([{ _id: 'best', title: 'Best', score: 5 }])
     const { result } = renderHook(() => useBestExperiences())
 
-    expect(result.current.bestExperiences.map(({ _id }) => _id)).toEqual([
-      'best',
-      'recent',
-      'old',
-    ])
+    await waitFor(() => expect(result.current.bestExperiences.map(({ _id }) => _id)).toEqual(['best']))
+    expect(requests[0].get('sort')).toBe('-score')
+    expect(requests[0].get('minScore')).toBe('1')
+    expect(requests[0].get('limit')).toBe('3')
   })
 
-  it('returns the highest scored experience for each year', () => {
-    useExperienceStore.setState({
-      experiences: [
-        ...experiences,
-        { _id: 'same-year-best', title: 'Same year best', date: new Date('2024-05-01'), score: 5 },
-      ],
-    })
-
+  it('returns the timeline computed by the server', async () => {
+    server.use(
+      http.get(`${API}/experiences/timeline`, () =>
+        HttpResponse.json([{ _id: 'a', title: 'A', year: 2023 }, { _id: 'b', title: 'B', year: 2024 }])
+      )
+    )
     const { result } = renderHook(() => useTimelineExperiences())
 
-    expect(result.current.timelineExperiences.map(({ _id }) => _id)).toEqual([
-      'middle',
-      'old',
-      'best',
-      'same-year-best',
-    ])
+    await waitFor(() => expect(result.current.timelineExperiences.map(({ year }) => year)).toEqual([2023, 2024]))
   })
 })

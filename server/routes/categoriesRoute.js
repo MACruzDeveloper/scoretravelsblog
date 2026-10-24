@@ -1,12 +1,15 @@
-const express     = require('express'), 
-    router        = express.Router(),
-    controller    = require('../controllers/categoriesController');
-const { requireAdmin } = require('../middleware/auth');
+const router = require('express').Router()
+const controller = require('../controllers/categoriesController')
+const { requireAdmin } = require('../middleware/auth')
+const { validate } = require('../middleware/validate')
+const schemas = require('../utils/schemas')
 
-router.get('/', controller.findAllCategories);
-router.post('/add', requireAdmin, controller.addNewCategory);
-router.post('/delete', requireAdmin, controller.deleteCategory);
-router.post('/update', requireAdmin, controller.updateCategory);
-router.get('/:category', controller.findOneCategory);
+const byId = validate(schemas.idParam, 'params')
 
-module.exports = router;
+router.get('/', controller.findAllCategories)
+router.get('/:id', byId, controller.findOneCategory)
+router.post('/', requireAdmin, validate(schemas.addCategory), controller.addNewCategory)
+router.patch('/:id', requireAdmin, byId, validate(schemas.updateCategory), controller.updateCategory)
+router.delete('/:id', requireAdmin, byId, controller.deleteCategory)
+
+module.exports = router

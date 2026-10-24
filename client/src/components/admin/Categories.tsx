@@ -1,210 +1,117 @@
-import { useState, useEffect, useMemo, FormEvent } from 'react'
-import { postData } from '@/utils/utils'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { MdDelete, MdEdit, MdClose, MdCheckCircleOutline } from 'react-icons/md'
-import { useCategoriesStore, Cat } from '@/store/categoriesStore'
-import { URL } from '../../config'
-import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
-import Table from '@/components/common/Table'
+import { createCategory, updateCategory, deleteCategory } from '@/api/categories'
+import type { Category } from '@/api/types'
+import { useCategoriesStore } from '@/store/categoriesStore'
+import { useSortedData } from '@/hooks/useSortedData'
+import { useInlineEdit } from '@/hooks/useInlineEdit'
+import { useMessage } from '@/hooks/useMessage'
+import { categorySchema, CategoryForm, firstIssue } from '@/schemas'
+import Msgbox from '@/components/common/Msgbox'
+import Spinner from '@/components/common/Spinner'
+import FieldError from '@/components/common/FieldError'
+import Table, { Column } from '@/components/common/Table'
 import TableActions from '@/components/common/TableActions'
 
-const reg = /^[\p{L}\p{N}\s]+$/u
+const COLUMNS: Column[] = [
+  { key: 'name', label: 'Category', sortable: true, width: 'w40' },
+  { key: 'description', label: 'Description', sortable: false, width: 'w30' },
+  { key: 'actions', label: 'Actions', sortable: false, width: 'w30', align: 'right' },
+]
+
+type CategoryDraft = { name: string; description: string }
 
 const Categories = () => {
-  // fetch Categories
-  const { cats, loading, error, fetchCats } = useCategoriesStore()
+  const { items: cats, loading, error, fetch } = useCategoriesStore()
+  const { message, showOk, showError, showWarning } = useMessage()
+  const edit = useInlineEdit<CategoryDraft>()
+  const sort = useSortedData(cats, { initialKey: 'name' })
 
-  // sort state
-  const [sortColumn, setSortColumn] = useState<string | null>('name')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<CategoryForm>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: { name: '', description: '' },
+  })
 
   useEffect(() => {
-    fetchCats()
-  }, [fetchCats])
+    fetch()
+  }, [fetch])
 
-  const handleSort = (key: string) => {
-    if (sortColumn === key) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortColumn(key)
-      setSortDirection('asc')
-    }
-  }
+  const exists = (name: string, exceptId?: string) =>
+    cats.some((cat) => cat._id !== exceptId && cat.name.toLowerCase() === name.toLowerCase())
 
-  const sortedCats = useMemo(() => {
-    if (!sortColumn) return cats
-    return [...cats].sort((a, b) => {
-      const aVal = (a as any)[sortColumn]
-      const bVal = (b as any)[sortColumn]
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [cats, sortColumn, sortDirection])
-
-  const itemsPerPage = 10
-
-  // handle form events
-  const [valuesInputAdd, setValuesInputAdd] = useState<Partial<Cat>>({ name: '', description: '' })
-  const [valuesInputUpdate, setValuesInputUpdate] = useState<Partial<Cat>>({ name: '', description: '' })
-  const [message, setMessage] = useState<ParamsMsgBox>({body: '', classname: ''})
-  const [updateActive, setUpdateActive] = useState<string | null>(null)
-
-  const handleChangeInputAdd = (e: FormEvent<HTMLInputElement>) => {
-    const target = e.currentTarget
-    if (target) setValuesInputAdd({ ...valuesInputAdd, [target.name]: target.value })
-  }
-
-  const handleChangeInputUpdate = (e: FormEvent<HTMLInputElement>) => {
-    const target = e.currentTarget
-    if (target) setValuesInputUpdate({ ...valuesInputUpdate, [target.name]: target.value })
-  }
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
+  const onAdd = async ({ name, description }: CategoryForm) => {
+    if (exists(name)) return showWarning('The category already exists')
     try {
-      let url = `${URL}/admin/categories/add`
-      const name = valuesInputAdd.name?.trim() ?? ''
-      const description = valuesInputAdd.description?.trim() ?? ''
-      let result = cats.findIndex(item => item.name.toLowerCase() === name.toLowerCase())
-      if (result === -1) {
-        if (reg.exec(name)) {
-          await postData(url, { name, description })
-          await fetchCats(true)
-          setValuesInputAdd({ name: '', description: '' })
-          setMessage({ body: `Category ${name} added!`, classname: 'msg_ok' })
-        } else {
-          setMessage({ body: 'The category has to be a text', classname: 'msg_error' })
-        }
-      } else {
-        setMessage({ body: 'The category already exists', classname: 'msg_error' })
-      }
+      await createCategory({ name, description })
+      await fetch({ force: true })
+      reset()
+      showOk(`Category ${name} added!`)
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not add the category')
     }
   }
 
-  const onClickDelete = async (ele: Cat) => {
-    setUpdateActive(null)
+  const onClickUpdate = async (category: Category) => {
+    if (!edit.values) return
+    const result = categorySchema.safeParse(edit.values)
+    if (!result.success) return showWarning(firstIssue(result) ?? 'Invalid category')
+    if (exists(result.data.name, category._id)) return showWarning('The category already exists')
     try {
-      let url = `${URL}/admin/categories/delete`
-      await postData(url, { name: ele.name })
-      await fetchCats(true)
-      setMessage({ body: `Category ${ele.name} deleted!`, classname: 'msg_ok' })
+      const { renamedInExperiences } = await updateCategory(category._id, result.data)
+      await fetch({ force: true })
+      edit.cancel()
+      showOk(renamedInExperiences ? `Category updated in ${renamedInExperiences} experience(s)` : 'Category updated!')
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not update the category')
     }
   }
 
-  const onClickShowUpdate = async (idx: string) => {
-    let idCat = cats.findIndex(e => e._id === idx)
-    if (idCat === -1) return
-    setUpdateActive(idx)
-    setValuesInputUpdate({ 
-      _id: idx,
-      name: cats[idCat].name,
-      description: cats[idCat].description ?? ''
-    })
-  }
-
-  const onClickCloseUpdate = async () => {
-    setUpdateActive(null)
-    setValuesInputUpdate({})
-  }
-
-  const onClickUpdate = async (idx: string) => {
+  // The server refuses (409) while experiences use the category
+  const onClickDelete = async (category: Category) => {
+    edit.cancel()
     try {
-      let url = `${URL}/admin/categories/update`
-      const updatedName = valuesInputUpdate.name?.trim() ?? ''
-      const updatedDescription = valuesInputUpdate.description?.trim() ?? ''
-      if (reg.exec(updatedName)) {
-        await postData(url, {
-          _id: idx,
-          name: updatedName,
-          description: updatedDescription
-        })
-        await fetchCats(true)
-        setUpdateActive(null)
-        setValuesInputUpdate({ name: '', description: '' })
-        setMessage({ body: `Category updated!`, classname: 'msg_ok' })
-      } else {
-        setMessage({ body: `Write a correct category`, classname: 'msg_error' })
-      }
+      await deleteCategory(category._id)
+      await fetch({ force: true })
+      showOk(`Category ${category.name} deleted!`)
     } catch (error) {
-      console.log(error)
+      showError(error, 'Could not delete the category')
     }
   }
 
-  const columns = [
-    { key: 'name', label: 'Category', sortable: true, width: 'w40' },
-    { key: 'description', label: 'Description', sortable: false, width: 'w30' },
-    { key: 'actions', label: 'Actions', sortable: false, width: 'w30', align: 'right' }
-  ]
-
-  const renderRow = (ele: Cat) => {
-    const actions = [
-      {
-        key: 'edit',
-        icon: <MdEdit />,
-        title: 'Edit',
-        onClick: () => onClickShowUpdate(ele._id),
-        show: () => updateActive !== ele._id,
-      },
-      {
-        key: 'save',
-        icon: <MdCheckCircleOutline />,
-        title: 'Save',
-        onClick: () => onClickUpdate(ele._id),
-        show: () => updateActive === ele._id,
-        className: 'btn_action green',
-      },
-      {
-        key: 'close',
-        icon: <MdClose />,
-        title: 'Close',
-        onClick: onClickCloseUpdate,
-        show: () => updateActive === ele._id,
-      },
-      {
-        key: 'delete',
-        icon: <MdDelete />,
-        title: 'Remove',
-        onClick: () => onClickDelete(ele),
-      },
-    ]
-
-    const isEditing = updateActive === ele._id
+  const renderRow = (category: Category) => {
+    const editing = edit.isEditing(category._id) && edit.values
+    const actions = editing
+      ? [
+        { key: 'save', icon: <MdCheckCircleOutline />, title: 'Save', onClick: onClickUpdate, className: 'btn_action green' },
+        { key: 'close', icon: <MdClose />, title: 'Close', onClick: edit.cancel },
+      ]
+      : [
+        { key: 'edit', icon: <MdEdit />, title: 'Edit', onClick: () => edit.startEdit(category._id, { name: category.name, description: category.description ?? '' }) },
+        { key: 'delete', icon: <MdDelete />, title: 'Remove', onClick: onClickDelete },
+      ]
 
     return (
-      <div className="tRow" key={ele._id}>
-        <div className="tCol w40">
-          {isEditing ? (
-            <input
-              type="text"
-              name="name"
-              className="form_control"
-              value={valuesInputUpdate.name ?? ''}
-              onChange={handleChangeInputUpdate}
-            />
+      <div className="tRow" role="row" key={category._id}>
+        <div className="tCol w40" role="cell">
+          {editing ? (
+            <input type="text" className="form_control" aria-label="Category name" maxLength={50}
+              value={edit.values?.name ?? ''} onChange={(e) => edit.setField('name', e.target.value)} />
           ) : (
-            <span>{ele.name}</span>
+            <span>{category.name}</span>
           )}
         </div>
-        <div className="tCol w30">
-          {isEditing ? (
-            <input
-              type="text"
-              name="description"
-              className="form_control"
-              value={valuesInputUpdate.description ?? ''}
-              onChange={handleChangeInputUpdate}
-            />
+        <div className="tCol w30" role="cell">
+          {editing ? (
+            <input type="text" className="form_control" aria-label="Category description" maxLength={300}
+              value={edit.values?.description ?? ''} onChange={(e) => edit.setField('description', e.target.value)} />
           ) : (
-            <span>{ele.description ?? ''}</span>
+            <span>{category.description ?? ''}</span>
           )}
         </div>
-        <div className="tCol w30">
-          <TableActions actions={actions} item={ele} />
+        <div className="tCol w30" role="cell">
+          <TableActions actions={actions} item={category} />
         </div>
       </div>
     )
@@ -216,43 +123,28 @@ const Categories = () => {
     </div>
 
     <div className="content_add">
-      <form className="form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          className="form_control"
-          placeholder="Write your category"
-          value={valuesInputAdd.name ?? ''}
-          onChange={handleChangeInputAdd}
-        />
-        <input
-          type="text"
-          name="description"
-          className="form_control"
-          placeholder="Write category description"
-          value={valuesInputAdd.description ?? ''}
-          onChange={handleChangeInputAdd}
-        />
+      <form className="form" onSubmit={handleSubmit(onAdd)} noValidate>
+        <div className="form_field">
+          <input type="text" className="form_control" placeholder="Write your category" aria-label="Category name"
+            aria-invalid={Boolean(errors.name)} maxLength={50} {...register('name')} />
+          <FieldError error={errors.name} />
+        </div>
+        <div className="form_field">
+          <input type="text" className="form_control" placeholder="Write category description" aria-label="Category description"
+            maxLength={300} {...register('description')} />
+          <FieldError error={errors.description} />
+        </div>
 
-        <button className="btn btn_admin">Add new category</button>
+        <button className="btn btn_admin" disabled={isSubmitting}>Add new category</button>
       </form>
     </div>
 
-    {loading && <div>Loading...</div>}
-    {error && <div>Error: {error}</div>}
+    {loading && <Spinner />}
+    {error && <p className="msg error">{error}</p>}
 
-    <Table
-      columns={columns}
-      data={sortedCats}
-      renderRow={renderRow}
-      onSort={handleSort}
-      sortColumn={sortColumn}
-      sortDirection={sortDirection}
-      hasPagination={true}
-      itemsPerPage={itemsPerPage}
-    />
+    <Table label="Categories" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={10} />
 
-    <Msgbox body={message.body} classname={message.classname} />
+    <Msgbox {...message} />
   </div>
 }
 

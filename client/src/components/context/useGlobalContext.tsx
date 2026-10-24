@@ -1,8 +1,9 @@
 import { createContext, useContext } from 'react'
 
 export type GlobalContent = {
-  token: string
-  isLoggedInValue: any
+  isLoggedIn: boolean
+  // False until the stored session has been checked with the server
+  authChecked: boolean
   user: string
   username: string
   role: string
@@ -12,8 +13,8 @@ export type GlobalContent = {
 }
 
 export const MyGlobalContext = createContext<GlobalContent>({
-  token: '',
-  isLoggedInValue: null,
+  isLoggedIn: false,
+  authChecked: false,
   user: '',
   username: '',
   role: '',

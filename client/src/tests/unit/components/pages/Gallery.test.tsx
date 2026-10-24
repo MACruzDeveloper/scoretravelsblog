@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/mocks/server'
+import { paginated } from '@/mocks/handlers'
+import { API } from '@/config'
 import Gallery from '@/components/Gallery'
-import { useExperienceStore } from '@store/experienceStore'
 
 const city = {
   _id: 'city-1',
@@ -22,15 +25,6 @@ const renderGallery = () => {
   )
 }
 
-afterEach(() => {
-  useExperienceStore.setState({
-    experiences: [],
-    loading: false,
-    error: undefined,
-    hasFetched: false,
-  })
-})
-
 describe('Gallery', () => {
   it('renders the gallery heading and filters', () => {
     renderGallery()
@@ -40,28 +34,25 @@ describe('Gallery', () => {
     expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
 
-  it('renders images from loaded experiences', () => {
-    useExperienceStore.setState({
-      experiences: [
-        {
-          _id: 'experience-1',
-          title: 'Eagle Beach',
-          city,
-          date: new Date('2024-01-15'),
-          image: 'eagle-beach.jpg',
-        },
-      ],
-      loading: false,
-      error: undefined,
-      hasFetched: true,
-    })
+  it('renders images returned by the server and only asks for experiences with image', async () => {
+    let query: URLSearchParams | undefined
+    server.use(
+      http.get(`${API}/experiences`, ({ request }) => {
+        query = new URL(request.url).searchParams
+        return HttpResponse.json(paginated([
+          { _id: 'experience-1', title: 'Eagle Beach', city, date: '2024-01-15', image: 'eagle-beach.jpg' },
+        ]))
+      })
+    )
 
     renderGallery()
 
-    expect(screen.getByRole('img', { name: 'Eagle Beach' })).toHaveAttribute(
+    expect(await screen.findByRole('img', { name: 'Eagle Beach' })).toHaveAttribute(
       'alt',
       'Eagle Beach'
     )
     expect(screen.getAllByText('Aruba').length).toBeGreaterThan(0)
+    expect(query?.get('hasImage')).toBe('true')
+    expect(query?.get('limit')).toBe('6')
   })
 })

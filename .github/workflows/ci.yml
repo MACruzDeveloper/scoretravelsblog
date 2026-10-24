@@ -1,41 +1,108 @@
-# .github/workflows/ci.yml
 name: CI
 
 on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+
+# A new push cancels the previous run of the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  client:
+    name: Client (lint, types, tests, build)
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./client
-
-    services:
-      mongodb:
-        image: mongo:7
-        ports:
-          - 27017:27017
-
+        working-directory: client
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version-file: .nvmrc
+          cache: npm
           cache-dependency-path: client/package-lock.json
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:run
+      - run: npx vite build
 
-      - name: Instalar dependencias
-        run: npm ci
+  server:
+    name: Server (lint, format, tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
+      # MongoDB binary used by mongodb-memory-server in the tests
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
 
-      - name: Ejecutar tests de prueba (debe fallar por level 2)
-        run: npm test -- --run src/tests/App.test.jsx
-        env:
-          MONGODB_URI: mongodb://localhost:27017/test
-          NODE_ENV: test
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
+      - run: npm ci
+        working-directory: server
+      - run: npm ci
+        working-directory: client
+      - run: npx playwright install --with-deps chromium
+        working-directory: client
+      # Builds the client and starts the e2e server with an in-memory database
+      - run: npm run test:e2e
+        working-directory: client
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: client/test-results
+          retention-days: 7
+
+  audit:
+    name: Dependency audit (production)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      # Same npm major as local development, so lockfiles written there are read the same way
+      - run: npm install -g npm@11
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: client
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: server
