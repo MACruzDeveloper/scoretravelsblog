@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import NavAdmin from '../components/admin/NavAdmin'
 import Spinner from '@/components/common/Spinner'
+import Seo from '@/components/common/Seo'
 
 const CURTAIN_MS = 4000
 
@@ -24,6 +25,7 @@ const AdminLayout = () => {
   if (!isLoggedIn) return <Navigate to="/login" replace />
 
   return <div className="page admin">
+      <Seo title="Admin" noindex />
       <div className={showCurtain ? 'curtain on' : 'curtain'}>
         <span></span>
 

@@ -4,6 +4,7 @@ import Spinner from '../common/Spinner'
 import Pagination from '../common/Pagination'
 import { useApiQuery } from '@/hooks/useApiQuery'
 import { listExperiences, toQueryString, ExperienceListParams } from '@/api/experiences'
+import Seo from '@/components/common/Seo'
 
 const ITEMS_PER_PAGE = 9
 
@@ -34,6 +35,7 @@ const SearchResults = ({ label, filters, emptyMessage }: PropsSearchResults) => 
   const total = data?.total ?? 0
 
   return <div className="page search">
+    <Seo title={label ? `Results for ${label}` : 'Search'} noindex />
     <div className="container">
       <div className="wrapper">
         {loading && <Spinner />}

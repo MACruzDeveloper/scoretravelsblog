@@ -9,6 +9,7 @@ import Filters from '@common/Filters'
 import { URL } from '../config'
 import { scrollToTop } from '@/utils/utils'
 import { cityOf } from '@/utils/experience'
+import Seo from '@/components/common/Seo'
 
 // Each "Show more" loads two rows of three images
 const CHUNK_SIZE = 3
@@ -42,6 +43,7 @@ const Gallery = () => {
   }
 
   return <div className="page gallery">
+    <Seo title="Gallery" description="Photos from the travel experiences shared on ScoreTravelsBlog." />
     <div className="container">
       <div className="wrapper">
         <div className="top">

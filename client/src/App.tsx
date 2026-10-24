@@ -11,6 +11,7 @@ import homeVideo from './assets/videos/home.mp4'
 import Breadcrumbs from '@/components/common/Breadcrumbs'
 import Footer from '@/components/common/Footer'
 import Spinner from '@/components/common/Spinner'
+import Seo from '@/components/common/Seo'
 import Home from '@/components/Home'
 import ScrollToTop from '@/components/common/ScrollToTop'
 import { PAGES_WITH_BREADCRUMBS } from '@/utils/constants'
@@ -138,7 +139,7 @@ function App() {
                 <Route path="users" element={<RequireAdmin><Users /></RequireAdmin>} />
                 <Route path="images" element={<RequireAdmin><Images /></RequireAdmin>} />
               </Route>
-              <Route path="*" element={<p>There's nothing here: 404!</p>} />
+              <Route path="*" element={<><Seo title="Page not found" noindex /><p>There's nothing here: 404!</p></>} />
             </Routes>
           </Suspense>
         </main>

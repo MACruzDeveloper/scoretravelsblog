@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react'
 import Spinner from './common/Spinner'
 import Carousel from '@/components/Carousel'
+import Seo from '@/components/common/Seo'
 
 const LastExperiences = lazy(() => import('@/components/experiences/LastExperiences.js'))
 const Timeline = lazy(() => import('@/components/Timeline.js'))
@@ -10,6 +11,7 @@ const MapExperiences = lazy(() => import('@/components/MapExperiences.js'))
 
 const Home = () => {
   return <div className="page home">
+    <Seo />
     <Carousel hasVideo />
 
     <div className="block">

@@ -5,6 +5,7 @@ import Filters from '@common/Filters'
 import { useExperienceFilters } from '@/hooks/useExperienceFilters'
 import { useApiQuery } from '@/hooks/useApiQuery'
 import { listExperiences, getExperienceFacets, toQueryString } from '@/api/experiences'
+import Seo from '@/components/common/Seo'
 
 const ITEMS_PER_PAGE = 9
 
@@ -26,6 +27,7 @@ const AllExperiences = () => {
 
   return (
     <div className="page experiences">
+      <Seo title="All experiences" description="Every travel experience shared on ScoreTravelsBlog, with filters by category, continent, score and date." />
       <div className="container">
         <div className="wrapper">
           <div className="top">

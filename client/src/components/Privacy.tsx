@@ -1,7 +1,9 @@
 import { NavLink } from 'react-router-dom'
+import Seo from '@/components/common/Seo'
 
 const Privacy = () => {
   return <div className="page privacy">
+    <Seo title="Privacy policy" />
     <div className="container">
       <article className="mod_privacy">
         <h2 className="title">Privacy policy</h2>

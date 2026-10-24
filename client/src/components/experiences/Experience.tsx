@@ -7,7 +7,10 @@ import FieldError from '@/components/common/FieldError'
 import DOMPurify from 'dompurify'
 import { getExperience, getExperienceComments } from '@/api/experiences'
 import { addComment } from '@/api/comments'
-import { cityOf } from '@/utils/experience'
+import { cityOf, coverOf } from '@/utils/experience'
+import { URL } from '@/config'
+import Seo from '@/components/common/Seo'
+import { summarize } from '@/utils/seo'
 import type { Comment, Experience as ExperienceType } from '@/api/types'
 import { useParams } from 'react-router-dom'
 import FormattedDate from '@/components/common/FormattedDate'
@@ -103,7 +106,18 @@ const Experience = ({ user }: PropsExperience) => {
     }
   }
 
+  const cover = experience && coverOf(experience)
+
   return <div className="page experience">
+    {experience
+      ? <Seo
+        title={experience.title}
+        description={summarize(experience.content) || undefined}
+        image={cover ? `${URL}/static/images/${cover}` : undefined}
+        type="article"
+        noindex={!!experience.status && experience.status !== 'published'}
+      />
+      : !expLoading && <Seo title="Experience not found" noindex />}
     <div className="container">
       <div className="wrapper flex">
         <div className="content_page">

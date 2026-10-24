@@ -6,6 +6,7 @@ import { useMessage } from '@/hooks/useMessage'
 import { contactSchema, ContactForm } from '@/schemas'
 import Msgbox from './common/Msgbox'
 import FieldError from './common/FieldError'
+import Seo from '@/components/common/Seo'
 
 const SUBJECT = 'Here is the message: '
 const EMPTY_FORM = { name: '', email: '', message: '', website: '' }
@@ -28,6 +29,7 @@ const Contact = () => {
   }
 
   return <div className="page contact">
+    <Seo title="Contact" description="Get in touch with ScoreTravelsBlog." />
     <div className="container">
       <div className="mod_contact">
         <div className="top">

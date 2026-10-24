@@ -8,6 +8,7 @@ import Msgbox from '@/components/common/Msgbox'
 import FieldError from '@/components/common/FieldError'
 import PasswordInput from '@/components/common/PasswordInput'
 import type { LoginSession } from '@/App'
+import Seo from '@/components/common/Seo'
 
 type PropsRegister = {
   login: (session: LoginSession) => void
@@ -32,6 +33,7 @@ const Register = ({ login }: PropsRegister) => {
   }
 
   return <div className="page login">
+    <Seo title="Register" noindex />
     <h2 className="title">Register</h2>
 
     <form onSubmit={handleSubmit(onSubmit)} className="form" noValidate>
