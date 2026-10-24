@@ -302,7 +302,7 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 
 ### Fase 6 — Producto, portfolio y documentación (continuo) 🟢
 
-- [ ] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. Mover la lista de "tipos de viaje" a `docs/` o al modelo de categorías.
+- [x] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. La lista de "tipos de viaje" pasa a `docs/travel-types.md`.
 - [ ] Revisar lo aprovechable de `_doc/` (HTTPS, rendimiento, testing) e incorporarlo a una carpeta `docs/` actualizada.
 - [ ] SEO: meta y Open Graph por experiencia, sitemap, robots; valorar prerender/SSR.
 - [ ] Accesibilidad y `prefers-reduced-motion`.

@@ -30,7 +30,7 @@ describe('MapScrollGuard', () => {
     expect(hint()).toHaveClass('visible')
   })
 
-  it('enables map zoom with Ctrl and stops the browser page zoom', () => {
+  it('enables map zoom with Ctrl and stops the browser page zoom', async () => {
     const { map, container, hint } = renderMap()
 
     const event = new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, bubbles: true, cancelable: true })
@@ -39,6 +39,9 @@ describe('MapScrollGuard', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(map.scrollWheelZoom.enabled()).toBe(true)
     expect(hint()).not.toHaveClass('visible')
+
+    // Leaflet debounces the wheel zoom (40ms); let it run before the map unmounts
+    await act(() => new Promise((resolve) => setTimeout(resolve, 100)))
   })
 
   it('follows the Ctrl key and disables zoom when released', () => {
