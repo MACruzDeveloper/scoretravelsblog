@@ -119,7 +119,10 @@ La app está pensada para un único servidor (p. ej. un droplet de DigitalOcean)
 3. Arrancar `server/index.js` con un gestor de procesos (pm2 o systemd) y hacer que nginx redirija al puerto 3040.
 4. No borrar `server/uploads/` al desplegar y hacer copia de seguridad junto con la base de datos.
 
+Guía completa (HTTPS, nginx, systemd, copias de seguridad) en [`docs/deployment.md`](docs/deployment.md).
+
 ## Documentación
 
 - [`PLAN_MEJORAS.md`](PLAN_MEJORAS.md): plan de mejoras y su progreso.
+- [`docs/deployment.md`](docs/deployment.md): despliegue en un servidor con nginx y HTTPS.
 - [`docs/travel-types.md`](docs/travel-types.md): ideas para las categorías de experiencias.

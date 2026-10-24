@@ -197,7 +197,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Score en servidor: un voto por usuario y experiencia (índice único parcial `{experience, userId}`; votar otra vez actualiza), entero 1-5, media recalculada en `services/scoreService.js`. `Score.tsx` solo muestra. El admin ya no puede fijar el score a mano. (S-6, A-4)
 - [x] `express-rate-limit`: login 10/15 min, registro 5/h, contacto 5/h, comentarios y votos 60/15 min, global 1000/15 min. (S-7)
 - [x] `URL` del cliente desde `VITE_API_URL` (por defecto, el mismo origen); `trust proxy` configurable con `TRUST_PROXY`. (S-8)
-- [ ] HTTPS real con dominio + certbot cuando haya despliegue (ver `_doc/HTTPS_SETUP.md`) y activar `upgradeInsecureRequests` en la CSP. (S-8)
+- [ ] HTTPS real con dominio + certbot cuando haya despliegue (ver `docs/deployment.md`) y activar `upgradeInsecureRequests` en la CSP. (S-8)
 - [x] Mensaje genérico de login, códigos HTTP correctos (400/401/403/404/409) y los formularios de login/registro muestran el error del servidor. (S-10)
 - [x] `select('-password')` en usuarios. Un admin no puede borrarse ni quitarse el rol a sí mismo. (S-11)
 - [x] `jwt.verify` con `algorithms: ['HS256']`; el servidor no arranca sin `JWT_SECRET` o `ATLAS_URL`. (S-12)
@@ -296,14 +296,14 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 - [x] `ci.yml`: cliente (lint, tipos, tests, build), servidor (lint, formato, tests con caché del binario de MongoDB) y auditoría de dependencias de producción; en `main` y `develop`. Dependabot semanal (npm cliente y servidor) y mensual (GitHub Actions).
 - [x] Encontrado con los e2e y corregido: el aviso `Msgbox` bloqueaba la página 3 s (ahora se cierra con clic o Escape), no repetía un mismo mensaje dos veces seguidas y no se anunciaba a lectores de pantalla; las estrellas de votar y el menú de cuenta del Navbar no tenían nombre accesible correcto.
 - [x] `deploy.ml` eliminado (extensión incorrecta, nunca se ejecutaba y apuntaba a Vercel sin haber despliegue).
-- [ ] Deploy (cuando lo haya): decidir estrategia (droplet + nginx o similar). Corregir `_doc/nginx-scoretravelsblog.conf` (B-12): servir `dist` desde nginx (`root` + `try_files $uri /index.html`) y hacer proxy solo de `/api` y `/static/images`.
+- [ ] Deploy (cuando lo haya): estrategia documentada en `docs/deployment.md` (droplet + nginx + systemd). B-12 resuelto en `docs/nginx-scoretravelsblog.conf`: nginx hace proxy de todo a Express (que ya sirve `dist`) con caché por ruta, en vez de bloques sin `proxy_pass`. Pendiente: desplegar y validar con `nginx -t`.
 - [x] `client/dist` fuera del repo y en `.gitignore`. (A-12)
 - [x] Imágenes subidas fuera del repo (`server/uploads`, Fase 1). (S-16)
 
 ### Fase 6 — Producto, portfolio y documentación (continuo) 🟢
 
 - [x] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. La lista de "tipos de viaje" pasa a `docs/travel-types.md`.
-- [ ] Revisar lo aprovechable de `_doc/` (HTTPS, rendimiento, testing) e incorporarlo a una carpeta `docs/` actualizada.
+- [x] Revisar lo aprovechable de `_doc/` e incorporarlo a `docs/`: HTTPS, nginx, systemd, copias de seguridad y comprobaciones de rendimiento en `docs/deployment.md`. `TESTING_PLAN.md` y `PROJECT_REVIEW.md` quedan obsoletos (los sustituyen los tests reales, el README y este plan).
 - [ ] SEO: meta y Open Graph por experiencia, sitemap, robots; valorar prerender/SSR.
 - [ ] Accesibilidad y `prefers-reduced-motion`.
 - [ ] About/portfolio: contenido externo (JSON/MD/BD), proyectos, CV, decidir idioma o i18n (A-14).
