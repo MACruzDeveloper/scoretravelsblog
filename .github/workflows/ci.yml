@@ -49,7 +49,7 @@ jobs:
       # Same npm major as local development, so lockfiles written there are read the same way
       - run: npm install -g npm@11
       # MongoDB binary used by mongodb-memory-server in the tests
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/mongodb-binaries
           key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
@@ -72,7 +72,7 @@ jobs:
             server/package-lock.json
       # Same npm major as local development, so lockfiles written there are read the same way
       - run: npm install -g npm@11
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/mongodb-binaries
           key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('server/package-lock.json') }}
