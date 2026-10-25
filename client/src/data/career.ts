@@ -58,18 +58,6 @@ const entries: Milestone[] = [
     description: { es: 'Título Edexcel de informática y desarrollo de sistemas.', en: 'Edexcel diploma in computing and systems development.' },
   },
   {
-    id: 'microsort',
-    start: '2006',
-    end: '2006',
-    type: 'work',
-    title: { es: 'Auxiliar técnico de informática', en: 'IT support technician' },
-    organization: 'Microsort',
-    description: {
-      es: 'Instalación de software, soporte, eliminación de virus y mantenimiento de hardware.',
-      en: 'Software installation, user support, virus removal and hardware maintenance.',
-    },
-  },
-  {
     id: 'faqtoria',
     start: '2008-10',
     end: '2012-08',
@@ -82,18 +70,6 @@ const entries: Milestone[] = [
       en: 'Web design and development with WordPress, SEO and newsletters, plus editorial design and layout.',
     },
     tags: ['HTML', 'CSS3', 'JavaScript', 'WordPress', 'PHP', 'SEO', 'SVN', 'Photoshop', 'InDesign'],
-  },
-  {
-    id: 'grupo-infinity',
-    start: '2010',
-    end: '2012-12',
-    type: 'work',
-    title: { es: 'Webmaster y community manager', en: 'Webmaster and community manager' },
-    organization: 'Grupo Infinity',
-    description: {
-      es: 'Diseño, maquetación y mantenimiento de la web, y gestión de redes sociales (Facebook, Twitter, YouTube).',
-      en: 'Design, front-end and maintenance of the website, and social media management (Facebook, Twitter, YouTube).',
-    },
   },
   {
     id: 'edib-indesign',
@@ -157,20 +133,6 @@ const entries: Milestone[] = [
     tags: ['HTML5', 'CSS3', 'Sass', 'jQuery', 'Bootstrap', 'Gulp', 'Grunt', 'Git', 'Photoshop'],
   },
   {
-    id: 'beeva',
-    start: '2016-07',
-    end: '2016-10',
-    type: 'work',
-    title: { es: 'Maquetador UX', en: 'UX front-end developer' },
-    organization: 'BEEVA',
-    place: MADRID,
-    description: {
-      es: 'Maquetación de la app móvil de BBVA: mantenimiento, incidencias y nuevas páginas.',
-      en: 'Front-end for the BBVA mobile app: maintenance, bug fixing and new pages.',
-    },
-    tags: ['HTML5', 'CSS3', 'Sass', 'Jade', 'Gulp', 'jQuery', 'Git'],
-  },
-  {
     id: 'freelance-2016',
     start: '2016-10',
     end: '2020-03',
@@ -184,17 +146,6 @@ const entries: Milestone[] = [
     },
     tags: ['React', 'Node'],
     link: 'https://www.villaluxurymallorca.com/',
-  },
-  {
-    id: 'diwoh',
-    start: '2017-04',
-    end: '2017-06',
-    type: 'work',
-    title: { es: 'Maquetador web', en: 'Front-end developer' },
-    organization: 'Diwoh Travel',
-    place: MADRID,
-    description: { es: 'Maquetación del portal, diseño responsive y cross-browser.', en: 'Portal front-end, responsive and cross-browser design.' },
-    link: 'https://www.diwoh.com/',
   },
   {
     id: 'barcelo',
