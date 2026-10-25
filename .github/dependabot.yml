@@ -16,7 +16,7 @@ updates:
       react:
         patterns: ['react', 'react-dom', '@types/react', '@types/react-dom', 'react-leaflet']
     ignore:
-      # Planned migrations, done by hand (see PLAN_MEJORAS.md)
+      # Major versions are migrations done by hand (see PLAN_MEJORAS.md)
       - dependency-name: react
         update-types: [version-update:semver-major]
       - dependency-name: react-dom

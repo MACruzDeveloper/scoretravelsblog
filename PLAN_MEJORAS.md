@@ -219,7 +219,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Client: `npm audit` → **0 vulnerabilidades**. ESLint: 0 errores (antes 30), 49 avisos (casi todos `any`).
 - [x] `.nvmrc` (22.12) y `engines` en ambos `package.json`; CI usa `.nvmrc`.
 - [x] Node 22.22 (`.nvmrc` y `engines` `>=22.22.2`), que desbloquea jsdom 30; también msw 3. Pendiente valorar Node 24 LTS (la 22 deja de tener soporte en abril de 2027).
-- [ ] React 19 + react-leaflet 5 (cuando haya tiempo para probar el mapa a fondo). Van juntos con `react-dom` y `@types/react*`; Dependabot los ignora hasta entonces.
+- [x] React 19 + react-leaflet 5 (con `react-dom` y `@types/react*`): `ref` como prop en lugar de `forwardRef`, tipos de `useRef`/`RefObject`, `fetchPriority`, fuera `react-helmet-async` (la precarga del vídeo con `as=video` no la soporta Chrome). Mapa, zoom con Ctrl y formularios comprobados en navegador.
 - [ ] TypeScript 7 cuando `typescript-eslint` lo soporte (Dependabot lo ignora hasta entonces).
 - [x] Dependabot contra `develop`, con grupos (Actions, ESLint, React, menores y parches). Aplicadas a mano: Actions (`checkout` 7, `setup-node` 7, `cache` 6, `upload-artifact` 7), ESLint 10 y `@eslint/js` 10 en cliente y servidor, `@hookform/resolvers` 6.
 - [ ] Migrar Sass de `@import` y funciones globales a `@use`/módulos (los avisos están silenciados en `vite.config.ts`).

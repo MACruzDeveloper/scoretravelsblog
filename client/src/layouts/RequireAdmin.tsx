@@ -1,8 +1,8 @@
-import { useContext } from 'react'
+import { useContext, type ReactElement } from 'react'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 
 type PropsRequireAdmin = {
-  children: JSX.Element
+  children: ReactElement
 }
 
 // Admin-only sections inside the panel (users only manage their own experiences)

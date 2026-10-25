@@ -12,7 +12,10 @@ const second = milestones[1]
 const last = milestones[milestones.length - 1]
 
 describe('About', () => {
-  afterEach(() => changeLanguage('es'))
+  // i18next changes language asynchronously and re-renders the page
+  afterEach(async () => {
+    await act(() => changeLanguage('es'))
+  })
 
   it('starts the trip at the first milestone, in Spanish', () => {
     render(<About />)
@@ -67,10 +70,12 @@ describe('About', () => {
     expect(cardTitle()).toBe(second.title.es)
   })
 
-  it('switches to English and remembers the choice', () => {
+  it('switches to English and remembers the choice', async () => {
     const { container } = render(<About />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'English' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'English' }))
+    })
 
     expect(cardTitle()).toBe(first.title.en)
     expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true')

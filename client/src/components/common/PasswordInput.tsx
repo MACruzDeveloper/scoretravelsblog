@@ -1,10 +1,12 @@
-import { useState, forwardRef, InputHTMLAttributes } from 'react'
+import { useState, type InputHTMLAttributes, type Ref } from 'react'
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md'
 
-type PropsPasswordInput = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>
+type PropsPasswordInput = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
+  ref?: Ref<HTMLInputElement>
+}
 
 // Password field with a button to show or hide what has been typed (works with react-hook-form)
-const PasswordInput = forwardRef<HTMLInputElement, PropsPasswordInput>(({ className = 'form_control', ...props }, ref) => {
+const PasswordInput = ({ className = 'form_control', ref, ...props }: PropsPasswordInput) => {
   const [visible, setVisible] = useState(false)
 
   return <div className="password_field">
@@ -19,8 +21,6 @@ const PasswordInput = forwardRef<HTMLInputElement, PropsPasswordInput>(({ classN
       {visible ? <MdVisibilityOff /> : <MdVisibility />}
     </button>
   </div>
-})
-
-PasswordInput.displayName = 'PasswordInput'
+}
 
 export default PasswordInput

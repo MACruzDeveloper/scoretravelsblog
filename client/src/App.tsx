@@ -3,11 +3,9 @@ import { getToken } from './utils/utils'
 import { getCurrentUser } from './api/auth'
 import type { Session } from './api/types'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { Helmet, HelmetProvider } from 'react-helmet-async'
 import AdminLayout from './layouts/AdminLayout'
 import RequireAdmin from './layouts/RequireAdmin'
 import Header from '@/components/common/Header'
-import homeVideo from './assets/videos/home.mp4'
 import Breadcrumbs from '@/components/common/Breadcrumbs'
 import Footer from '@/components/common/Footer'
 import Spinner from '@/components/common/Spinner'
@@ -101,51 +99,45 @@ function App() {
 
   return (
     <MyGlobalContext.Provider value={contextValues}>
-      <HelmetProvider>
-        <Helmet>
-          <link rel="preload" href={homeVideo} as="video" type="video/mp4" />
-        </Helmet>
+      <ScrollToTop />
+      <Header isLoggedIn={isLoggedIn} logout={clearSession} />
 
-        <ScrollToTop />
-        <Header isLoggedIn={isLoggedIn} logout={clearSession} />
+      { showBreadcrumb &&
+      <Breadcrumbs page={page} />
+      }
 
-        { showBreadcrumb &&
-        <Breadcrumbs page={page} />
-        }
+      <main>
+        <Suspense fallback={<Spinner />}>
+          <Routes>
+            <Route index element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/experiences" element={<AllExperiences />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path='/login' element={<Login login={login} />} />
+            <Route path='/register' element={<Register login={login} />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/search-by-continent/:search" element={<SearchPageContinent />} />
+            <Route path="/experience/:exp" element={<Experience user={user} />} />
 
-        <main>
-          <Suspense fallback={<Spinner />}>
-            <Routes>
-              <Route index element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/experiences" element={<AllExperiences />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path='/login' element={<Login login={login} />} />
-              <Route path='/register' element={<Register login={login} />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/search-by-continent/:search" element={<SearchPageContinent />} />
-              <Route path="/experience/:exp" element={<Experience user={user} />} />
+            {/* The panel needs a session; every user manages their experiences, the rest is admin only */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="experiences" replace />} />
+              <Route path="experiences" element={<Experiences />} />
+              <Route path="moderation" element={<RequireAdmin><Moderation /></RequireAdmin>} />
+              <Route path="categories" element={<RequireAdmin><Categories /></RequireAdmin>} />
+              <Route path="comments" element={<RequireAdmin><Comments /></RequireAdmin>} />
+              <Route path="scores" element={<RequireAdmin><Scores /></RequireAdmin>} />
+              <Route path="users" element={<RequireAdmin><Users /></RequireAdmin>} />
+              <Route path="images" element={<RequireAdmin><Images /></RequireAdmin>} />
+            </Route>
+            <Route path="*" element={<><Seo title="Page not found" noindex /><p>There's nothing here: 404!</p></>} />
+          </Routes>
+        </Suspense>
+      </main>
 
-              {/* The panel needs a session; every user manages their experiences, the rest is admin only */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Navigate to="experiences" replace />} />
-                <Route path="experiences" element={<Experiences />} />
-                <Route path="moderation" element={<RequireAdmin><Moderation /></RequireAdmin>} />
-                <Route path="categories" element={<RequireAdmin><Categories /></RequireAdmin>} />
-                <Route path="comments" element={<RequireAdmin><Comments /></RequireAdmin>} />
-                <Route path="scores" element={<RequireAdmin><Scores /></RequireAdmin>} />
-                <Route path="users" element={<RequireAdmin><Users /></RequireAdmin>} />
-                <Route path="images" element={<RequireAdmin><Images /></RequireAdmin>} />
-              </Route>
-              <Route path="*" element={<><Seo title="Page not found" noindex /><p>There's nothing here: 404!</p></>} />
-            </Routes>
-          </Suspense>
-        </main>
-
-        <Footer />
-      </HelmetProvider>
+      <Footer />
     </MyGlobalContext.Provider>
   )
 }

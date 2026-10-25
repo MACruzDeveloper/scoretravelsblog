@@ -194,7 +194,6 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
               loop
               playsInline
               preload="auto"
-              {...{ fetchpriority: 'high' }}
               aria-label={getTitleForSlide()}
             />
           ) : (
@@ -202,6 +201,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
               src={getUrlForSlide()}
               className={`carousel_image ${entering ? 'carousel_image--entering' : 'carousel_image--active'}`}
               alt={getTitleForSlide()}
+              fetchPriority="high"
             />
           )
         })() : (

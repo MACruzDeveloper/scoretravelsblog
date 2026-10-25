@@ -16,7 +16,7 @@ En producción el servidor sirve también el cliente compilado (`client/dist`) y
 
 ### Cliente (`client/`)
 
-- React 18, TypeScript (strict null checks), Vite, Sass.
+- React 19, TypeScript (strict null checks), Vite, Sass.
 - `src/api/`: llamadas tipadas a la API REST; `src/store/`: stores de Zustand; `src/hooks/`: hooks compartidos de datos y formularios.
 - Formularios con react-hook-form + zod (`src/schemas/`), con las mismas reglas que valida el servidor.
 - Mapa con Leaflet / react-leaflet y mapas base de CARTO (sin clave usa OpenStreetMap).

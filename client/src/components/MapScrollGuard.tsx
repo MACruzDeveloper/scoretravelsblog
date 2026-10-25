@@ -12,7 +12,7 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(naviga
 const MapScrollGuard = () => {
   const map = useMap()
   const [showHint, setShowHint] = useState(false)
-  const hintTimer = useRef<number>()
+  const hintTimer = useRef<number>(undefined)
 
   useEffect(() => {
     const container = map.getContainer()
