@@ -22,7 +22,7 @@ sudo apt install -y git nginx certbot
 
 # Node 22 con nvm (o NodeSource)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-nvm install 22
+nvm install 22.22
 ```
 
 ## 2. Instalar la aplicación

@@ -35,7 +35,7 @@ En producción el servidor sirve también el cliente compilado (`client/dist`) y
 
 ## Requisitos
 
-- Node.js 22.12 o superior (ver `.nvmrc`) y npm 10+.
+- Node.js 22.22 o superior (ver `.nvmrc`; con nvm: `nvm install` y `nvm use` en la raíz) y npm 11.
 - Una base de datos MongoDB (Atlas o local).
 - Opcional: una [clave de CARTO](https://carto.com/basemaps/apikey), credenciales SMTP de Brevo y una [clave de Gemini](https://aistudio.google.com/apikey) (solo para los scripts de seed y backfill).
 

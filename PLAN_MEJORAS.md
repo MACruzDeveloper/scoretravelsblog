@@ -218,7 +218,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Client: eliminados `moment`, `react-moment`, `lodash`, `trig-js`, `prop-types`, `sass-loader`, `@types/jest`, `@types/react-helmet`, `wait-on`, `nodemon`; sustituidos por `utils/collections.ts`, `utils/format.ts` y `<FormattedDate>` (con tests).
 - [x] Client: `npm audit` → **0 vulnerabilidades**. ESLint: 0 errores (antes 30), 49 avisos (casi todos `any`).
 - [x] `.nvmrc` (22.12) y `engines` en ambos `package.json`; CI usa `.nvmrc`.
-- [ ] Actualizar Node local a la última 22.x LTS (o 24): `jsdom` 28 necesita Node > 22.12, por eso está fijado en 26.
+- [x] Node 22.22 (`.nvmrc` y `engines` `>=22.22.2`), que desbloquea jsdom 30; también msw 3. Pendiente valorar Node 24 LTS (la 22 deja de tener soporte en abril de 2027).
 - [ ] React 19 + react-leaflet 5 (cuando haya tiempo para probar el mapa a fondo). Van juntos con `react-dom` y `@types/react*`; Dependabot los ignora hasta entonces.
 - [ ] TypeScript 7 cuando `typescript-eslint` lo soporte (Dependabot lo ignora hasta entonces).
 - [x] Dependabot contra `develop`, con grupos (Actions, ESLint, React, menores y parches). Aplicadas a mano: Actions (`checkout` 7, `setup-node` 7, `cache` 6, `upload-artifact` 7), ESLint 10 y `@eslint/js` 10 en cliente y servidor, `@hookform/resolvers` 6.
