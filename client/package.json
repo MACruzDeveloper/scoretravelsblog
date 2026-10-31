@@ -16,17 +16,17 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@hookform/resolvers": "^6.0.0",
+    "@hookform/resolvers": "^6.0.2",
     "dompurify": "^3.4.17",
-    "i18next": "^26.5.8",
+    "i18next": "^26.5.11",
     "leaflet": "^1.9.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-hook-form": "^7.90.0",
-    "react-i18next": "^17.1.6",
+    "react-hook-form": "^7.91.0",
+    "react-i18next": "^17.1.9",
     "react-icons": "^5.7.0",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.18.4",
+    "react-router-dom": "^7.18.5",
     "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },
@@ -51,7 +51,7 @@
     "sass": "^1.106.1",
     "terser": "^5.51.2",
     "typescript": "~5.9",
-    "typescript-eslint": "^8.72.0",
+    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
