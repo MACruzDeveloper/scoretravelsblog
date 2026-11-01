@@ -8,64 +8,79 @@ const ai = genkit({
   model: googleAI.model('gemini-3.5-flash'),
 })
 
-const mockExperienceInputSchema = z.object({
-  categories: z.array(z.string()),
-  cityNames: z.array(z.string()),
+const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', 'oceania', 'south-america']
+
+const mockExperiencesInputSchema = z.object({
+  continent: z.enum(CONTINENTS),
+  count: z.number().int().min(1).max(10),
+  categories: z.array(z.string()).min(1),
+  // Fictional authors: the model writes each experience in the voice of one of them
+  authors: z.array(z.object({ username: z.string(), voice: z.string() })).min(2),
+  // Places already covered, to avoid repeating them
+  avoidPlaces: z.array(z.string()),
+  // Another Gemini model when the default one is busy
+  model: z.string().optional(),
 })
 
-const mockExperienceOutputSchema = z.object({
-  title: z.string(),
-  content: z.string(),
-  category: z.string(),
-  city: z.string(), // must match one of the provided cityNames
-  score: z.number().min(1).max(5),
+const mockExperiencesOutputSchema = z.object({
+  experiences: z.array(
+    z.object({
+      title: z.string(),
+      paragraphs: z.array(z.string()),
+      category: z.string(),
+      author: z.string(),
+      place: z.object({
+        name: z.string(),
+        country: z.string(),
+        countryCode: z.string(),
+        kind: z.enum(['city', 'island', 'region', 'country']),
+        // Used when OpenStreetMap does not know the place itself
+        nearbyTown: z.string(),
+      }),
+      // Search terms for Wikimedia Commons, most specific first
+      photoSearches: z.array(z.string()),
+      score: z.number().int().min(1).max(5),
+      comments: z.array(z.object({ author: z.string(), text: z.string() })),
+    })
+  ),
 })
 
-// Generates a single plausible mock travel experience based on real
-// categories and cities present in the database.
-const generateMockExperienceFlow = ai.defineFlow(
+// Generates several fictional travel experiences of one continent in ONE request
+// (the free tier allows very few requests per day). Used by scripts/seed-experiences.js
+const generateMockExperiencesFlow = ai.defineFlow(
   {
-    name: 'generateMockExperience',
-    inputSchema: mockExperienceInputSchema,
-    outputSchema: mockExperienceOutputSchema,
+    name: 'generateMockExperiences',
+    inputSchema: mockExperiencesInputSchema,
+    outputSchema: mockExperiencesOutputSchema,
   },
   async (input) => {
-    const categoriesList = input.categories.join(', ')
-    const citiesList = input.cityNames.join(', ')
+    const authors = input.authors.map((a) => `- ${a.username}: ${a.voice}`).join('\n')
 
     const response = await ai.generate({
-      model: ai.model,
-      output: { format: 'json', schema: mockExperienceOutputSchema },
+      ...(input.model && { model: googleAI.model(input.model) }),
+      output: { format: 'json', schema: mockExperiencesOutputSchema },
       prompt: `
-You are a travel content creator. Write in ENGLISH.
+You write content for a travel blog where travellers share and rate their trips. Write in ENGLISH.
 
-Generate a fictional but realistic and credible travel experience.
+Write ${input.count} fictional but realistic travel experiences in ${input.continent}, as { "experiences": [ ... ] }.
 
-Choose ONE city from this list: ${citiesList}
-Choose ONE category from this list: ${categoriesList}
-
-Requirements:
-- Title: an attractive, specific title in English.
-- Content: a LONG, detailed description in English of about 200-280 words, split into 3-4 short paragraphs, describing places, food, atmosphere and practical tips.
-- Score: a number from 1 to 5 (at most 2 decimals) consistent with what you describe.
-- City and Category must be copied EXACTLY from the provided lists, with no extra text.
-
-Respond only with JSON of exactly this shape:
-{
-  "title": "...",
-  "content": "...",
-  "category": "...",
-  "city": "...",
-  "score": 4.5
-}
+Rules:
+- Each one in a different country when possible, and NOT about: ${input.avoidPlaces.join(', ') || '-'}.
+- Mix big cities with islands, regions or a whole country, and well-known places with less obvious ones.
+- "place": a real place. "name" in English as OpenStreetMap names it (e.g. "Naples", "Majorca", "Tuscany"); for a whole country, name = country. "countryCode": ISO 3166-1 alpha-2 (e.g. "FJ"). "nearbyTown": the main city or town in or next to it (e.g. "Sigatoka" for the Coral Coast); for a city, the city itself; for a country, its capital.
+- "category": exactly ONE of: ${input.categories.join(' | ')}
+- "author": the username of ONE of these authors, written in their voice. Use each author at most twice:
+${authors}
+- "title": specific and attractive, not clickbait.
+- "paragraphs": 3 or 4 paragraphs, 180-260 words in total, first person, with concrete details (places, food, prices, mistakes, practical tips). Not every trip is perfect.
+- "score": 1 to 5, consistent with the text (mostly 3-5, sometimes lower).
+- "photoSearches": 3 search terms for Wikimedia Commons photos of places in the text, most specific first (e.g. "Fushimi Inari-taisha torii", "Gion Kyoto street").
+- "comments": 1 to 3 short, natural comments from OTHER authors of the list (questions, own tips, agreement or polite disagreement).
 `,
     })
-
     return response.output
   }
 )
-
-const CONTINENTS = ['africa', 'antarctica', 'asia', 'europe', 'north-america', 'oceania', 'south-america']
 
 const classifyExperiencesInputSchema = z.object({
   categories: z.array(z.string()).min(1),
@@ -132,6 +147,7 @@ ${posts}
 
 module.exports = {
   ai,
-  generateMockExperienceFlow,
+  generateMockExperiencesFlow,
+  CONTINENTS,
   classifyExperiencesFlow,
 }

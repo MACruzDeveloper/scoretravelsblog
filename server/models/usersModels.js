@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema(
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
+    // Sample content from scripts/seed-experiences.js; scripts/clear-seed.js removes it
+    seed: { type: Boolean, select: false },
   },
   { timestamps: true }
 )

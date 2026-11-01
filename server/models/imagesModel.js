@@ -15,6 +15,8 @@ const imagesSchema = new mongoose.Schema(
     },
     width: Number,
     height: Number,
+    // Sample content from scripts/seed-experiences.js; scripts/clear-seed.js removes it
+    seed: { type: Boolean, select: false },
   },
   { timestamps: true }
 )

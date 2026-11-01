@@ -11,6 +11,8 @@ const citySchema = new Schema(
     continent: { type: String, required: true },
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
+    // Sample content from scripts/seed-experiences.js; scripts/clear-seed.js removes it
+    seed: { type: Boolean, select: false },
   },
   { timestamps: true }
 )

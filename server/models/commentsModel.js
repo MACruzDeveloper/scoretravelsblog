@@ -9,6 +9,8 @@ const commentSchema = new mongoose.Schema(
     experience: { type: Schema.Types.ObjectId, ref: 'experiences', required: true },
     date: { type: Date, default: Date.now },
     content: { type: String },
+    // Sample content from scripts/seed-experiences.js; scripts/clear-seed.js removes it
+    seed: { type: Boolean, select: false },
   },
   { timestamps: true }
 )

@@ -34,5 +34,24 @@ describe('Experience', () => {
     const image = await screen.findByRole('img', { name: 'No photos trip' })
     expect(image).toHaveClass('content_image')
     expect(document.querySelector('.carousel')).not.toBeInTheDocument()
+    expect(screen.queryByText(/via Wikimedia Commons/)).not.toBeInTheDocument()
+  })
+
+  it('credits the author and license of photos from Wikimedia Commons', async () => {
+    server.use(
+      http.get(`${API}/experiences/experience-1`, () =>
+        HttpResponse.json({
+          _id: 'experience-1', title: 'Kyoto trip', date: '2024-01-01', images: ['a.avif'], image: 'a.avif',
+          imageCredits: [{
+            filename: 'a.avif', author: 'Jakub Hałun', license: 'CC BY 4.0',
+            licenseUrl: 'https://creativecommons.org/licenses/by/4.0', source: 'https://commons.wikimedia.org/wiki/File:A.jpg',
+          }],
+        })
+      )
+    )
+    renderExperience()
+
+    expect(await screen.findByRole('link', { name: 'Jakub Hałun' })).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:A.jpg')
+    expect(screen.getByRole('link', { name: 'CC BY 4.0' })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0')
   })
 })

@@ -8,6 +8,8 @@ const scoreSchema = new mongoose.Schema(
     user: { type: String },
     userId: { type: Schema.Types.ObjectId, ref: 'users' },
     score: { type: Number, min: 1, max: 5 },
+    // Sample content from scripts/seed-experiences.js; scripts/clear-seed.js removes it
+    seed: { type: Boolean, select: false },
   },
   { timestamps: true }
 )

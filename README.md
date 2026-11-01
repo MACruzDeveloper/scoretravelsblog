@@ -102,7 +102,8 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `npm start` / `npm run dev` | Arranca la API (en dev recarga con nodemon) |
 | `npm test` | Tests de la API con node:test, supertest y MongoDB en memoria |
 | `npm run lint` / `npm run format` | ESLint y Prettier |
-| `npm run seed` | Genera experiencias de prueba con Gemini (`npm run seed -- 10 --user=admin`) |
+| `npm run seed` | Genera experiencias de ejemplo: texto con Gemini, lugares con Photon y fotos de Wikimedia Commons (con su crédito), más usuarios ficticios, comentarios y votos. Por defecto 5 por continente (`npm run seed -- --per-continent=2 --continents=europe,asia`, o `--dry-run` para ver solo el texto) |
+| `npm run seed:clear` | Cuenta el contenido creado por el seed; con `-- --yes` lo borra (experiencias, comentarios, votos, fotos, usuarios y lugares sin usar) |
 | `npm run scores:recalculate` | Recalcula la media de cada experiencia a partir de las puntuaciones |
 | `npm run backfill:propose` / `npm run backfill:apply` | Propone con Gemini categorías y ciudades para experiencias antiguas y aplica la propuesta revisada |
 | `npm run backup` | Copia de seguridad de la base de datos y las imágenes, con rotación |

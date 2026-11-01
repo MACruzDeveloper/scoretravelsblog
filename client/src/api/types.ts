@@ -36,6 +36,16 @@ export interface Experience {
   votes?: number
   status?: ExperienceStatus
   rejectionReason?: string
+  // Author and license of photos taken from Wikimedia Commons
+  imageCredits?: ImageCredit[]
+}
+
+export interface ImageCredit {
+  filename: string
+  author: string
+  license: string
+  licenseUrl?: string
+  source: string
 }
 
 export interface Comment {

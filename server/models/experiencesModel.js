@@ -19,6 +19,13 @@ const experienceSchema = new mongoose.Schema(
     status: { type: String, enum: ['pending', 'published', 'rejected'], default: 'pending' },
     rejectionReason: { type: String, default: '' },
     reviewedAt: { type: Date },
+    // Author and license of photos taken from Wikimedia Commons
+    imageCredits: {
+      type: [{ _id: false, filename: String, author: String, license: String, licenseUrl: String, source: String }],
+      default: undefined,
+    },
+    // Sample content from scripts/seed-experiences.js; scripts/clear-seed.js removes it
+    seed: { type: Boolean, select: false },
   },
   { timestamps: true }
 )

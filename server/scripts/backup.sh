@@ -11,8 +11,9 @@ BACKUP_DIR="${1:-$HOME/backups/scoretravelsblog}"
 KEEP_DAYS="${KEEP_DAYS:-14}"
 STAMP="$(date +%F_%H%M)"
 
-# Only the two variables needed, without running the rest of .env as shell code
-read_env() { grep -E "^$1=" "$SERVER_DIR/.env" | tail -1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/^["'\'']|["'\'']$//g'; }
+# Only the two variables needed, without running the rest of .env as shell code.
+# A missing variable is empty, not an error (grep fails when nothing matches)
+read_env() { { grep -E "^$1=" "$SERVER_DIR/.env" || true; } | tail -1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/^["'\'']|["'\'']$//g'; }
 ATLAS_URL="${ATLAS_URL:-$(read_env ATLAS_URL)}"
 UPLOADS_DIR="${UPLOADS_DIR:-$(read_env UPLOADS_DIR)}"
 UPLOADS_DIR="${UPLOADS_DIR:-$SERVER_DIR/uploads/images}"

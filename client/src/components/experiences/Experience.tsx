@@ -163,6 +163,25 @@ const Experience = ({ user }: PropsExperience) => {
                 </p>
 
                 <p className="content_desc">{getDataParsed(experience.content)}</p>
+
+                {/* Free licenses of the photos ask for the author and license */}
+                {experience.imageCredits && experience.imageCredits.length > 0 && (
+                  <p className="content_credits">
+                    Photos:{' '}
+                    {experience.imageCredits.map((credit, i) => (
+                      <span key={credit.filename}>
+                        {i > 0 && ' · '}
+                        <a href={credit.source} target="_blank" rel="noopener noreferrer">{credit.author}</a>
+                        {' ('}
+                        {credit.licenseUrl
+                          ? <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license">{credit.license}</a>
+                          : credit.license}
+                        {')'}
+                      </span>
+                    ))}
+                    {' via Wikimedia Commons'}
+                  </p>
+                )}
               </>
               : <p className="msg error">Experience not found</p>
           }
