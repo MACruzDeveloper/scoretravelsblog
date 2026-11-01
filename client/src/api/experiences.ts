@@ -1,6 +1,6 @@
 import { deleteData, getData, patchData, postData } from '@/utils/utils'
 import { API } from '@/config'
-import type { Comment, Experience, ExperienceStatus } from './types'
+import type { City, Comment, Experience, ExperienceStatus } from './types'
 
 export type { ExperienceStatus }
 
@@ -45,6 +45,11 @@ export type ExperienceFacets = {
 
 export type TimelineExperience = Experience & { year: number }
 
+// Only the fields the map popup shows
+export type MapExperience = Pick<Experience, '_id' | 'title' | 'category' | 'score' | 'votes' | 'image' | 'images'> & {
+  city: Pick<City, 'name' | 'type' | 'country' | 'continent' | 'lat' | 'lng'>
+}
+
 // Drops empty values so the URL only carries the filters in use
 export const toQueryString = (params: ExperienceListParams): string => {
   const query = new URLSearchParams()
@@ -72,6 +77,10 @@ export const getExperienceFacets = (signal?: AbortSignal) =>
 
 export const getTimeline = (signal?: AbortSignal) =>
   get<TimelineExperience[]>('/experiences/timeline', signal)
+
+// The five best scored experiences of each continent
+export const getMapExperiences = (signal?: AbortSignal) =>
+  get<MapExperience[]>('/experiences/map', signal)
 
 // Admin tables sort and paginate on the client, so they load every page
 export const listAllExperiences = async (params: Pick<ExperienceListParams, 'scope' | 'status'> = {}): Promise<Experience[]> => {

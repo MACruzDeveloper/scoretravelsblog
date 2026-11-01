@@ -12,6 +12,7 @@ router.get('/', optionalAuth, validate(schemas.listExperiences, 'query'), contro
 // Static paths before /:id so they are not read as ids
 router.get('/facets', controller.findFacets)
 router.get('/timeline', controller.findTimeline)
+router.get('/map', controller.findMapExperiences)
 router.get('/:id', optionalAuth, byId, controller.findExperience)
 router.get('/:id/comments', byId, controller.findExperienceComments)
 

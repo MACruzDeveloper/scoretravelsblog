@@ -111,6 +111,18 @@ describe('facets, timeline and comments', () => {
     assert.deepEqual(body.years, ['2024', '2023', '2022'])
   })
 
+  it('returns the five best scored experiences of each continent for the map', async () => {
+    const { body } = await request.get('/api/experiences/map').expect(200)
+    const byContinent = Object.groupBy(body, (e) => e.city.continent)
+    assert.deepEqual(Object.keys(byContinent).sort(), ['asia', 'europe', 'south-america'])
+    // Each continent has more scored experiences than that
+    assert.ok(Object.values(byContinent).every((list) => list.length === 5))
+    assert.ok(body.every((e) => e.score > 0 && e.title !== 'Hidden' && e.city.lat != null))
+    // Only what the popup needs
+    assert.equal(body[0].content, undefined)
+    assert.equal(body[0].userId, undefined)
+  })
+
   it('returns the best experience of each year, oldest year first', async () => {
     const { body } = await request.get('/api/experiences/timeline')
     assert.deepEqual(

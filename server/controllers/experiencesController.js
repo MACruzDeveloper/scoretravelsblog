@@ -3,7 +3,7 @@ const comments = require('../models/commentsModel')
 const scores = require('../models/scoresModel')
 const categories = require('../models/categoriesModel')
 const { getExperienceImages, removeUnusedImages } = require('../services/imageService')
-const { listExperiences, getFacets, getTimeline } = require('../services/experienceQuery')
+const { listExperiences, getFacets, getTimeline, getMapExperiences } = require('../services/experienceQuery')
 const { notifyPendingReview } = require('../services/mailer')
 const { isOwnerOrAdmin } = require('../middleware/auth')
 const { badRequest, unauthorized, forbidden, notFound } = require('../utils/httpErrors')
@@ -43,6 +43,10 @@ const findFacets = async (req, res) => {
 
 const findTimeline = async (req, res) => {
   res.send(await getTimeline())
+}
+
+const findMapExperiences = async (req, res) => {
+  res.send(await getMapExperiences())
 }
 
 // Unpublished experiences are only visible to their author and admins
@@ -138,6 +142,7 @@ module.exports = {
   findAllExperiences,
   findFacets,
   findTimeline,
+  findMapExperiences,
   findExperience,
   findExperienceComments,
   addNewExperience,

@@ -4,6 +4,10 @@
   height: 40rem;
   width: 100%;
   position: relative;
+
+  @media (min-width: $screenSm) {
+    height: 50rem;
+  }
 }
 
 .leaflet-container {
@@ -58,6 +62,89 @@
       display: block;
       margin-bottom: 4px;
     }
+  }
+}
+
+// Experience popup: cover, title, place, score and link
+.leaflet-popup-content-wrapper .leaflet-popup-content:has(.map_popup) {
+  margin: 0;
+}
+
+.leaflet-popup-content-wrapper:has(.map_popup) {
+  padding: 0;
+  overflow: hidden;
+}
+
+.map_popup {
+  &_image {
+    display: block;
+    width: 100%;
+    height: 9rem;
+    object-fit: cover;
+  }
+
+  &_body {
+    padding: 0.8rem 1rem 1rem;
+  }
+
+  a.map_popup_title {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: $fontBold;
+    line-height: 1.3;
+    color: $color1;
+    margin-bottom: 0.4rem;
+
+    &:hover {
+      color: $color2;
+    }
+  }
+
+  p.map_popup_place,
+  p.map_popup_meta {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 1.2rem;
+    color: $color4;
+    margin: 0 0 0.4rem;
+  }
+
+  &_stars {
+    display: inline-flex;
+    color: $color2;
+    font-size: 1.4rem;
+  }
+
+  &_category {
+    color: $color4;
+  }
+
+  p.map_popup_meta {
+    margin-bottom: 0;
+  }
+}
+
+// Close button: a round white button over the photo, easy to see and to hit
+.leaflet-container a.leaflet-popup-close-button {
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 2rem/1 $font1;
+  color: $color1;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+  z-index: 1;
+
+  &:hover,
+  &:focus {
+    color: $colorWhite;
+    background-color: $color1;
   }
 }
 

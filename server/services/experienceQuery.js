@@ -124,4 +124,36 @@ const getTimeline = async () => {
   return Experiences.populate(experiences, { path: 'city' })
 }
 
-module.exports = { listExperiences, getFacets, getTimeline, SORTS, PUBLISHED }
+// Best scored experiences of each continent for the home map, with only what the popup shows
+const MAP_PER_CONTINENT = 5
+
+const getMapExperiences = () =>
+  Experiences.aggregate([
+    { $match: { ...PUBLISHED, score: { $gt: 0 }, city: { $ne: null } } },
+    { $lookup: { from: 'cities', localField: 'city', foreignField: '_id', as: 'city' } },
+    { $unwind: '$city' },
+    { $sort: { score: -1, votes: -1, date: -1 } },
+    { $group: { _id: '$city.continent', experiences: { $push: '$$ROOT' } } },
+    { $project: { experiences: { $slice: ['$experiences', MAP_PER_CONTINENT] } } },
+    { $unwind: '$experiences' },
+    { $replaceRoot: { newRoot: '$experiences' } },
+    {
+      $project: {
+        title: 1,
+        category: 1,
+        score: 1,
+        votes: 1,
+        image: 1,
+        images: 1,
+        'city.name': 1,
+        'city.type': 1,
+        'city.country': 1,
+        'city.continent': 1,
+        'city.lat': 1,
+        'city.lng': 1,
+      },
+    },
+    { $sort: { score: -1 } },
+  ])
+
+module.exports = { listExperiences, getFacets, getTimeline, getMapExperiences, SORTS, PUBLISHED }
