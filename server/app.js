@@ -26,7 +26,7 @@ app.use(
           'https://*.tile.openstreetmap.org',
           'https://unpkg.com',
         ],
-        connectSrc: ["'self'", 'https://photon.komoot.io', 'https://restcountries.com'],
+        connectSrc: ["'self'", 'https://photon.komoot.io'],
         mediaSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
         frameAncestors: ["'self'"],
