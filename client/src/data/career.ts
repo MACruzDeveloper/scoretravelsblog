@@ -50,9 +50,10 @@ const entries: Milestone[] = [
     roadLabel: { es: 'HND Informática · Edib', en: 'HND Computing · Edib' },
     place: PALMA,
     description: {
-      es: 'Título superior británico (Edexcel BTEC) en informática y desarrollo de sistemas, cursado en la escuela EDIB de Palma: programación, bases de datos, redes y análisis de sistemas.',
-      en: 'British higher national diploma (Edexcel BTEC) in computing and systems development, at the EDIB school in Palma: programming, databases, networks and systems analysis.',
+      es: 'Título superior británico (Edexcel BTEC) en informática y desarrollo de sistemas, cursado en la escuela EDIB de Palma: programación en C, C#, .NET y Java, bases de datos con SQL, análisis de sistemas y gestión de proyectos con la guía PMBOK.',
+      en: 'British higher national diploma (Edexcel BTEC) in computing and systems development, at the EDIB school in Palma: programming in C, C#, .NET and Java, SQL databases, systems analysis and project management with the PMBOK guide.',
     },
+    tags: ['C', 'C#', '.NET', 'Java', 'SQL', 'PMBOK'],
   },
   {
     id: 'faqtoria',
@@ -104,10 +105,10 @@ const entries: Milestone[] = [
     organization: 'Animartec',
     roadLabel: { es: 'Curso de maquetación · Animartec', en: 'Front-end course · Animartec' },
     description: {
-      es: 'Curso de maquetación web profesional: HTML y CSS semántico, diseño responsive con Bootstrap 3 e interacción con jQuery.',
-      en: 'Professional front-end course: semantic HTML and CSS, responsive design with Bootstrap 3 and interaction with jQuery.',
+      es: 'Curso de maquetación web profesional centrado en jQuery: manipulación del DOM, eventos y efectos para dar interacción a las webs, junto con maquetación responsive con Bootstrap 3.',
+      en: 'Professional front-end course focused on jQuery: DOM manipulation, events and effects to make websites interactive, along with responsive layouts with Bootstrap 3.',
     },
-    tags: ['HTML5', 'CSS3', 'Bootstrap 3', 'jQuery'],
+    tags: ['jQuery', 'JavaScript', 'HTML5', 'CSS3', 'Bootstrap 3'],
   },
   {
     id: 'freelance-2014',
@@ -183,14 +184,15 @@ const entries: Milestone[] = [
     id: 'typescript',
     start: '2023-02',
     type: 'education',
-    title: { es: 'TypeScript Sin Fronteras', en: 'TypeScript Sin Fronteras' },
-    organization: { es: 'Curso avanzado online', en: 'Advanced online course' },
+    title: { es: 'TypeScript Avanzado', en: 'Advanced TypeScript' },
+    organization: 'The Refactor Project',
     roadLabel: { es: 'Curso de TypeScript', en: 'TypeScript course' },
     description: {
-      es: 'Curso avanzado online de TypeScript: tipos, genéricos y su uso en proyectos frontend.',
-      en: 'Advanced online TypeScript course: types, generics and how to use them in front-end projects.',
+      es: 'Curso online de 15 horas con clases en directo y pair programming: tipos genéricos, utility types, conditional y mapped types, keyof, type predicates, discriminated unions con exhaustive checking y sobrecarga de funciones, para trabajar con codebases y librerías reales.',
+      en: '15-hour online course with live classes and pair programming: generics, utility types, conditional and mapped types, keyof, type predicates, discriminated unions with exhaustive checking and function overloads, to work with real codebases and libraries.',
     },
-    tags: ['TypeScript'],
+    tags: ['TypeScript', 'Generics', 'Utility types', 'Mapped types', 'Type narrowing'],
+    link: 'https://the-refactor-project.com',
   },
   {
     id: 'first-certificate',
