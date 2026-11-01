@@ -41,7 +41,8 @@ const AllExperiences = () => {
               resetFilters={resetFilters}
               hasActiveFilters={hasActiveFilters}
               categories={facets?.categories ?? []}
-              cities={facets?.cities ?? []}
+              continents={facets?.continents ?? []}
+              countries={facets?.countries ?? []}
               availableYears={facets?.years ?? []}
             />
 

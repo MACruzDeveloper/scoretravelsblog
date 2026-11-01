@@ -85,6 +85,8 @@ export interface Image {
   height?: number
 }
 
+export type LibraryImage = Image & { experience: { _id: string; title: string } | null }
+
 // Returned by login and register
 export interface Session {
   token: string

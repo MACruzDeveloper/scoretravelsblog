@@ -57,7 +57,9 @@ const Gallery = () => {
             resetFilters={resetFilters}
             hasActiveFilters={hasActiveFilters}
             categories={[]}
-            cities={facets?.cities ?? []}
+            continents={facets?.continents ?? []}
+            countries={facets?.countries ?? []}
+            showScore={false}
             availableYears={[]}
           />
 

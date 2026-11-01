@@ -6,7 +6,9 @@ export type Filters = {
   search: string
   score: string
   category: string
-  city: string
+  continent: string
+  // ISO country code
+  country: string
   year: string
   month: string
 }
@@ -15,7 +17,8 @@ const INITIAL_FILTERS: Filters = {
   search: '',
   score: '',
   category: '',
-  city: '',
+  continent: '',
+  country: '',
   year: '',
   month: '',
 }
@@ -27,7 +30,8 @@ export const filtersToParams = (filters: Filters): ExperienceListParams => ({
   search: filters.search.trim() || undefined,
   minScore: filters.score ? Number(filters.score) : undefined,
   category: filters.category || undefined,
-  city: filters.city || undefined,
+  continent: filters.continent || undefined,
+  country: filters.country || undefined,
   year: filters.year ? Number(filters.year) : undefined,
   // Month only makes sense together with a year
   month: filters.year && filters.month ? Number(filters.month) : undefined,

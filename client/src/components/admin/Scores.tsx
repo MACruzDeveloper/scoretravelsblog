@@ -65,7 +65,7 @@ const Scores = () => {
     {loading && <Spinner />}
     {error && <p className="msg error">{error}</p>}
 
-    <Table label="Scores" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={5} />
+    <Table label="Scores" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={20} />
 
     <Msgbox {...message} />
   </div>

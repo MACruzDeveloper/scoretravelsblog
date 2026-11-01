@@ -66,10 +66,22 @@ describe('cities', () => {
   })
 
   it('saves a whole country as a place', async () => {
-    const italy = { name: 'Italy', type: 'country', country: 'Italy', countryCode: 'IT', continent: 'europe', lat: 42.6, lng: 12.6 }
+    const italy = {
+      name: 'Italy',
+      type: 'country',
+      country: 'Italy',
+      countryCode: 'IT',
+      continent: 'europe',
+      lat: 42.6,
+      lng: 12.6,
+    }
     const { body } = await request.post('/api/cities').set(ana.auth).send(italy).expect(200)
     assert.equal(body.city.type, 'country')
-    await request.post('/api/cities').set(ana.auth).send({ ...italy, type: 'region' }).expect(400)
+    await request
+      .post('/api/cities')
+      .set(ana.auth)
+      .send({ ...italy, type: 'region' })
+      .expect(400)
   })
 
   it('validates the payload and refuses to delete a city in use', async () => {

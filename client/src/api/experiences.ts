@@ -1,6 +1,6 @@
 import { deleteData, getData, patchData, postData } from '@/utils/utils'
 import { API } from '@/config'
-import type { City, Comment, Experience, ExperienceStatus } from './types'
+import type { Comment, Experience, ExperienceStatus } from './types'
 
 export type { ExperienceStatus }
 
@@ -15,6 +15,8 @@ export type ExperienceListParams = {
   category?: string
   city?: string
   continent?: string
+  // ISO country code
+  country?: string
   minScore?: number
   year?: number
   month?: number
@@ -32,9 +34,12 @@ export type Paginated<T> = {
   pages: number
 }
 
+export type FacetCountry = { code: string; name: string; continent: string }
+
 export type ExperienceFacets = {
   categories: string[]
-  cities: Pick<City, '_id' | 'name'>[]
+  continents: string[]
+  countries: FacetCountry[]
   years: string[]
 }
 

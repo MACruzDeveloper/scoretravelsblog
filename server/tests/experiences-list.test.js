@@ -56,10 +56,12 @@ describe('GET /api/experiences', () => {
     assert.equal((await list('?limit=101')).status, 400)
   })
 
-  it('searches title, content, category and city name, case insensitive', async () => {
+  it('searches title, content, category, place and country name, case insensitive', async () => {
     const byCity = await list('?search=TOKYO&limit=100')
     assert.ok(byCity.body.total > 0 && byCity.body.items.every((e) => e.city.name === 'Tokyo'))
     assert.equal((await list('?search=sushi')).body.total, 1)
+    const byCountry = await list('?search=japan&limit=100')
+    assert.ok(byCountry.body.total > 0 && byCountry.body.items.every((e) => e.city.country === 'Japan'))
     // Regex characters are matched literally
     assert.equal((await list(`?search=${encodeURIComponent('(a+b)')}`)).body.total, 1)
   })
@@ -69,6 +71,10 @@ describe('GET /api/experiences', () => {
     assert.equal(food.body.total, 12)
     const peru = await list('?continent=south-america&limit=100')
     assert.ok(peru.body.items.every((e) => e.city.name === 'Lima'))
+    const japan = await list('?country=jp&limit=100')
+    assert.ok(japan.body.total > 0 && japan.body.items.every((e) => e.city.countryCode === 'JP'))
+    assert.equal((await list('?continent=europe&country=JP')).body.total, 0)
+    assert.equal((await list('?country=Japan!')).status, 400)
     const good = await list('?minScore=4&limit=100')
     assert.ok(good.body.total > 0 && good.body.items.every((e) => e.score >= 4))
     const year = await list('?year=2023&limit=100')
@@ -96,7 +102,12 @@ describe('facets, timeline and comments', () => {
   it('returns filter options from published experiences only', async () => {
     const { body } = await request.get('/api/experiences/facets')
     assert.deepEqual(body.categories, ['Culture', 'Food'])
-    assert.equal(body.cities.length, 3)
+    assert.deepEqual(body.continents, ['asia', 'europe', 'south-america'])
+    assert.deepEqual(body.countries, [
+      { code: 'JP', name: 'Japan', continent: 'asia' },
+      { code: 'PE', name: 'Peru', continent: 'south-america' },
+      { code: 'PT', name: 'Portugal', continent: 'europe' },
+    ])
     assert.deepEqual(body.years, ['2024', '2023', '2022'])
   })
 

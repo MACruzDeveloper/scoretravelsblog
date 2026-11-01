@@ -66,7 +66,7 @@ const Comments = () => {
     {loading && <Spinner />}
     {error && <p className="msg error">{error}</p>}
 
-    <Table label="Comments" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={5} />
+    <Table label="Comments" columns={COLUMNS} data={sort.sorted} renderRow={renderRow} sort={sort} hasPagination itemsPerPage={10} />
 
     <Msgbox {...message} />
   </div>

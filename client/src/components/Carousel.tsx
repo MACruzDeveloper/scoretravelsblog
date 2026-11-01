@@ -55,7 +55,7 @@ const Carousel = ({ images, title, subtitle, autoplay = false, interval = 5000, 
 
     const fetchImages = async () => {
       try {
-        const imagesFeatured = (await listImages())
+        const imagesFeatured = (await listImages({ featured: true }))
           .filter((item) => item.featured)
           .map((image, index): CarouselSlide => ({
             _id: `image-${index}`,

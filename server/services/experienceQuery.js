@@ -34,7 +34,7 @@ const scopeFilter = ({ scope, status }, viewer) => {
 }
 
 const buildFilter = async (
-  { search, category, city, continent, minScore, year, month, hasImage, scope, status },
+  { search, category, city, continent, country, minScore, year, month, hasImage, scope, status },
   viewer
 ) => {
   const filter = scopeFilter({ scope, status }, viewer)
@@ -42,7 +42,7 @@ const buildFilter = async (
 
   if (search) {
     const regex = new RegExp(escapeRegex(search), 'i')
-    const matchingCities = await Cities.find({ name: regex }).distinct('_id')
+    const matchingCities = await Cities.find({ $or: [{ name: regex }, { country: regex }] }).distinct('_id')
     and.push({ $or: [{ title: regex }, { content: regex }, { category: regex }, { city: { $in: matchingCities } }] })
   }
   if (category) filter.category = category
@@ -50,6 +50,10 @@ const buildFilter = async (
   if (continent) {
     const continentCities = await Cities.find({ continent }).distinct('_id')
     and.push({ city: { $in: continentCities } })
+  }
+  if (country) {
+    const countryCities = await Cities.find({ countryCode: country }).distinct('_id')
+    and.push({ city: { $in: countryCities } })
   }
   if (minScore) filter.score = { $gte: minScore }
   if (year) {
@@ -90,12 +94,17 @@ const getFacets = async () => {
       { $sort: { _id: -1 } },
     ]),
   ])
-  const cities = await Cities.find({ _id: { $in: cityIds } })
-    .select('name')
-    .sort({ name: 1 })
+  // One entry per country of the places in use, with its continent for the dependent select
+  const countries = await Cities.aggregate([
+    { $match: { _id: { $in: cityIds } } },
+    { $group: { _id: '$countryCode', name: { $first: '$country' }, continent: { $first: '$continent' } } },
+    { $project: { _id: 0, code: '$_id', name: 1, continent: 1 } },
+    { $sort: { name: 1 } },
+  ])
   return {
     categories: categories.sort((a, b) => a.localeCompare(b)),
-    cities,
+    continents: [...new Set(countries.map((c) => c.continent))].sort(),
+    countries,
     years: years.map((y) => String(y._id)),
   }
 }

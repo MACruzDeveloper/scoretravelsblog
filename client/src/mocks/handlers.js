@@ -24,7 +24,7 @@ export const handlers = [
   }),
 
   http.get(`${API}/experiences/facets`, async () => {
-    return HttpResponse.json({ categories: [], cities: [], years: [] })
+    return HttpResponse.json({ categories: [], continents: [], countries: [], years: [] })
   }),
 
   http.get(`${API}/experiences/timeline`, async () => {

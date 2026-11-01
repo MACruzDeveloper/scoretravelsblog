@@ -8,7 +8,8 @@ const schemas = require('../utils/schemas')
 
 const byId = validate(schemas.idParam, 'params')
 
-router.get('/', controller.fetch_images)
+router.get('/', validate(schemas.listImages, 'query'), controller.fetch_images)
+router.get('/library', requireAdmin, controller.fetch_library)
 router.patch('/:id', requireAdmin, byId, validate(schemas.updateImage), controller.update_image)
 router.delete('/:id', requireAdmin, byId, controller.delete_image)
 

@@ -93,6 +93,13 @@ const listExperiences = z.object({
   category: z.string().trim().max(50).optional(),
   city: objectId.optional(),
   continent: z.enum(CONTINENTS).optional(),
+  // ISO country code of the place
+  country: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2,3}$/, 'Invalid country code')
+    .transform((value) => value.toUpperCase())
+    .optional(),
   minScore: z.coerce.number().min(1).max(5).optional(),
   year: z.coerce.number().int().min(1900).max(2100).optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
@@ -124,6 +131,12 @@ const updateScore = z.object({ score })
 // =============== IMAGES =====================
 const updateImage = z.object({ featured: z.boolean() })
 const uploadImage = z.object({ title: optionalText(150) })
+const listImages = z.object({
+  featured: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
+})
 
 // =============== EMAILS =====================
 const sendEmail = z.object({
@@ -157,5 +170,6 @@ module.exports = {
   updateScore,
   updateImage,
   uploadImage,
+  listImages,
   sendEmail,
 }

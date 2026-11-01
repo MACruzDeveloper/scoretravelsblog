@@ -7,7 +7,7 @@ describe('AllExperiences', () => {
     render(<AllExperiences />)
 
     expect(screen.getByRole('heading', { name: 'All Experiences' })).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Search by title, category, city or content...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search by title, category, place or content...')).toBeInTheDocument()
     expect(screen.getByText('All')).toBeInTheDocument()
   })
 })

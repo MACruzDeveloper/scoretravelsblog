@@ -2,12 +2,12 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { useExperienceFilters, filtersToParams } from '@hooks/useExperienceFilters'
 
-const empty = { search: '', score: '', category: '', city: '', year: '', month: '' }
+const empty = { search: '', score: '', category: '', continent: '', country: '', year: '', month: '' }
 
 describe('filtersToParams', () => {
   it('maps form values to API params and drops empty ones', () => {
     expect(filtersToParams(empty)).toEqual({
-      search: undefined, minScore: undefined, category: undefined, city: undefined, year: undefined, month: undefined,
+      search: undefined, minScore: undefined, category: undefined, continent: undefined, country: undefined, year: undefined, month: undefined,
     })
     expect(filtersToParams({ ...empty, search: ' alps ', score: '4', year: '2024', month: '3', category: 'beach' })).toMatchObject({
       search: 'alps', minScore: 4, year: 2024, month: 3, category: 'beach',

@@ -30,8 +30,9 @@ describe('Gallery', () => {
     renderGallery()
 
     expect(screen.getByRole('heading', { name: 'Gallery' })).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Search by title, category, city or content...')).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search by title, category, place or content...')).toBeInTheDocument()
+    // The search covers the rest: no score filter in the gallery
+    expect(screen.queryByLabelText('Min. score')).not.toBeInTheDocument()
   })
 
   it('renders images returned by the server and only asks for experiences with image', async () => {

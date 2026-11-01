@@ -4,7 +4,8 @@ const fs = require('fs')
 const sharp = require('sharp')
 const Images = require('../models/imagesModel')
 const { uploadsDir } = require('../config')
-const { resolveUpload, unlinkUpload, countExperiencesUsing } = require('../services/imageService')
+const Experiences = require('../models/experiencesModel')
+const { resolveUpload, unlinkUpload, countExperiencesUsing, getExperienceImages } = require('../services/imageService')
 const { badRequest, notFound, conflict } = require('../utils/httpErrors')
 
 const upload_image = async (req, res) => {
@@ -29,9 +30,25 @@ const upload_image = async (req, res) => {
 }
 
 const fetch_images = async (req, res) => {
-  // Newest first (ObjectIds grow with creation time)
-  const images = await Images.find({}).select('-pathname').sort({ _id: -1 })
+  // `?featured=true`: only the home carousel images. Newest first (ObjectIds grow with creation time)
+  const filter = req.query.featured ? { featured: true } : {}
+  const images = await Images.find(filter).select('-pathname').sort({ _id: -1 })
   res.json({ images })
+}
+
+// Admin library: every image with the experience that uses it, if any
+const fetch_library = async (req, res) => {
+  const [images, experiences] = await Promise.all([
+    Images.find({}).select('-pathname').sort({ _id: -1 }).lean(),
+    Experiences.find({}).select('title image images').lean(),
+  ])
+  const usedBy = new Map()
+  for (const experience of experiences) {
+    for (const filename of getExperienceImages(experience)) {
+      if (!usedBy.has(filename)) usedBy.set(filename, { _id: experience._id, title: experience.title })
+    }
+  }
+  res.json({ images: images.map((image) => ({ ...image, experience: usedBy.get(image.filename) ?? null })) })
 }
 
 // The filename comes from the database record, never from the URL
@@ -55,4 +72,4 @@ const update_image = async (req, res) => {
   res.send({ updated })
 }
 
-module.exports = { upload_image, fetch_images, delete_image, update_image }
+module.exports = { upload_image, fetch_images, fetch_library, delete_image, update_image }

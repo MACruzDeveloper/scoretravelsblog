@@ -72,6 +72,37 @@ describe('library', () => {
   })
 })
 
+describe('listing', () => {
+  it('returns only the carousel images with ?featured=true', async () => {
+    const [a] = await Promise.all([upload(admin), upload(admin)]).then((r) => r.map((x) => x.body.filename))
+    await request
+      .patch(`/api/images/${await imageId(a)}`)
+      .set(admin.auth)
+      .send({ featured: true })
+    const { body } = await request.get('/api/images?featured=true').expect(200)
+    assert.deepEqual(
+      body.images.map((i) => i.filename),
+      [a]
+    )
+    assert.equal((await request.get('/api/images')).body.images.length, 2)
+  })
+
+  it('tells admins which experience uses each image', async () => {
+    const [a, b] = await Promise.all([upload(admin), upload(admin)]).then((r) => r.map((x) => x.body.filename))
+    const trip = (
+      await request
+        .post('/api/experiences')
+        .set(admin.auth)
+        .send({ title: 'Trip', images: [a] })
+    ).body
+    assert.equal((await request.get('/api/images/library').set(ana.auth)).status, 403)
+    const { body } = await request.get('/api/images/library').set(admin.auth).expect(200)
+    const byName = new Map(body.images.map((i) => [i.filename, i.experience]))
+    assert.deepEqual(byName.get(a), { _id: trip._id, title: 'Trip' })
+    assert.equal(byName.get(b), null)
+  })
+})
+
 describe('cleanup', () => {
   it('removes images nothing else uses when an experience is edited or deleted, but keeps featured ones', async () => {
     const [a, b, c, d] = await Promise.all([upload(admin), upload(admin), upload(admin), upload(admin)]).then((r) =>

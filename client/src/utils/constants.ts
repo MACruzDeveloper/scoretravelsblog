@@ -60,3 +60,14 @@ export const COUNTRY_TO_CONTINENT: Record<string, string> = {
   NR: 'oceania', NZ: 'oceania', PW: 'oceania', PG: 'oceania', WS: 'oceania',
   SB: 'oceania', TO: 'oceania', TV: 'oceania', VU: 'oceania',
 }
+
+// Names of the continent ids used by the API
+export const CONTINENT_LABELS: Record<string, string> = {
+  africa: 'Africa',
+  antarctica: 'Antarctica',
+  asia: 'Asia',
+  europe: 'Europe',
+  'north-america': 'North America',
+  oceania: 'Oceania',
+  'south-america': 'South America',
+}
