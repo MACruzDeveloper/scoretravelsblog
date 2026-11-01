@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .pin { fill: #1c2b39; }
+    /* Dark browser tabs: a white pin stays visible */
+    @media (prefers-color-scheme: dark) { .pin { fill: #ffffff; } }
+  </style>
+  <path class="pin" d="M32 2C19.8 2 10 11.6 10 23.6 10 39.4 32 62 32 62s22-22.6 22-38.4C54 11.6 44.2 2 32 2z"/>
+  <path d="M32 11l4.1 8.6 9.4 1.1-7 6.4 1.9 9.3L32 31.7l-8.4 4.7 1.9-9.3-7-6.4 9.4-1.1z" fill="#B17634"/>
+</svg>
