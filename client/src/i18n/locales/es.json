@@ -13,16 +13,23 @@
     "next": "Hito siguiente",
     "types": {
       "education": "Formación",
-      "work": "Experiencia laboral",
-      "freelance": "Freelance"
+      "work": "Experiencia",
+      "language": "Idiomas",
+      "project": "Proyecto"
     },
-    "hint": "Arrastra la carretera, usa las flechas ‹ › o Ctrl + rueda para avanzar",
-    "hintMac": "Arrastra la carretera, usa las flechas ‹ › o ⌘ + rueda para avanzar",
+    "hint": "Arrastra la carretera, usa las flechas del teclado o Ctrl + rueda para avanzar",
+    "hintMac": "Arrastra la carretera, usa las flechas del teclado o ⌘ + rueda para avanzar",
     "present": "actualidad",
-    "count": "{{current}} de {{total}}",
-    "link": "Ver proyecto",
+    "link": "Ver más",
     "milestones": "Hitos de mi carrera",
     "links": "Enlaces",
-    "hintTouch": "Desliza la carretera o usa las flechas ‹ › para avanzar"
+    "hintTouch": "Desliza la carretera o usa los botones ‹ › para avanzar",
+    "projects": {
+      "title": "Proyectos destacados",
+      "personal": "Proyecto personal",
+      "visit": "Visitar",
+      "code": "Código",
+      "inProgress": "En construcción"
+    }
   }
 }

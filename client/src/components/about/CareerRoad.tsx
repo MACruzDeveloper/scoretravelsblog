@@ -2,13 +2,15 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Language } from '@/i18n'
-import { startYear, type Milestone } from '@/data/career'
+import { roadLabelOf, startYear, type Milestone } from '@/data/career'
 import { TYPE_ICONS } from './milestoneTypes'
 
 type PropsCareerRoad = {
   milestones: Milestone[]
   active: number
   onChange: (index: number) => void
+  // The milestone where the car has stopped: the card and the big year follow it
+  onSettle: (index: number) => void
 }
 
 // Ctrl/⌘ + wheel moves one milestone per notch; trackpads send many events per gesture
@@ -16,6 +18,11 @@ const WHEEL_THROTTLE_MS = 300
 // The car counts as moving until the scroll has been still for this long
 const MOVING_MS = 180
 const HINT_MS = 1500
+// Once the car has stopped, a moment before the card and the big year change
+const SETTLE_MS = 120
+// While the card slides in (0.5s) the controls wait, so quick presses cannot pile changes
+// on a card that is still coming in
+const CARD_CHANGE_MS = 500
 // A mouse press that moves less than this is a click, not a drag
 const DRAG_THRESHOLD = 4
 
@@ -29,7 +36,7 @@ const prefersReducedMotion = () =>
  * road moves under it; the milestone under the car is the active one. Scroll snapping
  * leaves one milestone centered. Page scroll never moves the road.
  */
-const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
+const CareerRoad = ({ milestones, active, onChange, onSettle }: PropsCareerRoad) => {
   const { t, i18n } = useTranslation()
   const lang = i18n.language as Language
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -42,11 +49,27 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
   const [moving, setMoving] = useState(false)
   const [backwards, setBackwards] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const [settled, setSettled] = useState(active)
+  const settledRef = useRef(active)
+  const lockedUntil = useRef(0)
   const last = milestones.length - 1
 
   useEffect(() => {
     activeRef.current = active
   }, [active])
+
+  // Only a stopped car changes the card and the year: passing milestones on the way must not
+  // start a fade each, as fades cut halfway look like a flicker
+  useEffect(() => {
+    if (moving) return
+    const timer = window.setTimeout(() => {
+      if (settledRef.current !== active) lockedUntil.current = Date.now() + CARD_CHANGE_MS
+      settledRef.current = active
+      setSettled(active)
+      onSettle(active)
+    }, SETTLE_MS)
+    return () => window.clearTimeout(timer)
+  }, [active, moving, onSettle])
 
   // Every milestone takes the same width, so the scroll position gives the index
   const stopWidth = () => viewportRef.current?.querySelector<HTMLElement>('.road_stop')?.offsetWidth || 1
@@ -61,6 +84,23 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
       })
     },
     [last, onChange]
+  )
+
+  // The controls (buttons, keys, Ctrl + wheel, milestones) wait while the card changes.
+  // With them the destination is known, so the card changes as the car sets off and both
+  // move together. Dragging and swiping stay free and change the card once the car stops
+  const navigate = useCallback(
+    (index: number) => {
+      if (Date.now() < lockedUntil.current) return
+      const target = Math.min(Math.max(index, 0), last)
+      goTo(target)
+      if (target === settledRef.current) return
+      settledRef.current = target
+      lockedUntil.current = Date.now() + CARD_CHANGE_MS
+      setSettled(target)
+      onSettle(target)
+    },
+    [goTo, last, onSettle]
   )
 
   const handleScroll = useCallback(() => {
@@ -85,9 +125,18 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
     }
   }, [last, onChange])
 
-  // Initial road position and after resizing (the stop width changes with the breakpoint)
+  // The trip starts at the given milestone, already there: no driving, no moving car
   useLayoutEffect(() => {
-    handleScroll()
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const width = viewport.querySelector<HTMLElement>('.road_stop')?.offsetWidth || 1
+    viewport.scrollLeft = activeRef.current * width
+    lastScroll.current = viewport.scrollLeft
+    viewport.style.setProperty('--car-position', `${viewport.scrollLeft + viewport.clientWidth / 2}px`)
+  }, [])
+
+  // After resizing the stop width changes with the breakpoint
+  useLayoutEffect(() => {
     const onResize = () => {
       viewportRef.current?.scrollTo?.({ left: activeRef.current * stopWidth() })
       handleScroll()
@@ -111,7 +160,7 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
         if (now - lastWheel.current < WHEEL_THROTTLE_MS) return
         lastWheel.current = now
         const delta = vertical ? event.deltaY : event.deltaX
-        if (delta) goTo(activeRef.current + Math.sign(delta))
+        if (delta) navigate(activeRef.current + Math.sign(delta))
         return
       }
       // Horizontal gestures (trackpad, shift + wheel) scroll the road natively
@@ -128,14 +177,30 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
       window.clearTimeout(timerIds.hint)
       window.clearTimeout(timerIds.moving)
     }
-  }, [goTo])
+  }, [navigate])
 
-  // Keys only while the road has the focus, so the rest of the page keeps its keyboard (B-1)
+  // ← → drive the car from anywhere on the page, unless the focus is in a field that needs them.
+  // The road handles its own keys first (and prevents the default), so they never count twice
+  useEffect(() => {
+    const onWindowKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key]
+      if (!step) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
+      event.preventDefault()
+      navigate(activeRef.current + step)
+    }
+    window.addEventListener('keydown', onWindowKeyDown)
+    return () => window.removeEventListener('keydown', onWindowKeyDown)
+  }, [navigate])
+
+  // Home and End only while the road has the focus, so the rest of the page keeps them (B-1)
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const moves: Record<string, number> = { ArrowRight: active + 1, ArrowLeft: active - 1, Home: 0, End: last }
     if (!(event.key in moves)) return
     event.preventDefault()
-    goTo(moves[event.key])
+    navigate(moves[event.key])
   }
 
   // Drag with the mouse; touch screens already scroll natively
@@ -174,11 +239,13 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
     event.stopPropagation()
   }
 
-  const year = startYear(milestones[active])
+  const year = startYear(milestones[settled])
 
   return (
     <section className="career_road" aria-label={t('about.road')}>
-      <span className="road_year" aria-hidden>{year}</span>
+      <div className="road_year_fade" aria-hidden>
+        <span className="road_year">{year}</span>
+      </div>
 
       <div
         ref={viewportRef}
@@ -205,15 +272,13 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
                 <li key={milestone.id} className={`road_stop type_${milestone.type} ${state}`}>
                   <button
                     type="button"
-                    onClick={() => goTo(index)}
+                    onClick={() => navigate(index)}
                     aria-current={index === active ? 'step' : undefined}
                     aria-label={t('about.goTo', { year: startYear(milestone), title: milestone.title[lang] })}
                   >
                     <span className="road_stop_dot" />
-                    <span className="road_stop_year">{startYear(milestone)}</span>
-                    <span className="road_stop_name">
-                      <Icon aria-hidden /> {milestone.organization}
-                    </span>
+                    <span className="road_stop_icon"><Icon aria-hidden /></span>
+                    <span className="road_stop_name">{roadLabelOf(milestone, lang)}</span>
                   </button>
                 </li>
               )
@@ -233,7 +298,7 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
       </div>
 
       <div className="road_controls">
-        <button type="button" className="road_control" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label={t('about.previous')}>
+        <button type="button" className="road_control" onClick={() => navigate(active - 1)} disabled={active === 0} aria-label={t('about.previous')}>
           ‹
         </button>
         <div className="road_minimap">
@@ -242,17 +307,16 @@ const CareerRoad = ({ milestones, active, onChange }: PropsCareerRoad) => {
               key={milestone.id}
               type="button"
               className={`road_minimap_dot type_${milestone.type} ${index === active ? 'active' : ''}`}
-              onClick={() => goTo(index)}
+              onClick={() => navigate(index)}
               aria-label={t('about.goTo', { year: startYear(milestone), title: milestone.title[lang] })}
               tabIndex={-1}
             />
           ))}
         </div>
-        <button type="button" className="road_control" onClick={() => goTo(active + 1)} disabled={active === last} aria-label={t('about.next')}>
+        <button type="button" className="road_control" onClick={() => navigate(active + 1)} disabled={active === last} aria-label={t('about.next')}>
           ›
         </button>
       </div>
-      <p className="road_count">{t('about.count', { current: active + 1, total: milestones.length })}</p>
       <p className={`road_hint ${showHint ? 'visible' : ''}`}>{t(isTouch ? 'about.hintTouch' : isMac ? 'about.hintMac' : 'about.hint')}</p>
     </section>
   )

@@ -3,7 +3,8 @@ import type { Language } from '@/i18n'
 // Text in every language of the About page
 export type Localized = Record<Language, string>
 
-export type MilestoneType = 'education' | 'work' | 'freelance'
+// Freelance projects count as work experience
+export type MilestoneType = 'education' | 'work' | 'language' | 'project'
 
 export type Milestone = {
   id: string
@@ -13,8 +14,10 @@ export type Milestone = {
   end?: string | 'present'
   type: MilestoneType
   title: Localized
-  // Company, school or client
-  organization: string
+  // Company, school or client; translated only when it is a description
+  organization: string | Localized
+  // Short name under the road when the organization alone does not say what it is
+  roadLabel?: Localized
   place?: Localized
   description?: Localized
   // Technologies or skills, shown as tags
@@ -35,18 +38,8 @@ export const profile = {
 const PALMA: Localized = { es: 'Palma de Mallorca', en: 'Palma, Mallorca' }
 const MADRID: Localized = { es: 'Madrid', en: 'Madrid' }
 
-// From the LinkedIn profile (October 2026)
+// From the LinkedIn profile and the CV (October 2026)
 const entries: Milestone[] = [
-  {
-    id: 'high-school',
-    start: '2001',
-    end: '2003',
-    type: 'education',
-    title: { es: 'Bachillerato y Selectividad', en: 'High school and university entrance exam' },
-    organization: 'IES Guillem Sagrera',
-    place: PALMA,
-    description: { es: 'Ciencias y tecnología.', en: 'Science and technology.' },
-  },
   {
     id: 'edib-hnd',
     start: '2006',
@@ -54,8 +47,12 @@ const entries: Milestone[] = [
     type: 'education',
     title: { es: 'BTEC HND in Computing and Systems Development', en: 'BTEC HND in Computing and Systems Development' },
     organization: 'Edib',
+    roadLabel: { es: 'HND Informática · Edib', en: 'HND Computing · Edib' },
     place: PALMA,
-    description: { es: 'Título Edexcel de informática y desarrollo de sistemas.', en: 'Edexcel diploma in computing and systems development.' },
+    description: {
+      es: 'Título superior británico (Edexcel BTEC) en informática y desarrollo de sistemas, cursado en la escuela EDIB de Palma: programación, bases de datos, redes y análisis de sistemas.',
+      en: 'British higher national diploma (Edexcel BTEC) in computing and systems development, at the EDIB school in Palma: programming, databases, networks and systems analysis.',
+    },
   },
   {
     id: 'faqtoria',
@@ -72,15 +69,6 @@ const entries: Milestone[] = [
     tags: ['HTML', 'CSS3', 'JavaScript', 'WordPress', 'PHP', 'SEO', 'SVN', 'Photoshop', 'InDesign'],
   },
   {
-    id: 'edib-indesign',
-    start: '2010',
-    end: '2011',
-    type: 'education',
-    title: { es: 'Curso avanzado de InDesign CS5', en: 'Advanced InDesign CS5 course' },
-    organization: 'Edib',
-    place: PALMA,
-  },
-  {
     id: 'juniper',
     start: '2012-08',
     end: '2013-09',
@@ -88,7 +76,10 @@ const entries: Milestone[] = [
     title: { es: 'Diseñador web', en: 'Web designer' },
     organization: 'Juniper',
     place: PALMA,
-    description: { es: 'Diseño y maquetación web y emails HTML.', en: 'Web design, front-end and HTML emails.' },
+    description: {
+      es: 'Diseño y maquetación de webs del sector turístico, además de campañas de emailing y señalética.',
+      en: 'Design and front-end of travel industry websites, plus email campaigns and signage.',
+    },
     tags: ['Fireworks', 'Photoshop', 'Dreamweaver', 'SVN'],
   },
   {
@@ -98,7 +89,10 @@ const entries: Milestone[] = [
     type: 'work',
     title: { es: 'Maquetador web', en: 'Front-end developer' },
     organization: 'ClickToTravel',
-    description: { es: 'Responsable de maquetación y diseño responsive.', en: 'In charge of the front-end and responsive design.' },
+    description: {
+      es: 'Responsable de la maquetación y el diseño responsive de portales del sector turístico.',
+      en: 'In charge of the front-end and responsive design of travel industry portals.',
+    },
     tags: ['HTML', 'CSS3', 'jQuery', 'JavaScript', 'Photoshop'],
   },
   {
@@ -108,15 +102,25 @@ const entries: Milestone[] = [
     type: 'education',
     title: { es: 'Maquetación web profesional', en: 'Professional front-end development' },
     organization: 'Animartec',
-    tags: ['Bootstrap 3', 'jQuery'],
+    roadLabel: { es: 'Curso de maquetación · Animartec', en: 'Front-end course · Animartec' },
+    description: {
+      es: 'Curso de maquetación web profesional: HTML y CSS semántico, diseño responsive con Bootstrap 3 e interacción con jQuery.',
+      en: 'Professional front-end course: semantic HTML and CSS, responsive design with Bootstrap 3 and interaction with jQuery.',
+    },
+    tags: ['HTML5', 'CSS3', 'Bootstrap 3', 'jQuery'],
   },
   {
     id: 'freelance-2014',
     start: '2014-06',
     end: '2014-11',
-    type: 'freelance',
+    type: 'work',
     title: { es: 'Desarrollador front-end', en: 'Front-end developer' },
     organization: 'Freelance',
+    description: {
+      es: 'Maquetación e integración con WordPress para diversos clientes, entre la etapa en el sector turístico y el salto a Madrid.',
+      en: 'Front-end and WordPress integration for several clients, between the travel industry years and the move to Madrid.',
+    },
+    tags: ['HTML5', 'CSS3', 'jQuery', 'WordPress'],
   },
   {
     id: 'nextret',
@@ -127,8 +131,8 @@ const entries: Milestone[] = [
     organization: 'NexTReT',
     place: MADRID,
     description: {
-      es: 'Responsable de diseño y maquetación: responsive, accesibilidad, cross-browser, SharePoint 2013 y .NET, con metodología Scrum.',
-      en: 'In charge of design and front-end: responsive, accessibility, cross-browser, SharePoint 2013 and .NET, working with Scrum.',
+      es: 'Responsable de maquetación del portal infantil Clan TV de RTVE, en un entorno Java con Eclipse y con especial cuidado de la accesibilidad. También proyectos en SharePoint 2013 y .NET, con metodología Scrum.',
+      en: 'In charge of the front-end of Clan TV, the RTVE children’s website, in a Java and Eclipse environment with a focus on accessibility. Also SharePoint 2013 and .NET projects, working with Scrum.',
     },
     tags: ['HTML5', 'CSS3', 'Sass', 'jQuery', 'Bootstrap', 'Gulp', 'Grunt', 'Git', 'Photoshop'],
   },
@@ -136,15 +140,15 @@ const entries: Milestone[] = [
     id: 'freelance-2016',
     start: '2016-10',
     end: '2020-03',
-    type: 'freelance',
+    type: 'work',
     title: { es: 'Maquetador y desarrollador web', en: 'Front-end and web developer' },
     organization: 'Freelance',
     place: PALMA,
     description: {
-      es: 'Proyectos destacados: web de Villas Camp de Mar (React y Node, 2020), web de Raimundo Burger (2019) y portal de COPE para Agile Content (2016-2017).',
-      en: 'Highlights: Villas Camp de Mar website (React and Node, 2020), Raimundo Burger website (2019) and the COPE portal for Agile Content (2016-2017).',
+      es: 'Maquetación y desarrollo por proyecto: el portal de la cadena COPE para Agile Content (2016-2017, Sass y jQuery), trabajos para Diwoh y Beeva (BBVA), la web de Raimundo Burger (2019) y el portal de villas de lujo Villas Camp de Mar, con React y Node, para The Positive Space (2020).',
+      en: 'Front-end and development by project: the COPE radio network portal for Agile Content (2016-2017, Sass and jQuery), work for Diwoh and Beeva (BBVA), the Raimundo Burger website (2019) and the Villas Camp de Mar luxury villa portal, with React and Node, for The Positive Space (2020).',
     },
-    tags: ['React', 'Node'],
+    tags: ['HTML5', 'CSS3', 'Sass', 'JavaScript', 'jQuery', 'WordPress', 'React', 'Node'],
     link: 'https://www.villaluxurymallorca.com/',
   },
   {
@@ -155,7 +159,11 @@ const entries: Milestone[] = [
     title: { es: 'Maquetador web', en: 'Front-end developer' },
     organization: 'Barceló Hotel Group',
     place: PALMA,
-    tags: ['HTML5', 'CSS3', 'Sass', 'jQuery', 'Bootstrap', 'Gulp', 'Tridion'],
+    description: {
+      es: 'Responsable de maquetación del portal web y de otros proyectos digitales de la cadena hotelera: refactorización, mejoras de rendimiento, responsive y cross-browser, además de newsletters para campañas de email marketing.',
+      en: 'In charge of the front-end of the hotel chain’s website and other digital projects: refactoring, performance, responsive and cross-browser work, plus newsletters for email marketing campaigns.',
+    },
+    tags: ['HTML5', 'CSS3', 'Sass', 'jQuery', 'Bootstrap', 'Gulp', '.NET', 'Tridion', 'Git'],
   },
   {
     id: 'bootcamp',
@@ -164,8 +172,37 @@ const entries: Milestone[] = [
     type: 'education',
     title: { es: 'Bootcamp JavaScript Full-Stack', en: 'JavaScript Full-Stack bootcamp' },
     organization: 'Barcelona Code School',
-    description: { es: 'Bootcamp online con mentor.', en: 'Online mentored bootcamp.' },
-    tags: ['JavaScript', 'React', 'Node'],
+    roadLabel: { es: 'Bootcamp Full-Stack · Barcelona Code School', en: 'Full-Stack bootcamp · Barcelona Code School' },
+    description: {
+      es: 'Bootcamp online con mentor (abril–mayo de 2020): aplicaciones completas con React y React Native en el cliente, y Node, Express y MongoDB en el servidor, más Git y nociones de UX.',
+      en: 'Online mentored bootcamp (April–May 2020): full applications with React and React Native on the client, and Node, Express and MongoDB on the server, plus Git and UX basics.',
+    },
+    tags: ['JavaScript', 'React', 'React Native', 'Node', 'Express', 'MongoDB', 'Git'],
+  },
+  {
+    id: 'typescript',
+    start: '2023-02',
+    type: 'education',
+    title: { es: 'TypeScript Sin Fronteras', en: 'TypeScript Sin Fronteras' },
+    organization: { es: 'Curso avanzado online', en: 'Advanced online course' },
+    roadLabel: { es: 'Curso de TypeScript', en: 'TypeScript course' },
+    description: {
+      es: 'Curso avanzado online de TypeScript: tipos, genéricos y su uso en proyectos frontend.',
+      en: 'Advanced online TypeScript course: types, generics and how to use them in front-end projects.',
+    },
+    tags: ['TypeScript'],
+  },
+  {
+    id: 'first-certificate',
+    start: '2019-07',
+    type: 'language',
+    title: { es: 'First Certificate in English (B2)', en: 'First Certificate in English (B2)' },
+    organization: 'Cambridge English',
+    roadLabel: { es: 'First Certificate · Cambridge', en: 'First Certificate · Cambridge' },
+    description: {
+      es: 'Inglés de nivel medio-alto certificado por Cambridge. Castellano nativo y catalán de nivel básico.',
+      en: 'Upper-intermediate English certified by Cambridge. Native Spanish and basic Catalan.',
+    },
   },
   {
     id: 'dentsu',
@@ -176,14 +213,52 @@ const entries: Milestone[] = [
     organization: 'Dentsu Creative Spain',
     place: MADRID,
     description: {
-      es: 'Desarrollo front y maquetación para clientes como MSC, El Corte Inglés, Santander F1, Vodafone, Google, Netflix, Bosch o Ikea, además de proyectos internos relacionados con IA.',
-      en: 'Front-end development for clients such as MSC, El Corte Inglés, Santander F1, Vodafone, Google, Netflix, Bosch and Ikea, plus internal AI projects.',
+      es: 'Desarrollo frontend y maquetación de webs para clientes nacionales e internacionales como MSC, El Corte Inglés, Seat, Santander, Vodafone, Google, Netflix, Bosch, IKEA o IQOS, newsletters para email marketing y mejoras de SEO. También iniciativas internas relacionadas con IA.',
+      en: 'Front-end development of websites for Spanish and international clients such as MSC, El Corte Inglés, Seat, Santander, Vodafone, Google, Netflix, Bosch, IKEA and IQOS, email marketing newsletters and SEO improvements. Also internal AI initiatives.',
     },
     tags: ['React', 'Vue', 'TypeScript', 'Alpine.js', 'Zustand', 'Vite', 'Jest', 'Node', 'Sass', 'SEO', 'GitHub Copilot'],
+  },
+  {
+    id: 'big-school-ai',
+    start: '2026-07',
+    end: '2026-10',
+    type: 'education',
+    title: { es: 'Máster de Desarrollo con IA', en: 'Master in AI-Assisted Software Development' },
+    organization: 'BIG school',
+    roadLabel: { es: 'Máster IA · BIG school', en: 'AI master · BIG school' },
+    description: {
+      es: 'Online. Doble titulación con el Experto Universitario en Desarrollo con Inteligencia Artificial (Universidad Isabel I): ingeniería de software, IA generativa, RAG y agentes, testing, CI/CD, seguridad (OWASP) y despliegue, con proyecto final de principio a fin.',
+      en: 'Online. Double degree with the University Expert in AI Development (Universidad Isabel I): software engineering, generative AI, RAG and agents, testing, CI/CD, security (OWASP) and deployment, with an end-to-end final project.',
+    },
+    tags: ['Generative AI', 'RAG', 'AI agents', 'LangChain', 'Claude', 'Cursor', 'Playwright', 'CI/CD', 'Docker', 'OWASP'],
+    link: 'https://thebigschool.com/master-desarrollo-con-ia/',
+  },
+  {
+    id: 'mylifemirror',
+    start: '2026-10',
+    type: 'project',
+    title: { es: 'MyLifeMirror (en construcción)', en: 'MyLifeMirror (in progress)' },
+    organization: { es: 'Proyecto final del máster · BIG school', en: 'Master’s final project · BIG school' },
+    roadLabel: { es: 'MyLifeMirror', en: 'MyLifeMirror' },
+    description: {
+      es: 'App para evaluar cómo va tu vida por áreas, ver tu equilibrio y su evolución, y recibir ideas concretas para mejorar, sin juicios. Clean Architecture, TDD, IA opcional y acotada con Claude, en español e inglés.',
+      en: 'App to rate how your life is going by area, see your balance and how it changes, and get concrete ideas to improve, without judgement. Clean Architecture, TDD, optional and bounded AI with Claude, in Spanish and English.',
+    },
+    tags: ['React', 'TypeScript', 'Clean Architecture', 'TDD', 'Supabase', 'Claude', 'Playwright', 'Vercel'],
+    link: 'https://my-life-mirror.vercel.app/',
   },
 ]
 
 // The road goes in date order
 export const milestones = [...entries].sort((a, b) => a.start.localeCompare(b.start))
 
+// The trip starts at the current job; the road behind and ahead can be driven both ways
+export const startIndex = Math.max(milestones.findIndex((milestone) => milestone.id === 'dentsu'), 0)
+
 export const startYear = (milestone: Milestone) => Number(milestone.start.slice(0, 4))
+
+export const organizationOf = (milestone: Milestone, lang: Language) =>
+  typeof milestone.organization === 'string' ? milestone.organization : milestone.organization[lang]
+
+export const roadLabelOf = (milestone: Milestone, lang: Language) =>
+  milestone.roadLabel?.[lang] ?? organizationOf(milestone, lang)

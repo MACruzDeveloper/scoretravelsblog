@@ -13,16 +13,23 @@
     "next": "Next milestone",
     "types": {
       "education": "Education",
-      "work": "Work experience",
-      "freelance": "Freelance"
+      "work": "Experience",
+      "language": "Languages",
+      "project": "Project"
     },
-    "hint": "Drag the road, use the ‹ › arrows or Ctrl + scroll to move",
-    "hintMac": "Drag the road, use the ‹ › arrows or ⌘ + scroll to move",
+    "hint": "Drag the road, use the arrow keys or Ctrl + scroll to move",
+    "hintMac": "Drag the road, use the arrow keys or ⌘ + scroll to move",
     "present": "present",
-    "count": "{{current}} of {{total}}",
-    "link": "View project",
+    "link": "Learn more",
     "milestones": "My career milestones",
     "links": "Links",
-    "hintTouch": "Swipe the road or use the ‹ › arrows to move"
+    "hintTouch": "Swipe the road or use the ‹ › buttons to move",
+    "projects": {
+      "title": "Featured projects",
+      "personal": "Personal project",
+      "visit": "Visit",
+      "code": "Code",
+      "inProgress": "In progress"
+    }
   }
 }

@@ -1,19 +1,26 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import '@/i18n'
 import type { Language } from '@/i18n'
-import { milestones, profile } from '@/data/career'
+import { milestones, profile, startIndex } from '@/data/career'
 import Seo from '@/components/common/Seo'
 import LanguageSwitch from '@/components/common/LanguageSwitch'
 import CareerRoad from '@/components/about/CareerRoad'
-import MilestoneCard from '@/components/about/MilestoneCard'
+import MilestoneCard, { type SlideDirection } from '@/components/about/MilestoneCard'
+import Projects from '@/components/about/Projects'
 
 // Portfolio page: the author's career as a road trip, in Spanish or English
 const About = () => {
   const { t, i18n } = useTranslation()
   const lang = i18n.language as Language
-  // The trip starts at the first milestone
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useState(startIndex)
+  // The milestone in the card, and where it comes from: it slides in the way the car drives
+  const [card, setCard] = useState({ index: startIndex, direction: 'forward' as SlideDirection })
+  const showMilestone = useCallback((index: number) => {
+    setCard((current) =>
+      current.index === index ? current : { index, direction: index < current.index ? 'backward' : 'forward' }
+    )
+  }, [])
 
   return (
     <div className="page about" lang={lang}>
@@ -38,8 +45,13 @@ const About = () => {
         </div>
       </header>
 
-      <CareerRoad milestones={milestones} active={active} onChange={setActive} />
-      <MilestoneCard milestone={milestones[active]} />
+      <CareerRoad milestones={milestones} active={active} onChange={setActive} onSettle={showMilestone} />
+      {/* Screen readers announce each milestone the car stops at */}
+      <div className="milestone_card_wrapper" aria-live="polite">
+        <MilestoneCard key={milestones[card.index].id} milestone={milestones[card.index]} direction={card.direction} />
+      </div>
+
+      <Projects />
     </div>
   )
 }
