@@ -6,6 +6,7 @@ import type { Experience } from '@/api/types'
 import { useModerationStore } from '@/store/moderationStore'
 import { URL } from '@/config'
 import { getErrorMessage } from '@/utils/errors'
+import { placeLabel } from '@/utils/experience'
 import FormattedDate from '@/components/common/FormattedDate'
 import Msgbox, { ParamsMsgBox } from '@/components/common/Msgbox'
 import Spinner from '@/components/common/Spinner'
@@ -81,7 +82,7 @@ const Moderation = () => {
             <p className="moderation_meta">
               by <strong>{experience.user || 'unknown'}</strong> · <FormattedDate date={experience.date} />
               {experience.category && <> · {experience.category}</>}
-              {city && <> · {city.name}, {city.country}</>}
+              {city && <> · {placeLabel(city)}</>}
             </p>
             <p className="moderation_excerpt">{excerpt(experience.content)}</p>
 

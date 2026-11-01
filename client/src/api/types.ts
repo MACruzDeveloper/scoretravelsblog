@@ -3,9 +3,14 @@
 export type Role = 'admin' | 'user'
 export type ExperienceStatus = 'pending' | 'published' | 'rejected'
 
+// A city or a whole country
+export type PlaceType = 'city' | 'country'
+
 export interface City {
   _id: string
   name: string
+  // Missing on cities saved before countries were allowed
+  type?: PlaceType
   country: string
   countryCode: string
   continent: string

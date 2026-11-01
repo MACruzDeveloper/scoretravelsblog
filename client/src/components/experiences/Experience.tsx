@@ -7,7 +7,7 @@ import FieldError from '@/components/common/FieldError'
 import DOMPurify from 'dompurify'
 import { getExperience, getExperienceComments } from '@/api/experiences'
 import { addComment } from '@/api/comments'
-import { cityOf, coverOf } from '@/utils/experience'
+import { cityOf, coverOf, placeLabel } from '@/utils/experience'
 import { URL } from '@/config'
 import Seo from '@/components/common/Seo'
 import { summarize } from '@/utils/seo'
@@ -107,6 +107,7 @@ const Experience = ({ user }: PropsExperience) => {
   }
 
   const cover = experience && coverOf(experience)
+  const place = experience && cityOf(experience)
 
   return <div className="page experience">
     {experience
@@ -152,8 +153,7 @@ const Experience = ({ user }: PropsExperience) => {
 
                 <p className="content_info">
                   <span>
-                    <span className="cat">{cityOf(experience)?.name} </span>
-                    <span className="cat">({cityOf(experience)?.country})</span>
+                    {place && <span className="cat">{placeLabel(place)}</span>}
                     <span> · </span>
                     {/* <span className="cat">{experience.category}</span> */}
                   </span>

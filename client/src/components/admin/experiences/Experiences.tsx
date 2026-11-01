@@ -8,7 +8,7 @@ import { useSortedData, SortValue } from '@/hooks/useSortedData'
 import { useInlineEdit } from '@/hooks/useInlineEdit'
 import { useMessage } from '@/hooks/useMessage'
 import { experienceSchema, firstIssue } from '@/schemas'
-import { cityOf, coverOf } from '@/utils/experience'
+import { cityOf, coverOf, placeLabel } from '@/utils/experience'
 import { URL } from '../../../config'
 import { MyGlobalContext } from '@/components/context/useGlobalContext'
 import FormattedDate from '@/components/common/FormattedDate'
@@ -113,6 +113,7 @@ const Experiences = () => {
   const renderRow = (experience: Experience) => {
     const editing = edit.isEditing(experience._id) && edit.values
     const cover = coverOf(experience)
+    const place = cityOf(experience)
     const actions = editing
       ? [
         { key: 'save', icon: <MdCheckCircle />, title: 'Save', onClick: onClickUpdate, className: 'btn_action green' },
@@ -134,9 +135,9 @@ const Experiences = () => {
           </div>
           <div className="tCol visible" role="cell">
             {editing ? (
-              <CitySearch onSelect={setNewCity} value={cityOf(experience)?.name} />
+              <CitySearch onSelect={setNewCity} value={place && placeLabel(place)} />
             ) : (
-              <span>{cityOf(experience)?.name}</span>
+              <span>{place?.name}</span>
             )}
           </div>
           <div className="tCol" role="cell">

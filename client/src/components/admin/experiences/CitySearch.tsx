@@ -2,15 +2,40 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react'
 import { COUNTRY_TO_CONTINENT } from '@utils/constants'
 import type { NewCity } from '@/api/types'
+import { placeLabel } from '@/utils/experience'
 
 // A city picked from the search, not saved yet
 export type City = NewCity
 
-// Subset of the OpenStreetMap Nominatim search result used here
-type NominatimPlace = {
-  lat: string
-  lon: string
-  address?: { city?: string; town?: string; village?: string; country?: string; country_code?: string }
+// Photon (OpenStreetMap data) is built for search as you type, unlike Nominatim
+const PHOTON_URL = 'https://photon.komoot.io/api/'
+
+// OpenStreetMap place kinds offered. Photon's own layers miss some cities (Mombasa is a
+// "district") and all islands and regions; villages are left out because they bury the cities
+const PLACE_TAGS = ['city', 'town', 'country', 'state', 'region', 'island', 'archipelago']
+
+// Subset of a Photon GeoJSON feature used here. `osm_value` is the OpenStreetMap place kind
+type PhotonFeature = {
+  geometry: { coordinates: [number, number] }
+  properties: { name?: string; osm_value?: string; country?: string; countrycode?: string }
+}
+
+// Anything inside a country (city, island, region) is stored as a city
+const toPlace = ({ geometry, properties }: PhotonFeature): City | null => {
+  const type = properties.osm_value === 'country' ? 'country' : 'city'
+  const countryCode = properties.countrycode?.toUpperCase() ?? ''
+  const country = properties.country || (type === 'country' ? properties.name : '') || ''
+  if (!properties.name || !countryCode || !country) return null
+  const [lng, lat] = geometry.coordinates
+  return {
+    name: properties.name,
+    type,
+    country,
+    countryCode,
+    continent: COUNTRY_TO_CONTINENT[countryCode] || 'unknown',
+    lat,
+    lng,
+  }
 }
 
 type Props = {
@@ -24,6 +49,7 @@ export const CitySearch = ({ onSelect, value }: Props) => {
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,43 +63,35 @@ export const CitySearch = ({ onSelect, value }: Props) => {
   }, [])
 
   const searchCities = async (q: string) => {
+    // A newer search replaces the one in flight, so stale results never show up
+    abortRef.current?.abort()
     if (q.length < 2) { setResults([]); return }
+    const controller = new AbortController()
+    abortRef.current = controller
     setLoading(true)
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&featuretype=city&format=json&limit=8&addressdetails=1`,
-        { headers: { 'Accept-Language': 'en', 'User-Agent': 'my-travel-app' } }
-      )
-      const data: NominatimPlace[] = await res.json()
+      const params = new URLSearchParams({ q, limit: '8', lang: 'en' })
+      PLACE_TAGS.forEach((tag) => params.append('osm_tag', `place:${tag}`))
+      const res = await fetch(`${PHOTON_URL}?${params}`, { signal: controller.signal })
+      const data: { features: PhotonFeature[] } = await res.json()
 
       const seen = new Set<string>()
-      const cities: City[] = data
-        .filter((item) => item.address?.city || item.address?.town || item.address?.village)
-        .map((item) => {
-          const address = item.address ?? {}
-          const countryCode = address.country_code?.toUpperCase() ?? ''
-          const continent = COUNTRY_TO_CONTINENT[countryCode] || 'unknown'
-          return {
-            name: address.city || address.town || address.village || '',
-            country: address.country ?? '',
-            countryCode,
-            continent,
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon),
-          }
-        })
-        .filter((city: City) => {
-          const key = `${city.name}-${city.countryCode}`
+      const places = data.features
+        .map(toPlace)
+        .filter((place): place is City => {
+          if (!place) return false
+          const key = `${place.type}-${place.name}-${place.countryCode}`
           if (seen.has(key)) return false
           seen.add(key)
           return true
         })
 
-      setResults(cities)
+      setResults(places)
       setIsOpen(true)
+      setLoading(false)
     } catch (error) {
-      console.error('City search error:', error)
-    } finally {
+      if (controller.signal.aborted) return
+      console.error('Place search error:', error)
       setLoading(false)
     }
   }
@@ -86,7 +104,7 @@ export const CitySearch = ({ onSelect, value }: Props) => {
   }
 
   const handleSelect = (city: City) => {
-    setQuery(`${city.name}, ${city.country}`)
+    setQuery(placeLabel(city))
     setResults([])
     setIsOpen(false)
     onSelect(city)
@@ -104,7 +122,7 @@ export const CitySearch = ({ onSelect, value }: Props) => {
         <input
           type="text"
           className="form_control"
-          placeholder="Search city..."
+          placeholder="Search city, island, region or country..."
           value={query}
           onChange={handleChange}
           onFocus={() => results.length > 0 && setIsOpen(true)}
@@ -125,14 +143,16 @@ export const CitySearch = ({ onSelect, value }: Props) => {
               onMouseDown={() => handleSelect(city)}
             >
               <span className="city_search_name">{city.name}</span>
-              <span className="city_search_country">{city.countryCode} · {city.country}</span>
+              <span className="city_search_country">
+                {city.type === 'country' ? 'Country' : `${city.countryCode} · ${city.country}`}
+              </span>
             </li>
           ))}
         </ul>
       )}
 
       {isOpen && !loading && query.length >= 2 && results.length === 0 && (
-        <div className="city_search_empty">No cities found for "{query}"</div>
+        <div className="city_search_empty">No places found for "{query}"</div>
       )}
     </div>
   )

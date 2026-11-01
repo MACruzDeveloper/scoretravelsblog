@@ -58,6 +58,7 @@ const updateCategory = addCategory
 // =============== CITIES =====================
 const addCity = z.object({
   name: text(100),
+  type: z.enum(['city', 'country']).default('city'),
   country: text(100),
   countryCode: z
     .string()

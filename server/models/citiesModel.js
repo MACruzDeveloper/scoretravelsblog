@@ -4,6 +4,8 @@ const Schema = mongoose.Schema
 const citySchema = new Schema(
   {
     name: { type: String, required: true },
+    // A whole country can also be the place of an experience
+    type: { type: String, enum: ['city', 'country'], default: 'city' },
     country: { type: String, required: true },
     countryCode: { type: String, required: true },
     continent: { type: String, required: true },

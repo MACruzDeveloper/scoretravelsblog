@@ -89,7 +89,7 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | Comando | Descripción |
 | --- | --- |
 | `npm run dev` | Servidor de desarrollo de Vite |
-| `npm run rundev` | Cliente y servidor a la vez |
+| `npm run rundev` | Cliente y servidor a la vez (Vite espera a que la API responda en `/api/health`) |
 | `npm run build` | Comprobación de tipos y build de producción en `client/dist` |
 | `npm run lint` / `npm run typecheck` | ESLint y comprobación de TypeScript |
 | `npm test` / `npm run test:run` | Tests unitarios con Vitest (modo watch / una pasada) |
@@ -105,7 +105,7 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `npm run seed` | Genera experiencias de prueba con Gemini (`npm run seed -- 10 --user=admin`) |
 | `npm run scores:recalculate` | Recalcula la media de cada experiencia a partir de las puntuaciones |
 | `npm run backfill:propose` / `npm run backfill:apply` | Propone con Gemini categorías y ciudades para experiencias antiguas y aplica la propuesta revisada |
-| `npm run backup` | Copia de seguridad de la base de datos y las imágenes, con rotación (ver `docs/deployment.md`) |
+| `npm run backup` | Copia de seguridad de la base de datos y las imágenes, con rotación |
 | `npm run migrate:*` | Migraciones de datos puntuales, ya ejecutadas en producción |
 
 ## Tests y CI
@@ -124,10 +124,6 @@ La app está pensada para un único servidor (p. ej. un droplet de DigitalOcean)
 3. Arrancar `server/index.js` con un gestor de procesos (pm2 o systemd) y hacer que nginx redirija al puerto 3040.
 4. No borrar `server/uploads/` al desplegar y hacer copia de seguridad junto con la base de datos.
 
-Guía completa (HTTPS, nginx, systemd, copias de seguridad) en [`docs/deployment.md`](docs/deployment.md).
-
 ## Documentación
 
 - [`PLAN_MEJORAS.md`](PLAN_MEJORAS.md): plan de mejoras y su progreso.
-- [`docs/deployment.md`](docs/deployment.md): despliegue en un servidor con nginx y HTTPS.
-- [`docs/travel-types.md`](docs/travel-types.md): ideas para las categorías de experiencias.

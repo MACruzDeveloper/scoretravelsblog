@@ -64,7 +64,7 @@ const Filters = ({
       {/* City */}
       {cities.length > 0 && (
         <div className="filter_group">
-          <label>City</label>
+          <label>City / Country</label>
           <select className="form_control" value={filters.city} onChange={e => setFilter('city', e.target.value)}>
             <option value="">All</option>
             {cities.map(c => (

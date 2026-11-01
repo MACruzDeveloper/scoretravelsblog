@@ -4,6 +4,10 @@ import type { City, Experience } from '@/api/types'
 export const cityOf = (experience: Pick<Experience, 'city'>): City | undefined =>
   experience.city && typeof experience.city === 'object' ? experience.city : undefined
 
+// "Naples, Italy" for a city, just "Italy" for a whole country
+export const placeLabel = (city: Pick<City, 'name' | 'type' | 'country'>): string =>
+  city.type === 'country' ? city.country : `${city.name}, ${city.country}`
+
 // Cover image: first of the gallery, or the single legacy `image`
 export const coverOf = (experience: Pick<Experience, 'image' | 'images'>): string | undefined =>
   experience.images?.find(Boolean) || experience.image || undefined

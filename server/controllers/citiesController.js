@@ -14,12 +14,13 @@ const findCitiesByCountry = async (req, res) => {
   res.send(await City.find({ country: req.params.country }).sort({ name: 1 }))
 }
 
-// Upsert: the same name + country code returns the existing city
+// Upsert: the same name + country code returns the existing city.
+// The type is only set on insert, so a country never turns a saved city into a country
 const addNewCity = async (req, res) => {
-  const { name, country, countryCode, continent, lat, lng } = req.body
+  const { name, type, country, countryCode, continent, lat, lng } = req.body
   const city = await City.findOneAndUpdate(
     { name, countryCode },
-    { name, country, countryCode, continent, lat, lng },
+    { name, country, countryCode, continent, lat, lng, $setOnInsert: { type } },
     { upsert: true, returnDocument: 'after', runValidators: true }
   )
   res.send({ city })

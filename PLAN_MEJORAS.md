@@ -197,7 +197,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Score en servidor: un voto por usuario y experiencia (índice único parcial `{experience, userId}`; votar otra vez actualiza), entero 1-5, media recalculada en `services/scoreService.js`. `Score.tsx` solo muestra. El admin ya no puede fijar el score a mano. (S-6, A-4)
 - [x] `express-rate-limit`: login 10/15 min, registro 5/h, contacto 5/h, comentarios y votos 60/15 min, global 1000/15 min. (S-7)
 - [x] `URL` del cliente desde `VITE_API_URL` (por defecto, el mismo origen); `trust proxy` configurable con `TRUST_PROXY`. (S-8)
-- [ ] HTTPS real con dominio + certbot cuando haya despliegue (ver `docs/deployment.md`) y activar `upgradeInsecureRequests` en la CSP. (S-8)
+- [ ] HTTPS real con dominio + certbot cuando haya despliegue (ver `_doc/deployment.md`) y activar `upgradeInsecureRequests` en la CSP. (S-8)
 - [x] Mensaje genérico de login, códigos HTTP correctos (400/401/403/404/409) y los formularios de login/registro muestran el error del servidor. (S-10)
 - [x] `select('-password')` en usuarios. Un admin no puede borrarse ni quitarse el rol a sí mismo. (S-11)
 - [x] `jwt.verify` con `algorithms: ['HS256']`; el servidor no arranca sin `JWT_SECRET` o `ATLAS_URL`. (S-12)
@@ -298,14 +298,14 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 - [x] `ci.yml`: cliente (lint, tipos, tests, build), servidor (lint, formato, tests con caché del binario de MongoDB) y auditoría de dependencias de producción; en `main` y `develop`. Dependabot semanal (npm cliente y servidor) y mensual (GitHub Actions).
 - [x] Encontrado con los e2e y corregido: el aviso `Msgbox` bloqueaba la página 3 s (ahora se cierra con clic o Escape), no repetía un mismo mensaje dos veces seguidas y no se anunciaba a lectores de pantalla; las estrellas de votar y el menú de cuenta del Navbar no tenían nombre accesible correcto.
 - [x] `deploy.ml` eliminado (extensión incorrecta, nunca se ejecutaba y apuntaba a Vercel sin haber despliegue).
-- [ ] Deploy (cuando lo haya): estrategia documentada en `docs/deployment.md` (droplet + nginx + systemd). B-12 resuelto en `docs/nginx-scoretravelsblog.conf`: nginx hace proxy de todo a Express (que ya sirve `dist`) con caché por ruta, en vez de bloques sin `proxy_pass`. Pendiente: desplegar y validar con `nginx -t`.
+- [ ] Deploy (cuando lo haya): estrategia documentada en `_doc/deployment.md` (droplet + nginx + systemd). B-12 resuelto en `_doc/nginx-scoretravelsblog.conf`: nginx hace proxy de todo a Express (que ya sirve `dist`) con caché por ruta, en vez de bloques sin `proxy_pass`. Pendiente: desplegar y validar con `nginx -t`.
 - [x] `client/dist` fuera del repo y en `.gitignore`. (A-12)
 - [x] Imágenes subidas fuera del repo (`server/uploads`, Fase 1). (S-16)
 
 ### Fase 6 — Producto, portfolio y documentación (continuo) 🟢
 
-- [x] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. La lista de "tipos de viaje" pasa a `docs/travel-types.md`.
-- [x] Revisar lo aprovechable de `_doc/` e incorporarlo a `docs/`: HTTPS, nginx, systemd, copias de seguridad y comprobaciones de rendimiento en `docs/deployment.md`. `TESTING_PLAN.md` y `PROJECT_REVIEW.md` quedan obsoletos (los sustituyen los tests reales, el README y este plan).
+- [x] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. La lista de "tipos de viaje" pasa a `_doc/travel-types.md`.
+- [x] Revisar lo aprovechable de `_doc/` y reunirlo en una guía: HTTPS, nginx, systemd, copias de seguridad y comprobaciones de rendimiento en `_doc/deployment.md` (con `_doc/nginx-scoretravelsblog.conf` y `_doc/travel-types.md`, fuera de git por ahora). `TESTING_PLAN.md` y `PROJECT_REVIEW.md` quedan obsoletos (los sustituyen los tests reales, el README y este plan).
 - [ ] SEO: meta y Open Graph por experiencia, sitemap, robots; valorar prerender/SSR.
   - [x] Cliente: componente `Seo` (título, descripción, canonical, Open Graph, `noindex` en admin, login, registro, búsquedas, 404 y experiencias no publicadas).
   - [x] Servidor: inyecta las meta de cada experiencia publicada en `index.html` (los bots de redes sociales no ejecutan JS), `robots.txt` y `sitemap.xml` dinámico (`controllers/seoController.js`, `SITE_URL`).
@@ -322,7 +322,7 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
   - [x] 6. Tests unitarios (navegación, teclado solo con foco, Ctrl + rueda, idioma, fechas) y comprobación en Chromium real (arrastre, rueda, teclado, giro del coche). B-1 cerrado.
   - [ ] Pendiente de decidir: certificaciones, más secciones (proyectos, habilidades, contacto).
 - [ ] Chat IA sobre tu experiencia (Genkit) con rate limit, límites de tokens y prompt acotado.
-- [x] Observabilidad y backups: logs con pino + pino-http (sustituye a morgan), ID por petición (`X-Request-Id`, devuelto en los 500), stack de los errores 500, eventos de conexión de Mongo y `uncaughtException`; `npm run backup` (mongodump + imágenes, con rotación) documentado con cron en `docs/deployment.md`. Sentry descartado por ahora (no hace falta con el volumen actual).
+- [x] Observabilidad y backups: logs con pino + pino-http (sustituye a morgan), ID por petición (`X-Request-Id`, devuelto en los 500), stack de los errores 500, eventos de conexión de Mongo y `uncaughtException`; `npm run backup` (mongodump + imágenes, con rotación) documentado con cron en `_doc/deployment.md`. Sentry descartado por ahora (no hace falta con el volumen actual).
 - [ ] **Quitar `0.0.0.0/0` de *Network Access* en Atlas** (S-1). Antes hay que montar un Mongo local para desarrollo (`docker-compose`) o usar un cluster de desarrollo aparte, para no tener que actualizar la IP doméstica cada vez.
 
 ---
