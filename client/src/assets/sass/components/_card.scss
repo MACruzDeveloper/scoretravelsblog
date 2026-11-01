@@ -132,12 +132,18 @@
 
   &_more {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     font-size: 1.5rem;
+    line-height: 1;
     color: $color2;
     font-weight: $fontBold;
 
+    > span {
+      display: block;
+    }
+
     .icon {
+      line-height: 0.5;
       margin-left: 0.25rem;
       transition: all 0.3s ease-in-out;
     }
