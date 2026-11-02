@@ -67,6 +67,7 @@ const NavbarAdmin = () => {
           <li><NavLink to={'/admin/users'}>Users</NavLink></li>
         </>
         }
+        <li><NavLink to={'/admin/password'}>My password</NavLink></li>
       </ul>
     </nav>
 

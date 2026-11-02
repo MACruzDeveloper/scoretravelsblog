@@ -41,4 +41,28 @@
       margin-top: 1.5rem;
     }
   }
+
+  // Result of the password recovery, in place of the form
+  .form_notice {
+    max-width: 40rem;
+    margin: 2rem auto;
+    font-size: 1.5rem;
+  }
+
+  > .form_legal {
+    font-size: 1.4rem;
+  }
+}
+
+// Admin > My password
+.account .form {
+  max-width: 40rem;
+
+  input {
+    margin-bottom: 1rem;
+  }
+
+  .password_field input {
+    margin-bottom: 0;
+  }
 }

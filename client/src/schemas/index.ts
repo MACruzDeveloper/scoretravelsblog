@@ -20,6 +20,18 @@ export const registerSchema = z
   .object({ username, email, password, password2: z.string() })
   .refine((data) => data.password === data.password2, { message: 'Passwords must match', path: ['password2'] })
 
+const matchingPasswords = { password, password2: z.string() }
+const passwordsMustMatch = { message: 'Passwords must match', path: ['password2'] }
+const samePasswords = (data: { password: string; password2: string }) => data.password === data.password2
+
+export const forgotPasswordSchema = z.object({ email })
+
+export const newPasswordSchema = z.object(matchingPasswords).refine(samePasswords, passwordsMustMatch)
+
+export const changePasswordSchema = z
+  .object({ currentPassword: z.string().min(1, 'Write your current password').max(128), ...matchingPasswords })
+  .refine(samePasswords, passwordsMustMatch)
+
 export const contactSchema = z.object({
   name: z.string().trim().min(1, 'Write your name').max(100),
   email,
@@ -51,6 +63,9 @@ export const experienceSchema = z.object({
 
 export type LoginForm = z.infer<typeof loginSchema>
 export type RegisterForm = z.infer<typeof registerSchema>
+export type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>
+export type NewPasswordForm = z.infer<typeof newPasswordSchema>
+export type ChangePasswordForm = z.infer<typeof changePasswordSchema>
 export type ContactForm = z.infer<typeof contactSchema>
 export type CategoryForm = z.infer<typeof categorySchema>
 export type CommentForm = z.infer<typeof commentSchema>

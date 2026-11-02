@@ -1,8 +1,11 @@
+const crypto = require('crypto')
 const User = require('../models/usersModels')
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
 const { JWT_ALGORITHM } = require('../middleware/auth')
-const { jwtSecret } = require('../config')
+const { jwtSecret, siteUrl, isProduction, corsOrigins } = require('../config')
+const mailer = require('../services/mailer')
+const logger = require('../logger')
 const { badRequest, unauthorized, notFound, conflict } = require('../utils/httpErrors')
 
 // Same message for unknown email and wrong password, to avoid user enumeration
@@ -80,4 +83,69 @@ const updateUser = async (req, res) => {
   res.send({ updated })
 }
 
-module.exports = { register, login, me, findAllUsers, addNewUser, deleteUser, updateUser }
+// Tokens carry their date in whole seconds: rounding down keeps the session started right after a change valid
+const passwordFields = async (password) => ({
+  password: await argon2.hash(password),
+  passwordChangedAt: new Date(Math.floor(Date.now() / 1000) * 1000),
+})
+
+// Closes the other sessions and returns a new one for this device
+const changePassword = async (req, res) => {
+  const { currentPassword, password } = req.body
+  const user = await User.findById(req.user._id)
+  if (!user) throw unauthorized('Invalid or expired token')
+  if (!(await argon2.verify(user.password, currentPassword))) throw badRequest('The current password is not correct')
+  Object.assign(user, await passwordFields(password))
+  await user.save()
+  res.json({ ok: true, message: 'Password changed', ...sessionFor(user) })
+}
+
+const RESET_TOKEN_MS = 60 * 60 * 1000
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex')
+
+// From the configuration, never from the request: a forged Host header could not redirect the link
+const resetUrlBase = () => siteUrl || (isProduction ? null : corsOrigins[0])
+
+// Always the same answer, so it cannot be used to find out which emails are registered.
+// The fictional users of the sample content have no real inbox
+const forgotPassword = async (req, res) => {
+  const user = await User.findOne({ email: req.body.email, seed: { $ne: true } })
+  const base = resetUrlBase()
+  if (user && base) {
+    const token = crypto.randomBytes(32).toString('hex')
+    await User.updateOne(
+      { _id: user._id },
+      { resetTokenHash: hashToken(token), resetTokenExpires: new Date(Date.now() + RESET_TOKEN_MS) }
+    )
+    // In the fragment (#), which browsers do not send: the token stays out of the server logs
+    await mailer.sendPasswordResetEmail(user, `${base}/reset-password#token=${token}`)
+  } else if (user) {
+    logger.error('Password recovery email not sent: SITE_URL is not configured')
+  }
+  res.json({ ok: true, message: 'If that email is registered, we have sent a link to reset the password' })
+}
+
+// Works once. The user signs in afterwards, with every old session closed
+const resetPassword = async (req, res) => {
+  const { token, password } = req.body
+  const user = await User.findOne({ resetTokenHash: hashToken(token), resetTokenExpires: { $gt: new Date() } })
+  if (!user) throw badRequest('This link is not valid or has expired. Please ask for a new one')
+  await User.updateOne(
+    { _id: user._id },
+    { ...(await passwordFields(password)), $unset: { resetTokenHash: 1, resetTokenExpires: 1 } }
+  )
+  res.json({ ok: true, message: 'Password changed. You can sign in now' })
+}
+
+module.exports = {
+  register,
+  login,
+  me,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+  findAllUsers,
+  addNewUser,
+  deleteUser,
+  updateUser,
+}

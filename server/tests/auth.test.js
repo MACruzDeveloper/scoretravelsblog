@@ -117,3 +117,118 @@ describe('rate limiting', () => {
     assert.equal(statuses.at(-1), 429)
   })
 })
+
+describe('passwords', () => {
+  const NEW = 'a-brand-new-password'
+  const signIn = (email, password) => request.post('/api/auth/login').send({ email, password })
+  const change = (auth, currentPassword, password = NEW, password2 = password) =>
+    request.post('/api/auth/change-password').set(auth).send({ currentPassword, password, password2 })
+
+  // Waits for a new second: session tokens carry their date in whole seconds
+  const nextSecond = () => new Promise((resolve) => setTimeout(resolve, 1100))
+
+  // Records the emails instead of sending them, and returns the emailed token
+  const captureEmails = (t) => {
+    const mailer = require('../services/mailer')
+    return t.mock.method(mailer, 'sendPasswordResetEmail', async () => {})
+  }
+  const tokenFrom = (call) => call.arguments[1].split('#token=')[1]
+  const forgot = (email) => request.post('/api/auth/forgot-password').send({ email })
+  const reset = (token, password = NEW) =>
+    request.post('/api/auth/reset-password').send({ token, password, password2: password })
+
+  it('changes it with the current one, and rejects a wrong one', async () => {
+    const { user, auth } = await createUser({ username: 'ana' })
+    await change(auth, 'wrong-password').expect(400)
+    await change(auth, 'supersecret1', NEW, 'different-password').expect(400)
+    await change(auth, 'supersecret1', 'short').expect(400)
+    await signIn(user.email, 'supersecret1').expect(200)
+
+    await change(auth, 'supersecret1').expect(200)
+    await signIn(user.email, 'supersecret1').expect(401)
+    await signIn(user.email, NEW).expect(200)
+  })
+
+  it('needs a session to change it', async () => {
+    await request
+      .post('/api/auth/change-password')
+      .send({ currentPassword: 'x', password: NEW, password2: NEW })
+      .expect(401)
+  })
+
+  it('closes the older sessions, but keeps the one it returns', async () => {
+    const { auth } = await createUser({ username: 'ana' })
+    await nextSecond()
+    const { body } = await change(auth, 'supersecret1').expect(200)
+
+    await request.get('/api/auth/me').set(auth).expect(401)
+    await request.get('/api/auth/me').set('Authorization', `Bearer ${body.token}`).expect(200)
+  })
+
+  it('never returns the recovery fields', async () => {
+    const { auth } = await createUser({ username: 'boss', role: 'admin' })
+    const { body } = await request.get('/api/users').set(auth).expect(200)
+    assert.ok(body.every((u) => !('passwordChangedAt' in u) && !('resetTokenHash' in u) && !('resetTokenExpires' in u)))
+  })
+
+  it('answers the same for a known and an unknown email, and only emails the known one', async (t) => {
+    const emails = captureEmails(t)
+    const { user } = await createUser({ username: 'ana' })
+
+    const known = await forgot(user.email).expect(200)
+    const unknown = await forgot('nobody@test.dev').expect(200)
+    assert.equal(known.body.message, unknown.body.message)
+    assert.equal(emails.mock.callCount(), 1)
+    assert.equal(emails.mock.calls[0].arguments[0].email, user.email)
+    assert.match(emails.mock.calls[0].arguments[1], /^http:\/\/localhost:5173\/reset-password#token=[a-f0-9]{64}$/)
+  })
+
+  it('stores only a hash of the token and ignores a forged Host', async (t) => {
+    const emails = captureEmails(t)
+    const User = require('../models/usersModels')
+    const { user } = await createUser({ username: 'ana' })
+
+    await request.post('/api/auth/forgot-password').set('Host', 'evil.example').send({ email: user.email }).expect(200)
+    const url = emails.mock.calls[0].arguments[1]
+    assert.ok(!url.includes('evil.example'))
+    const stored = await User.findById(user._id).select('resetTokenHash')
+    assert.notEqual(stored.resetTokenHash, tokenFrom(emails.mock.calls[0]))
+  })
+
+  it('resets it with the emailed token, once, closing the old sessions', async (t) => {
+    const emails = captureEmails(t)
+    const { user, auth } = await createUser({ username: 'ana' })
+    await nextSecond()
+    await forgot(user.email).expect(200)
+    const token = tokenFrom(emails.mock.calls[0])
+
+    await reset(token, 'short').expect(400)
+    await reset(token).expect(200)
+    await signIn(user.email, NEW).expect(200)
+    await signIn(user.email, 'supersecret1').expect(401)
+    await request.get('/api/auth/me').set(auth).expect(401)
+    // Used once
+    await reset(token, 'another-new-password').expect(400)
+  })
+
+  it('rejects expired and made up tokens', async (t) => {
+    const emails = captureEmails(t)
+    const User = require('../models/usersModels')
+    const { user } = await createUser({ username: 'ana' })
+    await forgot(user.email).expect(200)
+    await User.updateOne({ _id: user._id }, { resetTokenExpires: new Date(Date.now() - 1000) })
+
+    await reset(tokenFrom(emails.mock.calls[0])).expect(400)
+    await reset('f'.repeat(64)).expect(400)
+    await reset({ $ne: null }).expect(400)
+  })
+
+  it('does not email the fictional users of the sample content', async (t) => {
+    const emails = captureEmails(t)
+    const User = require('../models/usersModels')
+    await User.create({ username: 'fiction', email: 'fiction@example.com', password: 'x', seed: true })
+
+    await forgot('fiction@example.com').expect(200)
+    assert.equal(emails.mock.callCount(), 0)
+  })
+})

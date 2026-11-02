@@ -19,6 +19,9 @@ import './assets/sass/main.scss'
 // Every page except the home is loaded on demand, so the first visit downloads less
 const Login = lazy(() => import('./components/admin/login/Login'))
 const Register = lazy(() => import('./components/admin/login/Register'))
+const ForgotPassword = lazy(() => import('./components/admin/login/ForgotPassword'))
+const ResetPassword = lazy(() => import('./components/admin/login/ResetPassword'))
+const ChangePassword = lazy(() => import('./components/admin/ChangePassword'))
 const SearchPage = lazy(() => import('@/components/search/SearchPage'))
 const SearchPageContinent = lazy(() => import('@/components/search/SearchPageContinent'))
 const Experience = lazy(() => import('@/components/experiences/Experience'))
@@ -117,6 +120,8 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path='/login' element={<Login login={login} />} />
             <Route path='/register' element={<Register login={login} />} />
+            <Route path='/forgot-password' element={<ForgotPassword />} />
+            <Route path='/reset-password' element={<ResetPassword />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/search-by-continent/:search" element={<SearchPageContinent />} />
             <Route path="/experience/:exp" element={<Experience user={user} />} />
@@ -125,6 +130,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="experiences" replace />} />
               <Route path="experiences" element={<Experiences />} />
+              <Route path="password" element={<ChangePassword login={login} />} />
               <Route path="moderation" element={<RequireAdmin><Moderation /></RequireAdmin>} />
               <Route path="categories" element={<RequireAdmin><Categories /></RequireAdmin>} />
               <Route path="comments" element={<RequireAdmin><Comments /></RequireAdmin>} />

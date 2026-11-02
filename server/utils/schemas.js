@@ -47,6 +47,19 @@ const login = z.object({
   password: z.string().min(1).max(128),
 })
 
+const samePasswords = (data) => data.password === data.password2
+const passwordsMustMatch = { message: 'Passwords must match', path: ['password2'] }
+
+const changePassword = z
+  .object({ currentPassword: z.string().min(1).max(128), password, password2: z.string() })
+  .refine(samePasswords, passwordsMustMatch)
+
+const forgotPassword = z.object({ email })
+
+const resetPassword = z
+  .object({ token: z.string().regex(/^[a-f0-9]{64}$/, 'Invalid token'), password, password2: z.string() })
+  .refine(samePasswords, passwordsMustMatch)
+
 const addUser = z.object({ username, email, password, role: role.default('user') })
 const updateUser = z.object({ username: username.optional(), role: role.optional() })
 
@@ -152,6 +165,9 @@ module.exports = {
   idParam,
   register,
   login,
+  changePassword,
+  forgotPassword,
+  resetPassword,
   addUser,
   updateUser,
   addCategory,

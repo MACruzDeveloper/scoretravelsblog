@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { login as apiLogin } from '@/api/auth'
 import { useMessage } from '@/hooks/useMessage'
 import { loginSchema, LoginForm } from '@/schemas'
@@ -47,6 +47,7 @@ const Login = ({ login }: PropsLogin) => {
       <FieldError error={errors.password} />
 
       <button className="btn" disabled={isSubmitting}>login</button>
+      <p className="form_legal"><NavLink to="/forgot-password">Forgot your password?</NavLink></p>
     </form>
 
     <Msgbox {...message} />

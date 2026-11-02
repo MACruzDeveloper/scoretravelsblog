@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 
 const { jwtSecret: jwt_secret } = require('../config')
+const User = require('../models/usersModels')
 // Pin the algorithm so tokens signed with anything else are rejected
 const JWT_ALGORITHM = 'HS256'
 
@@ -10,34 +11,46 @@ const extractToken = (req) => {
   return header || null
 }
 
-const verify = (token) => jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
+const verify = async (token) => {
+  const payload = jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
+  // Changing the password closes the sessions started before it
+  const user = await User.findById(payload._id).select('passwordChangedAt').lean()
+  if (user?.passwordChangedAt && payload.iat * 1000 < user.passwordChangedAt.getTime()) {
+    throw new jwt.JsonWebTokenError('Session closed by a password change')
+  }
+  return payload
+}
+
+// Only a bad token means "not signed in": a database failure must reach the error handler
+const isTokenError = (error) => error instanceof jwt.JsonWebTokenError
 
 // For routes that work for everyone but show more to a signed in user:
 // sets req.user when the token is valid and simply continues otherwise
-const optionalAuth = (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   const token = extractToken(req)
   if (token) {
     try {
-      req.user = verify(token)
-    } catch {
+      req.user = await verify(token)
+    } catch (error) {
       // An invalid token is treated like no token on public routes
+      if (!isTokenError(error)) throw error
     }
   }
   return next()
 }
 
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   const token = extractToken(req)
   if (!token) {
     return res.status(401).json({ ok: false, message: 'Authentication required' })
   }
   try {
-    const payload = verify(token)
-    req.user = payload
-    return next()
+    req.user = await verify(token)
   } catch (error) {
+    if (!isTokenError(error)) throw error
     return res.status(401).json({ ok: false, message: 'Invalid or expired token' })
   }
+  return next()
 }
 
 const requireAdmin = (req, res, next) => {
