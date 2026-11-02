@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "regions": ["fra1"],
-  "installCommand": "npm ci --prefix client && npm ci --omit=dev --prefix server",
+  "installCommand": "npx -y npm@11 ci --prefix client && npx -y npm@11 ci --omit=dev --prefix server",
   "buildCommand": "npm run build --prefix client && mkdir -p client/server-html && mv client/dist/index.html client/server-html/index.html",
   "outputDirectory": "client/dist",
   "functions": {
