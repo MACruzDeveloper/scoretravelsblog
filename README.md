@@ -2,17 +2,23 @@
 
 Blog de viajes donde la gente comparte y puntúa sus experiencias. Los usuarios registrados escriben experiencias sobre una ciudad, una isla, una región o un país entero, las comentan y las valoran de 1 a 5 estrellas; un administrador modera las experiencias nuevas antes de publicarlas. La web incluye también una página About con la trayectoria profesional del autor, en español e inglés.
 
+- **En producción:** https://scoretravelsblog.vercel.app (Vercel, MongoDB Atlas y Vercel Blob; ver [Despliegue](#despliegue)).
+- **Stack:** React 19, TypeScript, Vite y Sass en el cliente; Node, Express 5 y Mongoose en el servidor.
+- **Datos de demostración:** el contenido publicado es de ejemplo, con textos escritos por IA (Gemini). La mayoría de las experiencias, con sus autores ficticios, comentarios y votos, salen de `npm run seed`; sus fotos vienen de Wikimedia Commons, con el autor y la licencia en cada experiencia.
+- **Para probarla:** cualquiera puede registrarse y enviar una experiencia, que queda pendiente hasta que un administrador la apruebe. La zona de administración necesita una cuenta de administrador.
+
 ## Arquitectura
 
 ```
 ┌──────────────────────┐   /api (JSON, JWT)   ┌───────────────────────┐        ┌───────────────┐
 │ client/              │ ───────────────────▶ │ server/               │ ─────▶ │ MongoDB Atlas │
 │ React + Vite (SPA)   │                      │ Express 5 (MVC)       │        └───────────────┘
-│ Zustand, react-router│ ◀─────────────────── │ zod, Mongoose, sharp  │ ─────▶ uploads/ (imágenes AVIF)
-└──────────────────────┘ estáticos + /uploads └───────────────────────┘ ─────▶ SMTP (Brevo), Gemini
+│ Zustand, react-router│ ◀─────────────────── │ zod, Mongoose, sharp  │ ─────▶ Imágenes AVIF: Vercel Blob
+└──────────────────────┘       HTML, API      └───────────────────────┘        (en local, uploads/ en disco)
+                                                                        ─────▶ SMTP (Brevo)
 ```
 
-En producción el servidor sirve también el cliente compilado (`client/dist`) y las imágenes subidas, así que todo funciona en un único origen.
+Todo funciona en un único origen. En producción, la CDN de Vercel sirve los archivos del cliente (`client/dist`), y Express, como una función de Vercel, atiende la API y el HTML. Las imágenes se piden siempre en `/static/images/...`, que redirige a la tienda de Blob; en local las sirve Express desde el disco.
 
 ### Servicios externos
 
@@ -75,31 +81,34 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 
 ## Variables de entorno
 
+En local se leen de los archivos indicados en cada apartado. En Vercel se configuran en *Settings → Environment Variables*; la última columna indica qué hacer con cada una.
+
 ### Servidor (`server/.env`)
 
-| Variable | Obligatoria | Descripción |
-| --- | --- | --- |
-| `ATLAS_URL` | sí | Cadena de conexión de MongoDB |
-| `JWT_SECRET` | sí | Secreto para firmar las sesiones (mínimo 32 caracteres aleatorios) |
-| `NODE_ENV` | no | `development` (por defecto), `production` o `test` |
-| `PORT` | no | Puerto de la API, `3040` por defecto |
-| `CORS_ORIGINS` | no | Orígenes permitidos, separados por comas |
-| `TRUST_PROXY` | no | Número de proxies inversos delante de la app (p. ej. `1` detrás de nginx) |
-| `UPLOADS_DIR` | no | Carpeta de imágenes subidas, `server/uploads/images` por defecto |
-| `BLOB_STORE_URL` | no | URL pública de una tienda de Vercel Blob. Con ella, las imágenes se guardan ahí en vez de en `UPLOADS_DIR`. En Vercel las credenciales son automáticas (`BLOB_STORE_ID` y OIDC) |
-| `BLOB_READ_WRITE_TOKEN` | no | Credencial de la tienda para usarla fuera de Vercel, por ejemplo con `npm run images:to-blob` |
-| `CLIENT_DIST_DIR` | no | Cliente compilado que se sirve, `client/dist` por defecto |
-| `LOG_LEVEL` | no | Nivel de log: `trace`, `debug`, `info` (por defecto), `warn`, `error`, `fatal` o `silent` |
-| `SITE_URL` | no | Dirección pública (p. ej. `https://midominio.com`) para el sitemap y las vistas previas en redes; por defecto, el host de la petición |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_TO` | no | Emails del formulario de contacto y de moderación |
-| `GEMINI_API_KEY` | no | Solo la usan los scripts de seed y backfill. El plan gratuito permite unas 20 peticiones al día por modelo; si `gemini-3.5-flash` está saturado, el seed reintenta con `gemini-3.5-flash-lite` |
+| Variable | Obligatoria | Descripción | En Vercel |
+| --- | --- | --- | --- |
+| `ATLAS_URL` | sí | Cadena de conexión de MongoDB | Sí |
+| `JWT_SECRET` | sí | Secreto para firmar las sesiones (mínimo 32 caracteres aleatorios) | Sí, distinto al de local |
+| `SITE_URL` | no | Dirección pública para el sitemap y las vistas previas en redes; por defecto, el host de la petición | Sí |
+| `TRUST_PROXY` | no | Número de proxies delante de la app | Sí, `1` |
+| `BLOB_STORE_URL` | no | URL pública de una tienda de Vercel Blob. Con ella, las imágenes se guardan ahí en vez de en `UPLOADS_DIR` | Sí |
+| `BLOB_STORE_ID` | no | Identificador de la tienda, para las credenciales OIDC | Automática, al conectar la tienda |
+| `BLOB_READ_WRITE_TOKEN` | no | Credencial de la tienda para usarla fuera de Vercel, con `npm run images:to-blob` | No |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_TO` | no | Emails del formulario de contacto y de moderación | Sí |
+| `LOG_LEVEL` | no | `trace`, `debug`, `info` (por defecto), `warn`, `error`, `fatal` o `silent` | Opcional |
+| `NODE_ENV` | no | `development` (por defecto), `production` o `test` | Automática (`production`) |
+| `PORT` | no | Puerto de la API, `3040` por defecto | No se usa |
+| `CORS_ORIGINS` | no | Orígenes permitidos, separados por comas (en local, el cliente de Vite) | No hace falta: mismo origen |
+| `UPLOADS_DIR` | no | Carpeta de imágenes subidas, `server/uploads/images` por defecto | No se usa: disco de solo lectura |
+| `CLIENT_DIST_DIR` | no | Carpeta con el `index.html` del cliente, `client/dist` por defecto | No: la fija `api/index.js` |
+| `GEMINI_API_KEY` | no | Solo la usan los scripts de seed y backfill | No |
 
 ### Cliente (`client/.env.local`)
 
-| Variable | Descripción |
-| --- | --- |
-| `VITE_API_URL` | URL base de la API. Vacía usa `http://localhost:3040` en desarrollo y el mismo origen en producción |
-| `VITE_CARTO_API_KEY` | Clave de CARTO para el estilo claro del mapa |
+| Variable | Descripción | En Vercel |
+| --- | --- | --- |
+| `VITE_API_URL` | URL base de la API. Vacía usa `http://localhost:3040` en desarrollo y el mismo origen en producción | No |
+| `VITE_CARTO_API_KEY` | Clave de CARTO para el estilo claro del mapa; sin ella se usa OpenStreetMap | Sí, de tipo *Config*: acaba en el JavaScript público |
 
 ## Scripts
 
@@ -138,18 +147,27 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 
 ## Despliegue
 
-### Vercel
+La web está en **Vercel**: cada cambio en `main` se despliega en producción, en https://scoretravelsblog.vercel.app, y las demás ramas generan una URL de prueba.
 
-El proyecto se despliega desde la raíz del repositorio con [`vercel.json`](vercel.json): región `fra1` (junto a la base de datos), `client/dist` en la CDN y el resto de peticiones, HTML incluido, a Express como una única función ([`api/index.js`](api/index.js)).
+La configuración está en [`vercel.json`](vercel.json), y el proyecto se despliega desde la raíz del repositorio:
 
-- El disco de las funciones es de solo lectura, así que las imágenes van a Vercel Blob. Sus URLs siguen siendo `/static/images/...`, que redirigen a la tienda.
-- Una petición admite como máximo 4,5 MB: el navegador reduce las fotos grandes a 2000 px antes de subirlas.
-- Variables: `ATLAS_URL`, `JWT_SECRET`, `TRUST_PROXY=1`, `SITE_URL`, `BLOB_STORE_URL`, las de SMTP y `VITE_CARTO_API_KEY`. Al conectar la tienda, Vercel añade `BLOB_STORE_ID` y gestiona la credencial (OIDC).
-- Vercel no tiene IPs fijas en el plan gratuito: Atlas debe permitir `0.0.0.0/0`.
+- **Región:** `fra1`, junto a la base de datos de Atlas.
+- **Cliente:** `client/dist` se sirve desde la CDN.
+- **Servidor:** el resto de peticiones, HTML incluido, llegan a Express como una única función ([`api/index.js`](api/index.js)). Así la CSP y las etiquetas SEO se aplican igual que en local.
+- **Instalación:** con npm 11, porque npm 10 rechaza el `package-lock` del servidor.
 
-### Servidor propio
+Lo que cambia respecto a un servidor con disco propio:
 
-También funciona en un único servidor (p. ej. un droplet de DigitalOcean) detrás de nginx con HTTPS:
+- **Imágenes en Vercel Blob:** el disco de las funciones es de solo lectura. La tienda debe ser pública. `npm run images:to-blob` copia a la tienda las imágenes locales.
+- **Subidas de hasta 4,5 MB:** es el límite por petición, así que el navegador reduce las fotos de más de 1 MB a 2000 px antes de enviarlas.
+- **Atlas abierto a `0.0.0.0/0`:** Vercel no tiene IPs fijas en el plan gratuito, así que la protección es la credencial de la base de datos.
+- **Rate limiting por instancia:** los contadores están en memoria, de modo que cada instancia lleva su cuenta.
+- **Copias de seguridad:** `npm run backup` guarda la base de datos y `UPLOADS_DIR`, pero no la tienda de Blob.
+- **Desarrollo:** usa `UPLOADS_DIR`. Si comparte base de datos con producción, las fotos subidas en un entorno no se ven en el otro.
+
+### Alternativa: servidor propio
+
+La app también funciona en un único servidor detrás de nginx con HTTPS, sin `BLOB_STORE_URL`, con las imágenes en disco:
 
 1. `npm ci` en las dos carpetas y `npm run build` en `client/`.
 2. En `server/.env`, poner `NODE_ENV=production`, `TRUST_PROXY=1` y los `CORS_ORIGINS` de producción.
