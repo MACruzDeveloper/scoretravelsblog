@@ -1,0 +1,8 @@
+{
+  "name": "scoretravelsblog",
+  "private": true,
+  "description": "Only for Vercel: the Node version of the deployment. The code lives in client/ and server/",
+  "engines": {
+    "node": "22.x"
+  }
+}

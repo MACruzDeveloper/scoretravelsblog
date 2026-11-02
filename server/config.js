@@ -29,6 +29,12 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => value || path.join(__dirname, 'uploads', 'images')),
+  // Public URL of a Vercel Blob store (https://<id>.public.blob.vercel-storage.com). When set, uploaded
+  // images go there instead of UPLOADS_DIR; the credentials are read by @vercel/blob from the environment
+  BLOB_STORE_URL: z
+    .url()
+    .optional()
+    .transform((value) => value?.replace(/\/+$/, '')),
   // Built client served by Express (the e2e tests use their own build)
   CLIENT_DIST_DIR: z
     .string()
@@ -74,6 +80,7 @@ module.exports = {
   corsOrigins: env.CORS_ORIGINS,
   trustProxy: env.TRUST_PROXY,
   uploadsDir: env.UPLOADS_DIR,
+  blobStoreUrl: env.BLOB_STORE_URL,
   clientDistDir: env.CLIENT_DIST_DIR,
   siteUrl: env.SITE_URL,
   logLevel: env.LOG_LEVEL || (env.NODE_ENV === 'test' ? 'silent' : 'info'),

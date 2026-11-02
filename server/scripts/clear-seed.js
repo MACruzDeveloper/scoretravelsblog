@@ -16,7 +16,7 @@ const Users = require('../models/usersModels')
 const Comments = require('../models/commentsModel')
 const Scores = require('../models/scoresModel')
 const Images = require('../models/imagesModel')
-const { resolveUpload, unlinkUpload } = require('../services/imageService')
+const { removeImage } = require('../services/imageStorage')
 
 async function main() {
   const confirmed = process.argv.includes('--yes')
@@ -44,8 +44,7 @@ async function main() {
   await Scores.deleteMany({ $or: [{ seed: true }, { experience: { $in: experienceIds } }] })
   await Experiences.deleteMany({ _id: { $in: experienceIds } })
   for (const image of images) {
-    const filePath = resolveUpload(image.filename)
-    if (filePath) await unlinkUpload(filePath)
+    await removeImage(image.filename)
   }
   await Images.deleteMany({ seed: true })
   await Users.deleteMany({ _id: { $in: users } })

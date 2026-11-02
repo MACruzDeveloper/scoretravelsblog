@@ -46,3 +46,7 @@ server/scripts/backfill-proposal.json
 client/e2e/dist/
 client/test-results/
 client/playwright-report/
+
+# Vercel
+.vercel
+client/server-html

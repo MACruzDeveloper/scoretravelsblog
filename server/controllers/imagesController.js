@@ -1,22 +1,19 @@
-const path = require('path')
 const crypto = require('crypto')
-const fs = require('fs')
 const sharp = require('sharp')
 const Images = require('../models/imagesModel')
-const { uploadsDir } = require('../config')
 const Experiences = require('../models/experiencesModel')
-const { resolveUpload, unlinkUpload, countExperiencesUsing, getExperienceImages } = require('../services/imageService')
+const { countExperiencesUsing, getExperienceImages } = require('../services/imageService')
+const { saveImage, removeImage } = require('../services/imageStorage')
 const { badRequest, notFound, conflict } = require('../utils/httpErrors')
 
 const upload_image = async (req, res) => {
   if (!req.file || !req.file.buffer) throw badRequest('No file uploaded')
 
-  fs.mkdirSync(uploadsDir, { recursive: true })
   // Generated name: never trust the client's original filename
   const filename = `${Date.now()}-${crypto.randomUUID()}.avif`
   const image = sharp(req.file.buffer)
   const metadata = await image.metadata()
-  await image.rotate().avif({ quality: 70, effort: 6 }).toFile(path.join(uploadsDir, filename))
+  await saveImage(filename, await image.rotate().avif({ quality: 70, effort: 6 }).toBuffer())
 
   const title = req.body.title || ''
   await Images.create({
@@ -55,13 +52,10 @@ const fetch_library = async (req, res) => {
 const delete_image = async (req, res) => {
   const image = await Images.findById(req.params.id)
   if (!image) throw notFound('Image not found')
-  const filePath = resolveUpload(image.filename)
-  if (!filePath) throw badRequest('Invalid filename')
-
   const usedBy = await countExperiencesUsing(image.filename)
   if (usedBy) throw conflict(`Image is used by ${usedBy} experience(s). Remove it from them first`)
 
-  await unlinkUpload(filePath)
+  if (!(await removeImage(image.filename))) throw badRequest('Invalid filename')
   const deleted = await Images.deleteOne({ _id: image._id })
   res.send({ deleted })
 }

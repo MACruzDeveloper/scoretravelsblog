@@ -8,6 +8,7 @@
     "dev": "nodemon index.js",
     "seed": "node scripts/seed-experiences.js",
     "seed:clear": "node scripts/clear-seed.js",
+    "images:to-blob": "node scripts/migrate-images-to-blob.js",
     "migrate:user-refs": "node scripts/migrate-user-refs.js",
     "migrate:roles": "node scripts/migrate-roles.js",
     "test": "node --test --test-concurrency=1 'tests/**/*.test.js'",
@@ -25,6 +26,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
@@ -55,5 +57,10 @@
   },
   "engines": {
     "node": ">=22.22.2"
+  },
+  "overrides": {
+    "@vercel/cli-config": {
+      "zod": "$zod"
+    }
   }
 }

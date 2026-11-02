@@ -21,6 +21,7 @@ En producción el servidor sirve también el cliente compilado (`client/dist`) y
 | [Photon](https://photon.komoot.io) (datos de OpenStreetMap) | Buscar el lugar de una experiencia mientras se escribe | Navegador (permitido en la CSP) y script de seed |
 | CARTO / OpenStreetMap | Mapas base de Leaflet | Navegador |
 | Brevo (SMTP) | Formulario de contacto y aviso de moderación al admin | Servidor |
+| Vercel Blob | Imágenes subidas, cuando la app está desplegada en Vercel | Servidor |
 | Gemini (Genkit) | Textos de ejemplo y clasificación de experiencias antiguas | Solo scripts (`seed`, `backfill`) |
 | Wikimedia Commons | Fotos con licencia libre para las experiencias de ejemplo | Solo el script de seed |
 
@@ -85,6 +86,7 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `CORS_ORIGINS` | no | Orígenes permitidos, separados por comas |
 | `TRUST_PROXY` | no | Número de proxies inversos delante de la app (p. ej. `1` detrás de nginx) |
 | `UPLOADS_DIR` | no | Carpeta de imágenes subidas, `server/uploads/images` por defecto |
+| `BLOB_STORE_URL`, `BLOB_READ_WRITE_TOKEN` | no | Tienda pública de Vercel Blob. Con `BLOB_STORE_URL`, las imágenes se guardan ahí en vez de en `UPLOADS_DIR`. El token solo también sirve para `npm run images:to-blob` |
 | `CLIENT_DIST_DIR` | no | Cliente compilado que se sirve, `client/dist` por defecto |
 | `LOG_LEVEL` | no | Nivel de log: `trace`, `debug`, `info` (por defecto), `warn`, `error`, `fatal` o `silent` |
 | `SITE_URL` | no | Dirección pública (p. ej. `https://midominio.com`) para el sitemap y las vistas previas en redes; por defecto, el host de la petición |
@@ -122,6 +124,7 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `npm run seed:clear` | Cuenta el contenido creado por el seed; con `-- --yes` lo borra (experiencias, comentarios, votos, fotos, usuarios y lugares sin usar) |
 | `npm run scores:recalculate` | Recalcula la media de cada experiencia a partir de las puntuaciones |
 | `npm run backfill:propose` / `npm run backfill:apply` | Propone con Gemini categorías y ciudades para experiencias antiguas y aplica la propuesta revisada |
+| `npm run images:to-blob` | Copia a Vercel Blob las imágenes de `UPLOADS_DIR` que aún no estén allí, sin borrar nada (con `-- --yes`; sin él solo las cuenta) |
 | `npm run backup` | Copia de seguridad de la base de datos (`mongodump`) y las imágenes en `~/backups/scoretravelsblog` (o la carpeta que se le pase), guardando los últimos 14 días |
 | `npm run migrate:*` | Migraciones de datos puntuales, ya ejecutadas en producción |
 
@@ -134,7 +137,18 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 
 ## Despliegue
 
-La app está pensada para un único servidor (p. ej. un droplet de DigitalOcean) detrás de nginx con HTTPS:
+### Vercel
+
+El proyecto se despliega desde la raíz del repositorio con [`vercel.json`](vercel.json): región `fra1` (junto a la base de datos), `client/dist` en la CDN y el resto de peticiones, HTML incluido, a Express como una única función ([`api/index.js`](api/index.js)).
+
+- El disco de las funciones es de solo lectura, así que las imágenes van a Vercel Blob. Sus URLs siguen siendo `/static/images/...`, que redirigen a la tienda.
+- Una petición admite como máximo 4,5 MB: el navegador reduce las fotos grandes a 2000 px antes de subirlas.
+- Variables: `ATLAS_URL`, `JWT_SECRET`, `TRUST_PROXY=1`, `SITE_URL`, `BLOB_STORE_URL`, `BLOB_READ_WRITE_TOKEN`, las de SMTP y `VITE_CARTO_API_KEY`.
+- Vercel no tiene IPs fijas en el plan gratuito: Atlas debe permitir `0.0.0.0/0`.
+
+### Servidor propio
+
+También funciona en un único servidor (p. ej. un droplet de DigitalOcean) detrás de nginx con HTTPS:
 
 1. `npm ci` en las dos carpetas y `npm run build` en `client/`.
 2. En `server/.env`, poner `NODE_ENV=production`, `TRUST_PROXY=1` y los `CORS_ORIGINS` de producción.

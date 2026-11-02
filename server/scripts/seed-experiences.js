@@ -11,8 +11,6 @@
  */
 require('dotenv').config({ quiet: true })
 
-const path = require('path')
-const fs = require('fs')
 const crypto = require('crypto')
 const mongoose = require('mongoose')
 const argon2 = require('argon2')
@@ -25,7 +23,7 @@ const Comments = require('../models/commentsModel')
 const Scores = require('../models/scoresModel')
 const Images = require('../models/imagesModel')
 const { recalculateExperienceScore } = require('../services/scoreService')
-const { uploadsDir } = require('../config')
+const { saveImage } = require('../services/imageStorage')
 const { generateMockExperiencesFlow } = require('../genkit')
 
 const INHABITED = ['africa', 'asia', 'europe', 'north-america', 'oceania', 'south-america']
@@ -198,7 +196,7 @@ async function searchPhotos(query) {
   )
 }
 
-// Downloads the photo and stores it like an upload: AVIF in the uploads folder plus an images record
+// Downloads the photo and stores it like an upload: AVIF in the image storage plus an images record
 async function savePhoto(photo, userId) {
   const res = await fetch(photo.url, { headers: { 'User-Agent': USER_AGENT } })
   if (!res.ok) throw new Error(`${res.status} ${photo.url}`)
@@ -206,7 +204,7 @@ async function savePhoto(photo, userId) {
   const filename = `${Date.now()}-${crypto.randomUUID()}.avif`
   const image = sharp(buffer)
   const metadata = await image.metadata()
-  await image.rotate().avif({ quality: 70, effort: 6 }).toFile(path.join(uploadsDir, filename))
+  await saveImage(filename, await image.rotate().avif({ quality: 70, effort: 6 }).toBuffer())
   await Images.create({ filename, title: '', userId, width: metadata.width, height: metadata.height, seed: true })
   return filename
 }
@@ -284,7 +282,6 @@ async function main() {
 
   const users = options.dryRun ? new Map() : await ensureAuthors()
   const usedSources = new Set()
-  fs.mkdirSync(uploadsDir, { recursive: true })
   let created = 0
 
   for (const continent of options.continents) {

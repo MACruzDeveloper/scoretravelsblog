@@ -1,5 +1,6 @@
 // The Express application, without starting it (index.js connects and listens; tests use it directly)
 const config = require('./config')
+const { serveImages } = require('./services/imageStorage')
 const express = require('express')
 const path = require('path')
 const app = express()
@@ -25,6 +26,8 @@ app.use(
           'https://tile.openstreetmap.org',
           'https://*.tile.openstreetmap.org',
           'https://unpkg.com',
+          // Uploaded images, when they live in a Blob store
+          ...(config.blobStoreUrl ? [config.blobStoreUrl] : []),
         ],
         connectSrc: ["'self'", 'https://photon.komoot.io'],
         mediaSrc: ["'self'", 'blob:'],
@@ -95,8 +98,8 @@ const setAvifHeader = (res, filePath) => {
   }
 }
 
-// Uploaded images live outside the client folder (UPLOADS_DIR, see config.js)
-app.use('/static/images', express.static(config.uploadsDir, { setHeaders: setAvifHeader }))
+// Uploaded images live outside the client folder (see services/imageStorage.js)
+app.use('/static/images', serveImages())
 
 app.use('/static', express.static(path.join(__dirname, '../client/public'), { setHeaders: setAvifHeader }))
 // Missing static files are a real 404, not the SPA index.html

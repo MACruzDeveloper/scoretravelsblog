@@ -1,5 +1,6 @@
 import { deleteData, getData, patchData, postForm } from '@/utils/utils'
 import { API } from '@/config'
+import { shrinkImage } from '@/utils/shrinkImage'
 import type { Image, LibraryImage } from './types'
 
 // Newest first; `featured` only returns the home carousel images
@@ -13,7 +14,7 @@ export const listImageLibrary = async () =>
 // Any signed in user can upload; the server converts the image to AVIF and names it
 export const uploadImage = async (file: File, title = '') => {
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', await shrinkImage(file))
   form.append('title', title)
   return (await postForm<{ filename: string; title: string }>(`${API}/images`, form)).data
 }
