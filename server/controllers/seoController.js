@@ -10,7 +10,16 @@ const SITE_NAME = 'ScoreTravelsBlog'
 // Public pages listed in the sitemap besides the experiences
 const STATIC_PAGES = ['/', '/experiences', '/gallery', '/contact', '/about', '/privacy']
 // Private pages and endless search combinations stay out of search engines
-const DISALLOW = ['/admin', '/login', '/register', '/forgot-password', '/reset-password', '/search', '/search-by-continent', '/api/']
+const DISALLOW = [
+  '/admin',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/search',
+  '/search-by-continent',
+  '/api/',
+]
 
 const siteUrl = (req) => config.siteUrl || `${req.protocol}://${req.get('host')}`
 
