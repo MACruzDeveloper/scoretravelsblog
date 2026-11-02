@@ -86,7 +86,8 @@ El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/a
 | `CORS_ORIGINS` | no | Orígenes permitidos, separados por comas |
 | `TRUST_PROXY` | no | Número de proxies inversos delante de la app (p. ej. `1` detrás de nginx) |
 | `UPLOADS_DIR` | no | Carpeta de imágenes subidas, `server/uploads/images` por defecto |
-| `BLOB_STORE_URL`, `BLOB_READ_WRITE_TOKEN` | no | Tienda pública de Vercel Blob. Con `BLOB_STORE_URL`, las imágenes se guardan ahí en vez de en `UPLOADS_DIR`. El token solo también sirve para `npm run images:to-blob` |
+| `BLOB_STORE_URL` | no | URL pública de una tienda de Vercel Blob. Con ella, las imágenes se guardan ahí en vez de en `UPLOADS_DIR`. En Vercel las credenciales son automáticas (`BLOB_STORE_ID` y OIDC) |
+| `BLOB_READ_WRITE_TOKEN` | no | Credencial de la tienda para usarla fuera de Vercel, por ejemplo con `npm run images:to-blob` |
 | `CLIENT_DIST_DIR` | no | Cliente compilado que se sirve, `client/dist` por defecto |
 | `LOG_LEVEL` | no | Nivel de log: `trace`, `debug`, `info` (por defecto), `warn`, `error`, `fatal` o `silent` |
 | `SITE_URL` | no | Dirección pública (p. ej. `https://midominio.com`) para el sitemap y las vistas previas en redes; por defecto, el host de la petición |
@@ -143,7 +144,7 @@ El proyecto se despliega desde la raíz del repositorio con [`vercel.json`](verc
 
 - El disco de las funciones es de solo lectura, así que las imágenes van a Vercel Blob. Sus URLs siguen siendo `/static/images/...`, que redirigen a la tienda.
 - Una petición admite como máximo 4,5 MB: el navegador reduce las fotos grandes a 2000 px antes de subirlas.
-- Variables: `ATLAS_URL`, `JWT_SECRET`, `TRUST_PROXY=1`, `SITE_URL`, `BLOB_STORE_URL`, `BLOB_READ_WRITE_TOKEN`, las de SMTP y `VITE_CARTO_API_KEY`.
+- Variables: `ATLAS_URL`, `JWT_SECRET`, `TRUST_PROXY=1`, `SITE_URL`, `BLOB_STORE_URL`, las de SMTP y `VITE_CARTO_API_KEY`. Al conectar la tienda, Vercel añade `BLOB_STORE_ID` y gestiona la credencial (OIDC).
 - Vercel no tiene IPs fijas en el plan gratuito: Atlas debe permitir `0.0.0.0/0`.
 
 ### Servidor propio

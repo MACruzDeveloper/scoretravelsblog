@@ -49,4 +49,5 @@ client/playwright-report/
 
 # Vercel
 .vercel
+.env.vercel
 client/server-html

@@ -39,6 +39,8 @@ describe('security headers and CORS', () => {
   it('sends a Content-Security-Policy', async () => {
     const res = await request.get('/api/health')
     assert.match(res.headers['content-security-policy'], /default-src 'self'/)
+    // Map tile servers refuse requests without a Referer
+    assert.equal(res.headers['referrer-policy'], 'strict-origin-when-cross-origin')
   })
 
   it('allows the dev client origin and nothing else', async () => {

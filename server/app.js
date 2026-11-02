@@ -39,6 +39,9 @@ app.use(
         upgradeInsecureRequests: null,
       },
     },
+    // Map tile servers need to know the site asking for tiles (OpenStreetMap answers 403 without a
+    // Referer). Other sites only get the origin, never the path
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     crossOriginEmbedderPolicy: false,
     // The dev client (Vite on another port) loads images from this server
     crossOriginResourcePolicy: false,
