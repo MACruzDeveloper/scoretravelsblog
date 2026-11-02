@@ -1,0 +1,13 @@
+# Database for development, apart from production: docker compose up -d
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      # Only from this computer: it has no password
+      - '127.0.0.1:27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

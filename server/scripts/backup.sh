@@ -14,7 +14,9 @@ STAMP="$(date +%F_%H%M)"
 # Only the two variables needed, without running the rest of .env as shell code.
 # A missing variable is empty, not an error (grep fails when nothing matches)
 read_env() { { grep -E "^$1=" "$SERVER_DIR/.env" || true; } | tail -1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/^["'\'']|["'\'']$//g'; }
-ATLAS_URL="${ATLAS_URL:-$(read_env ATLAS_URL)}"
+# Production when there is a separate development database
+PROD_URL="${ATLAS_URL_PROD:-$(read_env ATLAS_URL_PROD)}"
+ATLAS_URL="${PROD_URL:-${ATLAS_URL:-$(read_env ATLAS_URL)}}"
 UPLOADS_DIR="${UPLOADS_DIR:-$(read_env UPLOADS_DIR)}"
 UPLOADS_DIR="${UPLOADS_DIR:-$SERVER_DIR/uploads/images}"
 

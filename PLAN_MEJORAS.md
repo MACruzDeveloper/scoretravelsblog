@@ -197,7 +197,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [x] Score en servidor: un voto por usuario y experiencia (índice único parcial `{experience, userId}`; votar otra vez actualiza), entero 1-5, media recalculada en `services/scoreService.js`. `Score.tsx` solo muestra. El admin ya no puede fijar el score a mano. (S-6, A-4)
 - [x] `express-rate-limit`: login 10/15 min, registro 5/h, contacto 5/h, comentarios y votos 60/15 min, global 1000/15 min. (S-7)
 - [x] `URL` del cliente desde `VITE_API_URL` (por defecto, el mismo origen); `trust proxy` configurable con `TRUST_PROXY`. (S-8)
-- [ ] HTTPS real con dominio + certbot cuando haya despliegue (ver `_doc/deployment.md`) y activar `upgradeInsecureRequests` en la CSP. (S-8)
+- [x] HTTPS real en Vercel y `upgradeInsecureRequests` en la CSP, activo cuando `SITE_URL` es `https://`. (S-8)
 - [x] Mensaje genérico de login, códigos HTTP correctos (400/401/403/404/409) y los formularios de login/registro muestran el error del servidor. (S-10)
 - [x] `select('-password')` en usuarios. Un admin no puede borrarse ni quitarse el rol a sí mismo. (S-11)
 - [x] `jwt.verify` con `algorithms: ['HS256']`; el servidor no arranca sin `JWT_SECRET` o `ATLAS_URL`. (S-12)
@@ -226,7 +226,7 @@ Cada fase deja el proyecto funcionando. Las estimaciones son orientativas para u
 - [ ] Activar las reglas del React Compiler de `eslint-plugin-react-hooks` 7 cuando se aborde la Fase 4.
 - [x] Regresiones tras la actualización, corregidas: fuentes Catamaran sin empaquetar (rutas `url()` con alias `@/assets/fonts`), dos reglas reordenadas por Sass (declaraciones antes de los `@include`), `build.cssTarget` para que Lightning CSS mantenga sintaxis compatible con Safari 14+.
 - [x] Mapa: CARTO exige ahora API key (gratuita). Se lee de `VITE_CARTO_API_KEY` en `client/.env.local`; sin clave se usa OpenStreetMap estándar. Documentado en `client/.env.example`.
-- [ ] Al desplegar: restringir la API key de CARTO al dominio en su panel.
+- [x] API key de CARTO restringida al dominio en su panel.
 
 ### Fase 3 — Arquitectura del backend (4-6 días) 🟡
 
@@ -298,7 +298,7 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 - [x] `ci.yml`: cliente (lint, tipos, tests, build), servidor (lint, formato, tests con caché del binario de MongoDB) y auditoría de dependencias de producción; en `main` y `develop`. Dependabot semanal (npm cliente y servidor) y mensual (GitHub Actions).
 - [x] Encontrado con los e2e y corregido: el aviso `Msgbox` bloqueaba la página 3 s (ahora se cierra con clic o Escape), no repetía un mismo mensaje dos veces seguidas y no se anunciaba a lectores de pantalla; las estrellas de votar y el menú de cuenta del Navbar no tenían nombre accesible correcto.
 - [x] `deploy.ml` eliminado (extensión incorrecta, nunca se ejecutaba y apuntaba a Vercel sin haber despliegue).
-- [ ] Deploy (cuando lo haya): estrategia documentada en `_doc/deployment.md` (droplet + nginx + systemd). B-12 resuelto en `_doc/nginx-scoretravelsblog.conf`: nginx hace proxy de todo a Express (que ya sirve `dist`) con caché por ruta, en vez de bloques sin `proxy_pass`. Pendiente: desplegar y validar con `nginx -t`.
+- [x] Deploy en Vercel: https://scoretravelsblog.vercel.app, región `fra1`, Express como una función e imágenes en Vercel Blob (ver README). La guía de droplet + nginx sigue en `_doc/deployment.md` como alternativa.
 - [x] `client/dist` fuera del repo y en `.gitignore`. (A-12)
 - [x] Imágenes subidas fuera del repo (`server/uploads`, Fase 1). (S-16)
 
@@ -306,12 +306,12 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
 
 - [x] Reescribir README: descripción, arquitectura (diagrama client/server/Mongo), requisitos (Node 22), variables de entorno, scripts reales, despliegue. La lista de "tipos de viaje" pasa a `_doc/travel-types.md`.
 - [x] Revisar lo aprovechable de `_doc/` y reunirlo en una guía: HTTPS, nginx, systemd, copias de seguridad y comprobaciones de rendimiento en `_doc/deployment.md` (con `_doc/nginx-scoretravelsblog.conf` y `_doc/travel-types.md`, fuera de git por ahora). `TESTING_PLAN.md` y `PROJECT_REVIEW.md` quedan obsoletos (los sustituyen los tests reales, el README y este plan).
-- [ ] SEO: meta y Open Graph por experiencia, sitemap, robots; valorar prerender/SSR.
+- [x] SEO: meta y Open Graph por experiencia, sitemap, robots.
   - [x] Cliente: componente `Seo` (título, descripción, canonical, Open Graph, `noindex` en admin, login, registro, búsquedas, 404 y experiencias no publicadas).
   - [x] Servidor: inyecta las meta de cada experiencia publicada en `index.html` (los bots de redes sociales no ejecutan JS), `robots.txt` y `sitemap.xml` dinámico (`controllers/seoController.js`, `SITE_URL`).
   - [ ] Valorar prerender/SSR si Google indexa mal el contenido (de momento no hace falta: Google ejecuta JS).
 - [ ] Accesibilidad y `prefers-reduced-motion`.
-- [ ] About/portfolio: la carrera como una carretera con hitos (formación, trabajo, proyectos). Por ahora solo la carretera; más secciones después.
+- [x] About/portfolio: la carrera como una carretera con hitos (formación, experiencia, idiomas y proyectos) y proyectos destacados.
   - Problemas de partida: el scroll vertical de la página mueve el coche (sección de `190vh` con panel `sticky`), mucho fondo negro, la tarjeta se superpone con la carretera y el coche, los puntos se reparten en `100vw` (no escala con muchos años), el año interpolado no coincide con los puntos, B-1, B-13 y animaciones infinitas sin `prefers-reduced-motion`.
   - [x] 1. i18n (A-14): `i18next` + `react-i18next` solo en el chunk del About, español por defecto, selector ES/EN recordado en `localStorage`. Hitos en `src/data/career.ts` (año, tipo, título y descripción en los dos idiomas, organización, lugar, tecnologías, enlace).
   - [x] Contenido real: 17 hitos (2001 – hoy) sacados del PDF del perfil de LinkedIn, en español e inglés, con fechas de inicio y fin, tipo (formación, trabajo, freelance), lugar y tecnologías. Las certificaciones no tienen fecha y quedan fuera de momento.
@@ -320,10 +320,16 @@ Corrige una decisión de la Fase 1 (crear experiencias había quedado solo para 
   - [x] 4. Navegación: gestos horizontales nativos, arrastre con ratón, Ctrl/⌘ + rueda como en el mapa, botones ‹ ›, minimapa de años y flechas solo con el foco en la carretera (B-1).
   - [x] 5. Detalles: el coche gira al ir hacia atrás, ruedas solo en movimiento, icono y color por tipo, `prefers-reduced-motion`, móvil, limpieza de timers (B-13).
   - [x] 6. Tests unitarios (navegación, teclado solo con foco, Ctrl + rueda, idioma, fechas) y comprobación en Chromium real (arrastre, rueda, teclado, giro del coche). B-1 cerrado.
-  - [ ] Pendiente de decidir: certificaciones, más secciones (proyectos, habilidades, contacto).
+  - [ ] Pendiente de decidir: certificaciones y más secciones (habilidades, contacto).
 - [ ] Chat IA sobre tu experiencia (Genkit) con rate limit, límites de tokens y prompt acotado.
 - [x] Observabilidad y backups: logs con pino + pino-http (sustituye a morgan), ID por petición (`X-Request-Id`, devuelto en los 500), stack de los errores 500, eventos de conexión de Mongo y `uncaughtException`; `npm run backup` (mongodump + imágenes, con rotación) documentado con cron en `_doc/deployment.md`. Sentry descartado por ahora (no hace falta con el volumen actual).
-- [ ] **Quitar `0.0.0.0/0` de *Network Access* en Atlas** (S-1). Antes hay que montar un Mongo local para desarrollo (`docker-compose`) o usar un cluster de desarrollo aparte, para no tener que actualizar la IP doméstica cada vez.
+- [x] Contraseñas: cambiarla (Admin → My password), recuperarla por email con enlace de un solo uso y `npm run users:set-password`. Las sesiones se cierran al cambiarla, y el rol se lee de la base de datos en cada petición.
+- [x] Rate limiting compartido en MongoDB con índice TTL en login, registro, recuperación y contacto; `npm run backup:images` para las imágenes de Blob.
+- [x] Atlas: usuario dedicado con `readWrite` solo sobre `project`, en lugar de `atlasAdmin`.
+- [ ] `0.0.0.0/0` en *Network Access* de Atlas (S-1): se queda mientras Vercel no tenga IPs fijas (plan gratuito). Ver "Limitaciones conocidas" en el README.
+- [x] Base de datos de desarrollo con `docker compose` y `npm run db:dev:copy`.
+- [x] Sin cuenta de demo: el README enseña la zona de administración con capturas.
+- [x] El email de recuperación se envía después de responder. Historial en `CHANGELOG.md`.
 
 ---
 

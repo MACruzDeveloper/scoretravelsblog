@@ -13,12 +13,14 @@ const extractToken = (req) => {
 
 const verify = async (token) => {
   const payload = jwt.verify(token, jwt_secret, { algorithms: [JWT_ALGORITHM] })
+  const user = await User.findById(payload._id).select('username email role passwordChangedAt').lean()
+  if (!user) throw new jwt.JsonWebTokenError('The user no longer exists')
   // Changing the password closes the sessions started before it
-  const user = await User.findById(payload._id).select('passwordChangedAt').lean()
-  if (user?.passwordChangedAt && payload.iat * 1000 < user.passwordChangedAt.getTime()) {
+  if (user.passwordChangedAt && payload.iat * 1000 < user.passwordChangedAt.getTime()) {
     throw new jwt.JsonWebTokenError('Session closed by a password change')
   }
-  return payload
+  // The token proves who it is; what they can do comes from the database, so a role change applies at once
+  return { ...payload, username: user.username, email: user.email, role: user.role }
 }
 
 // Only a bad token means "not signed in": a database failure must reach the error handler

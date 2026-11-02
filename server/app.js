@@ -35,8 +35,8 @@ app.use(
         frameAncestors: ["'self'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
-        // Enable once the site is served over HTTPS
-        upgradeInsecureRequests: null,
+        // Only when the site is served over HTTPS: it would break plain HTTP on localhost
+        upgradeInsecureRequests: config.siteUrl?.startsWith('https://') ? [] : null,
       },
     },
     // Map tile servers need to know the site asking for tiles (OpenStreetMap answers 403 without a

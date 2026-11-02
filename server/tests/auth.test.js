@@ -133,6 +133,12 @@ describe('passwords', () => {
     return t.mock.method(mailer, 'sendPasswordResetEmail', async () => {})
   }
   const tokenFrom = (call) => call.arguments[1].split('#token=')[1]
+  // The email goes out after the response
+  const until = async (done) => {
+    for (let i = 0; i < 100 && !done(); i++) await new Promise((resolve) => setTimeout(resolve, 10))
+    assert.ok(done(), 'the recovery email was not sent in time')
+  }
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 100))
   const forgot = (email) => request.post('/api/auth/forgot-password').send({ email })
   const reset = (token, password = NEW) =>
     request.post('/api/auth/reset-password').send({ token, password, password2: password })
@@ -178,9 +184,27 @@ describe('passwords', () => {
     const known = await forgot(user.email).expect(200)
     const unknown = await forgot('nobody@test.dev').expect(200)
     assert.equal(known.body.message, unknown.body.message)
+    await until(() => emails.mock.callCount() === 1)
+    await settle()
     assert.equal(emails.mock.callCount(), 1)
     assert.equal(emails.mock.calls[0].arguments[0].email, user.email)
     assert.match(emails.mock.calls[0].arguments[1], /^http:\/\/localhost:5173\/reset-password#token=[a-f0-9]{64}$/)
+  })
+
+  it('answers before doing the work, so the time does not reveal the email', async (t) => {
+    const mailer = require('../services/mailer')
+    let finishEmail
+    const emails = t.mock.method(
+      mailer,
+      'sendPasswordResetEmail',
+      () => new Promise((resolve) => (finishEmail = resolve))
+    )
+    const { user } = await createUser({ username: 'ana' })
+
+    // The email is still being sent when the answer arrives
+    await forgot(user.email).expect(200)
+    await until(() => emails.mock.callCount() === 1)
+    finishEmail()
   })
 
   it('stores only a hash of the token and ignores a forged Host', async (t) => {
@@ -189,6 +213,7 @@ describe('passwords', () => {
     const { user } = await createUser({ username: 'ana' })
 
     await request.post('/api/auth/forgot-password').set('Host', 'evil.example').send({ email: user.email }).expect(200)
+    await until(() => emails.mock.callCount() === 1)
     const url = emails.mock.calls[0].arguments[1]
     assert.ok(!url.includes('evil.example'))
     const stored = await User.findById(user._id).select('resetTokenHash')
@@ -200,6 +225,7 @@ describe('passwords', () => {
     const { user, auth } = await createUser({ username: 'ana' })
     await nextSecond()
     await forgot(user.email).expect(200)
+    await until(() => emails.mock.callCount() === 1)
     const token = tokenFrom(emails.mock.calls[0])
 
     await reset(token, 'short').expect(400)
@@ -216,6 +242,7 @@ describe('passwords', () => {
     const User = require('../models/usersModels')
     const { user } = await createUser({ username: 'ana' })
     await forgot(user.email).expect(200)
+    await until(() => emails.mock.callCount() === 1)
     await User.updateOne({ _id: user._id }, { resetTokenExpires: new Date(Date.now() - 1000) })
 
     await reset(tokenFrom(emails.mock.calls[0])).expect(400)
@@ -229,6 +256,85 @@ describe('passwords', () => {
     await User.create({ username: 'fiction', email: 'fiction@example.com', password: 'x', seed: true })
 
     await forgot('fiction@example.com').expect(200)
+    await settle()
     assert.equal(emails.mock.callCount(), 0)
+  })
+})
+
+describe('sessions follow the database', () => {
+  it('applies a role change at once', async () => {
+    const User = require('../models/usersModels')
+    const { user, auth } = await createUser({ username: 'boss', role: 'admin' })
+    await request.get('/api/users').set(auth).expect(200)
+
+    await User.updateOne({ _id: user._id }, { role: 'user' })
+    await request.get('/api/users').set(auth).expect(403)
+    const { body } = await request.get('/api/auth/me').set(auth).expect(200)
+    assert.equal(body.user.role, 'user')
+  })
+
+  it('closes the session of a deleted user', async () => {
+    const User = require('../models/usersModels')
+    const { user, auth } = await createUser({ username: 'ana' })
+
+    await User.deleteOne({ _id: user._id })
+    await request.get('/api/auth/me').set(auth).expect(401)
+  })
+})
+
+describe('shared rate limit counters', () => {
+  const { MongoRateLimitStore } = require('../middleware/mongoRateLimitStore')
+  const RateLimit = require('../models/rateLimitModel')
+  const IP = '203.0.113.7'
+  const storeOf = (prefix = 'test', windowMs = 60_000) => {
+    const store = new MongoRateLimitStore(prefix)
+    store.init({ windowMs })
+    return store
+  }
+
+  it('counts together across instances', async () => {
+    assert.equal((await storeOf().increment(IP)).totalHits, 1)
+    // Another instance of the function sees the same counter
+    assert.equal((await storeOf().increment(IP)).totalHits, 2)
+  })
+
+  it('counts every concurrent request', async () => {
+    await RateLimit.init()
+    const results = await Promise.all(Array.from({ length: 20 }, () => storeOf().increment(IP)))
+    assert.deepEqual(
+      results.map((r) => r.totalHits).sort((a, b) => a - b),
+      Array.from({ length: 20 }, (_, i) => i + 1)
+    )
+  })
+
+  it('keeps limits and IPs apart, and starts again when the window ends', async () => {
+    await storeOf('login').increment(IP)
+    assert.equal((await storeOf('email').increment(IP)).totalHits, 1)
+    assert.equal((await storeOf('login').increment('203.0.113.8')).totalHits, 1)
+
+    const short = storeOf('short', 20)
+    await short.increment(IP)
+    await new Promise((resolve) => setTimeout(resolve, 40))
+    assert.equal((await short.increment(IP)).totalHits, 1)
+  })
+
+  it('does not store the IP, and expires on its own', async () => {
+    await storeOf().increment(IP)
+    const [counter] = await RateLimit.find().lean()
+    assert.ok(!JSON.stringify(counter).includes(IP))
+
+    await RateLimit.init()
+    const indexes = await RateLimit.collection.indexes()
+    assert.ok(indexes.some((index) => index.key.resetAt === 1 && index.expireAfterSeconds === 0))
+  })
+
+  it('decrements and resets', async () => {
+    const store = storeOf()
+    await store.increment(IP)
+    await store.increment(IP)
+    await store.decrement(IP)
+    assert.equal((await store.increment(IP)).totalHits, 2)
+    await store.resetKey(IP)
+    assert.equal((await store.increment(IP)).totalHits, 1)
   })
 })

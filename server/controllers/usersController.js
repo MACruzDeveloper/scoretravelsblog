@@ -1,10 +1,12 @@
 const crypto = require('crypto')
+const { waitUntil } = require('@vercel/functions')
 const User = require('../models/usersModels')
 const argon2 = require('argon2')
 const jwt = require('jsonwebtoken')
 const { JWT_ALGORITHM } = require('../middleware/auth')
 const { jwtSecret, siteUrl, isProduction, corsOrigins } = require('../config')
 const mailer = require('../services/mailer')
+const { passwordFields } = require('../services/passwords')
 const logger = require('../logger')
 const { badRequest, unauthorized, notFound, conflict } = require('../utils/httpErrors')
 
@@ -83,12 +85,6 @@ const updateUser = async (req, res) => {
   res.send({ updated })
 }
 
-// Tokens carry their date in whole seconds: rounding down keeps the session started right after a change valid
-const passwordFields = async (password) => ({
-  password: await argon2.hash(password),
-  passwordChangedAt: new Date(Math.floor(Date.now() / 1000) * 1000),
-})
-
 // Closes the other sessions and returns a new one for this device
 const changePassword = async (req, res) => {
   const { currentPassword, password } = req.body
@@ -106,12 +102,16 @@ const hashToken = (token) => crypto.createHash('sha256').update(token).digest('h
 // From the configuration, never from the request: a forged Host header could not redirect the link
 const resetUrlBase = () => siteUrl || (isProduction ? null : corsOrigins[0])
 
-// Always the same answer, so it cannot be used to find out which emails are registered.
-// The fictional users of the sample content have no real inbox
-const forgotPassword = async (req, res) => {
-  const user = await User.findOne({ email: req.body.email, seed: { $ne: true } })
-  const base = resetUrlBase()
-  if (user && base) {
+// Looks for the user and sends the email. The fictional users of the sample content have no real inbox
+const sendRecovery = async (email) => {
+  try {
+    const user = await User.findOne({ email, seed: { $ne: true } })
+    if (!user) return
+    const base = resetUrlBase()
+    if (!base) {
+      logger.error('Password recovery email not sent: SITE_URL is not configured')
+      return
+    }
     const token = crypto.randomBytes(32).toString('hex')
     await User.updateOne(
       { _id: user._id },
@@ -119,10 +119,16 @@ const forgotPassword = async (req, res) => {
     )
     // In the fragment (#), which browsers do not send: the token stays out of the server logs
     await mailer.sendPasswordResetEmail(user, `${base}/reset-password#token=${token}`)
-  } else if (user) {
-    logger.error('Password recovery email not sent: SITE_URL is not configured')
+  } catch (error) {
+    logger.error({ err: error }, 'Password recovery failed')
   }
+}
+
+// Answers first and works afterwards, so neither the text nor the time reveals which emails are registered.
+// waitUntil keeps a serverless function alive until the work ends; on a normal server it just runs
+const forgotPassword = (req, res) => {
   res.json({ ok: true, message: 'If that email is registered, we have sent a link to reset the password' })
+  waitUntil(sendRecovery(req.body.email))
 }
 
 // Works once. The user signs in afterwards, with every old session closed

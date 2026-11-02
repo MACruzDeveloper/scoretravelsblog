@@ -21,13 +21,16 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "e2e:server": "node tests/e2e-server.js",
-    "backup": "scripts/backup.sh"
+    "db:dev:copy": "scripts/dev-db-copy.sh",
+    "backup": "scripts/backup.sh",
+    "backup:images": "node scripts/backup-images.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@vercel/blob": "^2.8.2",
+    "@vercel/functions": "^3.10.5",
     "argon2": "^0.45.1",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",

@@ -5,7 +5,11 @@ Blog de viajes donde la gente comparte y puntúa sus experiencias. Los usuarios 
 - **En producción:** https://scoretravelsblog.vercel.app (Vercel, MongoDB Atlas y Vercel Blob; ver [Despliegue](#despliegue)).
 - **Stack:** React 19, TypeScript, Vite y Sass en el cliente; Node, Express 5 y Mongoose en el servidor.
 - **Datos de demostración:** el contenido publicado es de ejemplo, con textos escritos por IA (Gemini). La mayoría de las experiencias, con sus autores ficticios, comentarios y votos, salen de `npm run seed`; sus fotos vienen de Wikimedia Commons, con el autor y la licencia en cada experiencia.
-- **Para probarla:** cualquiera puede registrarse y enviar una experiencia, que queda pendiente hasta que un administrador la apruebe. La zona de administración necesita una cuenta de administrador.
+- **Para probarla:** cualquiera puede registrarse y enviar una experiencia, que queda pendiente hasta que un administrador la apruebe. La zona de administración necesita una cuenta de administrador; así se ve:
+
+| Cola de moderación | Imágenes, por pestañas |
+| --- | --- |
+| ![Cola de moderación con experiencias pendientes y los botones de publicar y rechazar](docs/images/moderacion.png) | ![Biblioteca de imágenes con pestañas de carrusel, sin usar y en experiencias](docs/images/imagenes.png) |
 
 ## Arquitectura
 
@@ -13,14 +17,16 @@ Blog de viajes donde la gente comparte y puntúa sus experiencias. Los usuarios 
 ┌──────────────────────┐  archivos estáticos  ┌───────────────────────┐
 │ client/              │ ◀─────────────────── │ CDN de Vercel         │
 │ React + Vite (SPA)   │                      └───────────────────────┘
-│ Zustand, react-router│  HTML y /api (JWT)   ┌───────────────────────┐        ┌───────────────┐
-│                      │ ◀──────────────────▶ │ server/ (una función) │ ─────▶ │ MongoDB Atlas │
-│                      │                      │ Express 5 (MVC)       │        └───────────────┘
-│                      │                      │ zod, Mongoose, sharp  │ ─────▶ Vercel Blob (guarda las imágenes)
-│                      │                      └───────────────────────┘ ─────▶ SMTP (Brevo)
-│                      │  /static/images redirige a la tienda    ┌─────────────┐
-│                      │ ◀─────────────────────────────────────▶ │ Vercel Blob │
-└──────────────────────┘                                         └─────────────┘
+│ Zustand, react-router│                      ┌───────────────────────┐        ┌───────────────┐
+│                      │  HTML y /api (JWT)   │ server/ (una función) │ ─────▶ │ MongoDB Atlas │
+│                      │ ◀──────────────────▶ │ Express 5 (MVC)       │        └───────────────┘
+│                      │                      │ zod, Mongoose, sharp  │ ─────▶ SMTP (Brevo)
+│                      │                      └───────────┬───────────┘
+│                      │                                  │ guarda las imágenes
+│                      │  /static/images redirige         ▼
+│                      │ ◀─────────────────── ┌───────────────────────┐
+└──────────────────────┘                      │ Vercel Blob           │
+                                              └───────────────────────┘
 ```
 
 Todo funciona en un único origen. En producción, la CDN de Vercel sirve los archivos del cliente (`client/dist`), y Express, como una función de Vercel, atiende la API y el HTML. Las imágenes se piden siempre en `/static/images/...`, que redirige a la tienda de Blob; en local las sirve Express desde el disco.
@@ -51,8 +57,8 @@ Todo funciona en un único origen. En producción, la CDN de Vercel sirve los ar
 
 - Express 5 con rutas → controladores → servicios → modelos de Mongoose; todas las rutas cuelgan de `/api`.
 - Validación de peticiones con zod (`utils/schemas.js`) y un gestor de errores central.
-- Autenticación: JWT (HS256) en la cabecera `Authorization`, contraseñas con argon2, roles `user` y `admin`. Cada usuario puede cambiar su contraseña (Admin → My password) o recuperarla por email con un enlace de un solo uso que caduca en 1 hora; en ambos casos se cierran las sesiones abiertas.
-- Seguridad: helmet (CSP), lista blanca de CORS, rate limiting, comprobación de subidas (tipo, tamaño) y conversión a AVIF con sharp.
+- Autenticación: JWT (HS256) en la cabecera `Authorization`, contraseñas con argon2, roles `user` y `admin`. Cada usuario puede cambiar su contraseña (Admin → My password) o recuperarla por email con un enlace de un solo uso que caduca en 1 hora; en ambos casos se cierran las sesiones abiertas. El rol se lee de la base de datos en cada petición, así que bajar de rol o borrar un usuario se aplica al momento.
+- Seguridad: helmet (CSP), lista blanca de CORS, rate limiting con contadores compartidos en MongoDB en las rutas sensibles, comprobación de subidas (tipo, tamaño) y conversión a AVIF con sharp.
 - Las experiencias tienen autor y estado de moderación (`pending`, `published`, `rejected`); el admin recibe un email con cada envío nuevo.
 - Cada experiencia apunta a un lugar (colección `cities`) de tipo `city` (ciudad, isla o región) o `country` (país entero), con país, continente y coordenadas.
 - Endpoints de lectura para la portada y los filtros: `/api/experiences/facets` (categorías, continentes, países y años con experiencias), `/api/experiences/map` (las 5 mejores de cada continente) y `/api/experiences/timeline` (la mejor de cada año).
@@ -63,7 +69,7 @@ Todo funciona en un único origen. En producción, la CDN de Vercel sirve los ar
 ## Requisitos
 
 - Node.js 22.22 o superior (ver `.nvmrc`; con nvm: `nvm install` y `nvm use` en la raíz) y npm 11.
-- Una base de datos MongoDB (Atlas o local).
+- Docker, para la base de datos de desarrollo (o cualquier MongoDB).
 - Para `npm run backup`: [MongoDB Database Tools](https://www.mongodb.com/docs/database-tools/) (`mongodump`; en macOS, `brew install mongodb-database-tools`).
 - Opcional: una [clave de CARTO](https://carto.com/basemaps/apikey), credenciales SMTP de Brevo y una [clave de Gemini](https://aistudio.google.com/apikey) (solo para los scripts de seed y backfill).
 
@@ -78,11 +84,43 @@ cd ../client && npm install
 cp server/.env.template server/.env      # como mínimo ATLAS_URL y JWT_SECRET
 cp client/.env.example client/.env.local # opcional: VITE_CARTO_API_KEY
 
-# 3. Arrancar cliente y servidor a la vez (desde client/)
+# 3. Levantar la base de datos de desarrollo (en server/.env: ATLAS_URL=mongodb://localhost:27017/project)
+docker compose up -d
+
+# 4. Arrancar cliente y servidor a la vez (desde client/)
 npm run rundev
 ```
 
+La base local empieza vacía. Para trabajar con datos reales, añade `ATLAS_URL_PROD` a `server/.env` y, desde `server/`, copia la base de datos y las imágenes (producción solo se lee):
+
+```bash
+npm run db:dev:copy
+npm run backup:images -- https://scoretravelsblog.vercel.app uploads/images
+```
+
 El cliente queda en `http://localhost:5173` y la API en `http://localhost:3040/api`.
+
+### Local y producción
+
+Producción es la fuente de verdad, y la base de datos local es una copia que se puede tirar cuando se quiera. Por eso nada de lo que se prueba en local llega a la web.
+
+| Qué cambia | Dónde se hace | Cómo llega al otro entorno |
+| --- | --- | --- |
+| Contenido (experiencias, comentarios, fotos) | En la web desplegada | A local, con `npm run db:dev:copy` y, si hay fotos nuevas, `backup:images` |
+| Código, estilos y textos de About | En local | A producción, con git: al fusionar en `main`, Vercel despliega |
+| Contraseñas | En la web (My password) o con `npm run users:set-password -- <usuario> --prod` | A local, con `npm run db:dev:copy` |
+| Pruebas | En local | No llegan a producción |
+
+Para actualizar la copia local, desde `server/`:
+
+```bash
+npm run db:dev:copy
+npm run backup:images -- https://scoretravelsblog.vercel.app uploads/images
+```
+
+`db:dev:copy` **sustituye toda la base local**, así que lo probado en local se pierde. La copia solo va de producción a local, nunca al revés.
+
+Los scripts escriben en `ATLAS_URL`, es decir, en local. Para ejecutar uno contra producción, como el seed, hay que pasarle la URL solo para ese comando, sabiendo que cambia datos reales. Las copias de seguridad (`backup`, `backup:images`) ya usan `ATLAS_URL_PROD` cuando existe.
 
 ## Variables de entorno
 
@@ -93,6 +131,7 @@ En local se leen de los archivos indicados en cada apartado. En Vercel se config
 | Variable | Obligatoria | Descripción | En Vercel |
 | --- | --- | --- | --- |
 | `ATLAS_URL` | sí | Cadena de conexión de MongoDB | Sí |
+| `ATLAS_URL_PROD` | no | Base de datos de producción cuando `ATLAS_URL` es la local. La usan `db:dev:copy`, las copias de seguridad y `users:set-password -- --prod` | No |
 | `JWT_SECRET` | sí | Secreto para firmar las sesiones (mínimo 32 caracteres aleatorios) | Sí, distinto al de local |
 | `SITE_URL` | no | Dirección pública para el sitemap, las vistas previas en redes y los enlaces de recuperación de contraseña (sin ella, en producción no se envían); por defecto, el host de la petición | Sí |
 | `TRUST_PROXY` | no | Número de proxies delante de la app | Sí, `1` |
@@ -139,9 +178,11 @@ En local se leen de los archivos indicados en cada apartado. En Vercel se config
 | `npm run seed:clear` | Cuenta el contenido creado por el seed; con `-- --yes` lo borra (experiencias, comentarios, votos, fotos, usuarios y lugares sin usar) |
 | `npm run scores:recalculate` | Recalcula la media de cada experiencia a partir de las puntuaciones |
 | `npm run backfill:propose` / `npm run backfill:apply` | Propone con Gemini categorías y ciudades para experiencias antiguas y aplica la propuesta revisada |
-| `npm run users:set-password -- <usuario o email>` | Cambia la contraseña de un usuario desde la terminal, sin mostrarla (mínimo 12 caracteres) |
+| `npm run users:set-password -- <usuario o email> [--prod]` | Cambia la contraseña de un usuario desde la terminal, sin mostrarla (mínimo 12 caracteres), y cierra sus sesiones |
+| `npm run db:dev:copy` | Sustituye la base de datos local por una copia de producción, que solo se lee |
 | `npm run images:to-blob` | Copia a Vercel Blob las imágenes de `UPLOADS_DIR` que aún no estén allí, sin borrar nada (con `-- --yes`; sin él solo las cuenta) |
 | `npm run backup` | Copia de seguridad de la base de datos (`mongodump`) y las imágenes en `~/backups/scoretravelsblog` (o la carpeta que se le pase), guardando los últimos 14 días |
+| `npm run backup:images -- <URL de la web>` | Descarga a `~/backups/scoretravelsblog/images` las imágenes nuevas de la web desplegada; no necesita credenciales de Blob |
 | `npm run migrate:*` | Migraciones de datos puntuales, ya ejecutadas en producción |
 
 ## Tests y CI
@@ -166,16 +207,13 @@ La web está en **Vercel**: cada cambio en `main` se despliega en producción, e
 
 - **Imágenes en Vercel Blob:** el disco de las funciones es de solo lectura. La tienda debe ser pública. `npm run images:to-blob` copia a la tienda las imágenes locales.
 - **Subidas de hasta 4,5 MB:** es el límite por petición, así que el navegador reduce las fotos de más de 1 MB a 2000 px antes de enviarlas.
-- **Desarrollo:** usa `UPLOADS_DIR`. Si comparte base de datos con producción, las fotos subidas en un entorno no se ven en el otro.
 
 ### Limitaciones conocidas
 
-- **El rate limiting protege poco en serverless.** Los contadores están en la memoria de cada instancia, y las instancias se crean y destruyen según la carga, así que un atacante puede repartir los intentos de login o de recuperación de contraseña entre ellas. Lo que queda es un freno para abusos simples, no una defensa contra fuerza bruta. La solución es un contador compartido: una colección de MongoDB con índice TTL o un Redis gestionado.
+- **El rate limiting es por IP.** Las rutas sensibles comparten sus contadores entre instancias (ver [CHANGELOG](CHANGELOG.md)), lo que frena la fuerza bruta desde una IP, pero no un ataque repartido entre muchas. El límite global de la API y el de escrituras siguen en memoria: solo frenan abusos simples.
 - **Atlas abierto a `0.0.0.0/0`.** Vercel no tiene IPs fijas en el plan gratuito, así que la red no protege la base de datos y todo depende de la credencial. Por eso la app usa un usuario dedicado con `readWrite` solo sobre esta base, nunca `atlasAdmin`, y con una contraseña larga autogenerada: una credencial filtrada no da acceso al resto de la cuenta.
-- **Las copias de seguridad no cubren Blob.** `npm run backup` guarda la base de datos y `UPLOADS_DIR`. Si se pierde la tienda, las imágenes subidas en producción no están en ninguna copia.
+- **Las copias de seguridad son manuales.** `npm run backup` guarda la base de datos y `UPLOADS_DIR`, y `npm run backup:images` descarga las imágenes de la web desplegada. Nada las programa, así que solo protegen hasta la última vez que se ejecutaron.
 - **Las imágenes son públicas.** Las de experiencias pendientes o rechazadas se pueden abrir con su URL, y rechazar una experiencia no borra sus fotos. Es poco explotable en las subidas actuales, cuyo nombre lleva un UUID aleatorio; las más antiguas conservan nombres legibles.
-- **Las sesiones no siguen a los cambios de rol.** Son JWT de 1 día: cambiar la contraseña las cierra, pero bajar de rol o borrar un usuario no surte efecto en su sesión abierta hasta que caduca.
-- **La recuperación de contraseña responde igual para cualquier email, pero no tarda lo mismo:** con un email registrado se envía el correo antes de responder, y esa diferencia de tiempo podría revelar si existe.
 
 ### Alternativa: servidor propio
 
@@ -188,4 +226,5 @@ La app también funciona en un único servidor detrás de nginx con HTTPS, sin `
 
 ## Documentación
 
+- [`CHANGELOG.md`](CHANGELOG.md): decisiones de seguridad e infraestructura, y por qué se tomaron.
 - [`PLAN_MEJORAS.md`](PLAN_MEJORAS.md): plan de mejoras y su progreso.
