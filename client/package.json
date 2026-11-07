@@ -16,7 +16,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@hookform/resolvers": "^6.0.2",
+    "@hookform/resolvers": "^7.0.2",
     "dompurify": "^3.4.17",
     "i18next": "^26.5.11",
     "leaflet": "^1.9.4",
